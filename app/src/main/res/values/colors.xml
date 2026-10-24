@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Taken from the logo -->
+    <color name="brand_green">#FF053024</color>
+    <color name="brand_green_dark">#FF031F17</color>
+    <color name="brand_gold">#FFC88E38</color>
+    <color name="brand_cream">#FFF6F1E4</color>
+    <color name="ic_launcher_background">#FF053024</color>
+</resources>

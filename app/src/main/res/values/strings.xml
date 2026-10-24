@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">أجهور الكبرى</string>
+    <string name="tagline">كل خدمات قريتك في مكان واحد</string>
+
+    <string name="tab_home">الرئيسية</string>
+    <string name="tab_news">الأخبار</string>
+    <string name="tab_account">حسابي</string>
+
+    <string name="section_categories">الأقسام</string>
+    <string name="section_latest_news">آخر الأخبار</string>
+    <string name="see_all">عرض الكل</string>
+
+    <string name="search_firms">ابحث باسم المنشأة</string>
+    <string name="no_firms">لا توجد منشآت في هذا القسم بعد.</string>
+    <string name="no_news">لا توجد أخبار بعد.</string>
+    <string name="no_categories">لا توجد أقسام بعد.</string>
+
+    <string name="retry">إعادة المحاولة</string>
+    <string name="back">رجوع</string>
+    <string name="loading">جارٍ التحميل…</string>
+
+    <string name="call">اتصال</string>
+    <string name="whatsapp">واتساب</string>
+    <string name="open_map">الخريطة</string>
+    <string name="address">العنوان</string>
+    <string name="working_hours">مواعيد العمل</string>
+    <string name="phone">الهاتف</string>
+    <string name="about">عن المنشأة</string>
+
+    <string name="login">تسجيل الدخول</string>
+    <string name="register">إنشاء حساب</string>
+    <string name="logout">تسجيل الخروج</string>
+    <string name="name">الاسم</string>
+    <string name="phone_number">رقم الهاتف</string>
+    <string name="email_optional">البريد الإلكتروني (اختياري)</string>
+    <string name="password">كلمة المرور</string>
+    <string name="password_confirmation">تأكيد كلمة المرور</string>
+    <string name="no_account">ليس لديك حساب؟ أنشئ حسابًا</string>
+    <string name="have_account">لديك حساب؟ سجّل الدخول</string>
+    <string name="account_guest_title">مرحبًا بك في أجهور الكبرى</string>
+    <string name="account_guest_body">سجّل الدخول لإدارة منشأتك ومتابعة اشتراكك والإشعارات.</string>
+    <string name="role_user">مستخدم</string>
+    <string name="role_firm_admin">صاحب منشأة</string>
+    <string name="role_super_admin">مدير النظام</string>
+
+    <string name="kind_news">خبر</string>
+    <string name="kind_article">مقال</string>
+    <string name="kind_announcement">إعلان</string>
+</resources>
