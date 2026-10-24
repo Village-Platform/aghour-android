@@ -47,4 +47,39 @@
     <string name="kind_news">خبر</string>
     <string name="kind_article">مقال</string>
     <string name="kind_announcement">إعلان</string>
+
+    <!-- UI/UX v2 -->
+    <string name="greeting_guest">أهلاً بك</string>
+    <string name="greeting_user">أهلاً، %1$s</string>
+    <string name="home_subtitle">ابحث عن أي خدمة في القرية واتصل بها مباشرة</string>
+    <string name="search_hint">ابحث عن طبيب، صيدلية، مطعم…</string>
+    <string name="search_title">البحث</string>
+    <string name="search_start">اكتب اسم المنشأة للبحث في كل الأقسام.</string>
+    <string name="search_no_results">لا توجد نتائج لـ "%1$s".</string>
+    <string name="firms_count">%1$d منشأة</string>
+    <string name="share">مشاركة</string>
+    <string name="contact_info">بيانات التواصل</string>
+    <string name="share_firm_text">%1$s — %2$s
+%3$s
+من تطبيق أجهور الكبرى</string>
+    <string name="show_password">إظهار</string>
+    <string name="hide_password">إخفاء</string>
+    <string name="welcome_back">مرحبًا بعودتك</string>
+    <string name="login_subtitle">سجّل الدخول برقم هاتفك</string>
+    <string name="register_subtitle">أنشئ حسابك في دقيقة</string>
+    <string name="error_name_required">اكتب اسمك.</string>
+    <string name="error_phone_invalid">رقم الهاتف يجب أن يكون 11 رقمًا ويبدأ بـ 01.</string>
+    <string name="error_password_short">كلمة المرور 8 أحرف على الأقل.</string>
+    <string name="error_password_mismatch">كلمتا المرور غير متطابقتين.</string>
+    <string name="logout_confirm_title">تسجيل الخروج؟</string>
+    <string name="logout_confirm_body">يمكنك تسجيل الدخول مرة أخرى في أي وقت.</string>
+    <string name="cancel">إلغاء</string>
+    <string name="about_app">عن التطبيق</string>
+    <string name="about_app_body">تطبيق قرية أجهور الكبرى — كل خدمات قريتك في مكان واحد.
+الإصدار %1$s</string>
+    <string name="ok">حسنًا</string>
+    <string name="benefit_firms">أضف منشأتك ليصل إليك أهل القرية</string>
+    <string name="benefit_notifications">تابع إشعارات اشتراكك وأخبار القرية</string>
+    <string name="benefit_free">التصفح مجاني ولا يحتاج إلى حساب</string>
+    <string name="my_account">بيانات الحساب</string>
 </resources>

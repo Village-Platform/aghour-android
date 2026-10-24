@@ -42,18 +42,25 @@ private val LightColors = lightColorScheme(
     onSurfaceVariant = Muted,
     outline = Color(0xFFD6D9D2),
     outlineVariant = Color(0xFFE4E2D8),
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = Color(0xFFFDFCF8),
+    surfaceContainer = Paper,
+    surfaceContainerHigh = Color(0xFFF4F1E8),
+    error = Color(0xFFB42318),
 )
 
 private val AppShapes = Shapes(
-    small = RoundedCornerShape(10.dp),
-    medium = RoundedCornerShape(14.dp),
-    large = RoundedCornerShape(20.dp),
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(32.dp),
 )
 
 /** Arabic-first app: the layout is always right-to-left, whatever the phone language is. */
 @Composable
 fun AghourTheme(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        MaterialTheme(colorScheme = LightColors, shapes = AppShapes, content = content)
+        MaterialTheme(colorScheme = LightColors, typography = AppTypography, shapes = AppShapes, content = content)
     }
 }

@@ -18,6 +18,9 @@ class CatalogRepository(private val api: AghourApi, private val json: Json) {
     suspend fun categoryFirms(categoryId: Long, query: String?, page: Int): ApiResult<ListResponse<FirmDto>> =
         safeApiCall(json) { api.categoryFirms(categoryId, query?.takeIf { it.isNotBlank() }, page) }
 
+    suspend fun searchFirms(query: String, page: Int): ApiResult<ListResponse<FirmDto>> =
+        safeApiCall(json) { api.firms(query.trim(), page) }
+
     suspend fun firm(id: Long): ApiResult<FirmDto> =
         safeApiCall(json) { api.firm(id).data }
 

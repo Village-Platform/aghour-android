@@ -37,7 +37,11 @@ import com.aghour.app.ui.firms.FirmsScreen
 import com.aghour.app.ui.home.HomeScreen
 import com.aghour.app.ui.news.ArticleScreen
 import com.aghour.app.ui.news.NewsScreen
+import com.aghour.app.ui.search.SearchScreen
 import com.aghour.app.ui.theme.Gold100
+import com.aghour.app.ui.theme.Green900
+import com.aghour.app.ui.theme.Muted
+import androidx.compose.ui.unit.dp
 import kotlinx.serialization.Serializable
 
 // ---- Type-safe routes ----
@@ -46,6 +50,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object AccountRoute
 @Serializable data object LoginRoute
 @Serializable data object RegisterRoute
+@Serializable data object SearchRoute
 @Serializable data class FirmsRoute(val categoryId: Long, val categoryName: String)
 @Serializable data class FirmRoute(val firmId: Long)
 @Serializable data class ArticleRoute(val articleId: Long)
@@ -73,14 +78,20 @@ fun AppNavigation() {
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
                     tabs.forEach { tab ->
                         NavigationBarItem(
                             selected = destination != null && tab.matches(destination),
                             onClick = { nav.navigateToTab(tab.route) },
                             icon = { Icon(tab.icon, contentDescription = null) },
                             label = { Text(stringResource(tab.labelRes)) },
-                            colors = NavigationBarItemDefaults.colors(indicatorColor = Gold100),
+                            colors = NavigationBarItemDefaults.colors(
+                                indicatorColor = Gold100,
+                                selectedIconColor = Green900,
+                                selectedTextColor = Green900,
+                                unselectedIconColor = Muted,
+                                unselectedTextColor = Muted,
+                            ),
                         )
                     }
                 }
@@ -100,7 +111,11 @@ fun AppNavigation() {
                     onCategoryClick = { nav.navigate(FirmsRoute(it.id, it.name)) },
                     onArticleClick = { nav.navigate(ArticleRoute(it.id)) },
                     onSeeAllNews = { nav.navigateToTab(NewsRoute) },
+                    onSearchClick = { nav.navigate(SearchRoute) },
                 )
+            }
+            composable<SearchRoute> {
+                SearchScreen(onBack = { nav.popBackStack() }, onFirmClick = { nav.navigate(FirmRoute(it.id)) })
             }
             composable<NewsRoute> {
                 NewsScreen(onArticleClick = { nav.navigate(ArticleRoute(it.id)) })

@@ -1,41 +1,49 @@
 package com.aghour.app.ui.firms
 
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,10 +54,24 @@ import com.aghour.app.data.remote.ApiResult
 import com.aghour.app.data.remote.FirmDto
 import com.aghour.app.data.repository.CatalogRepository
 import com.aghour.app.ui.components.AppTopBar
-import com.aghour.app.ui.components.LoadingBox
+import com.aghour.app.ui.components.BrandHeader
+import com.aghour.app.ui.components.LetterAvatar
 import com.aghour.app.ui.components.MessageBox
 import com.aghour.app.ui.components.Pill
+import com.aghour.app.ui.components.SkeletonCards
 import com.aghour.app.ui.components.appContainer
+import com.aghour.app.ui.components.brandCardColors
+import com.aghour.app.ui.components.brandCardElevation
+import com.aghour.app.ui.components.openDialer
+import com.aghour.app.ui.components.openMap
+import com.aghour.app.ui.components.openWhatsApp
+import com.aghour.app.ui.components.shareText
+import com.aghour.app.ui.theme.Cream
+import com.aghour.app.ui.theme.Gold100
+import com.aghour.app.ui.theme.Gold500
+import com.aghour.app.ui.theme.Green50
+import com.aghour.app.ui.theme.Green900
+import com.aghour.app.ui.theme.Green950
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -81,104 +103,154 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit) {
     val container = appContainer()
     val vm: FirmDetailViewModel = viewModel { FirmDetailViewModel(container.catalog, firmId) }
     val state by vm.state.collectAsStateWithLifecycle()
+    val firm = state.firm
 
-    Scaffold(topBar = { AppTopBar(state.firm?.name ?: "", onBack) }) { padding ->
-        val firm = state.firm
-        when {
-            state.loading -> LoadingBox(Modifier.padding(padding))
-            firm == null -> MessageBox(state.error ?: "", Modifier.padding(padding), onRetry = vm::load)
-            else -> FirmDetailContent(firm, Modifier.padding(padding))
+    when {
+        firm != null -> FirmDetailContent(firm, onBack)
+        state.loading -> Column(Modifier.fillMaxSize()) {
+            AppTopBar(title = "", onBack = onBack)
+            SkeletonCards(count = 3, modifier = Modifier.padding(top = 16.dp))
+        }
+        else -> Column(Modifier.fillMaxSize()) {
+            AppTopBar(title = "", onBack = onBack)
+            MessageBox(state.error ?: "", onRetry = vm::load)
         }
     }
 }
 
 @Composable
-private fun FirmDetailContent(firm: FirmDto, modifier: Modifier = Modifier) {
+private fun FirmDetailContent(firm: FirmDto, onBack: () -> Unit) {
     val context = LocalContext.current
-    Column(
-        modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        ) {
-            Column(Modifier.fillMaxWidth().padding(18.dp)) {
-                Pill(firm.category.name, MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer)
-                Spacer(Modifier.height(8.dp))
-                Text(firm.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                firm.description?.takeIf { it.isNotBlank() }?.let {
+    val shareMessage = stringResource(R.string.share_firm_text, firm.name, firm.category.name, firm.phone ?: "")
+
+    Column(Modifier.fillMaxSize()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            // Hero header
+            BrandHeader {
+                Column(
+                    Modifier.fillMaxWidth().statusBarsPadding().padding(bottom = 28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = Cream)
+                        }
+                        Spacer(Modifier.weight(1f))
+                        IconButton(onClick = { context.shareText(shareMessage) }) {
+                            Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.share), tint = Cream)
+                        }
+                    }
+                    LetterAvatar(firm.name, size = 88.dp, background = Gold500, content = Green950, bordered = true)
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        firm.name,
+                        color = Cream,
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 24.dp),
+                    )
                     Spacer(Modifier.height(8.dp))
-                    Text(it, style = MaterialTheme.typography.bodyMedium)
+                    Pill(firm.category.name, Gold100, Green900)
+                }
+            }
+
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                firm.description?.takeIf { it.isNotBlank() }?.let { description ->
+                    InfoCard(stringResource(R.string.about)) {
+                        Text(description, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+
+                InfoCard(stringResource(R.string.contact_info)) {
+                    DetailRow(Icons.Filled.LocationOn, stringResource(R.string.address), firm.address)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    DetailRow(Icons.Filled.DateRange, stringResource(R.string.working_hours), firm.workingHours)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    DetailRow(Icons.Filled.Phone, stringResource(R.string.phone), firm.phone, ltr = true)
                 }
             }
         }
 
-        // Quick actions
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        // Sticky action bar: the main reason people open a firm page is to contact it.
+        ActionBar(firm)
+    }
+}
+
+@Composable
+private fun ActionBar(firm: FirmDto) {
+    val context = LocalContext.current
+    val hasMap = firm.latitude != null && firm.longitude != null
+    if (firm.phone == null && firm.whatsapp == null && !hasMap) return
+
+    Surface(shadowElevation = 12.dp, color = MaterialTheme.colorScheme.surface) {
+        Row(
+            Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             firm.phone?.let { phone ->
-                Button(onClick = { context.openDialer(phone) }, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Filled.Call, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(stringResource(R.string.call))
+                Button(onClick = { context.openDialer(phone) }, modifier = Modifier.weight(1f).height(50.dp)) {
+                    Icon(Icons.Filled.Call, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.call))
                 }
             }
             firm.whatsapp?.let { number ->
                 Button(
                     onClick = { context.openWhatsApp(number) },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary, contentColor = MaterialTheme.colorScheme.onSecondary),
+                    modifier = Modifier.weight(1f).height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Gold500, contentColor = Green950),
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.Send, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(stringResource(R.string.whatsapp))
+                    Icon(Icons.AutoMirrored.Filled.Send, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.whatsapp))
                 }
             }
-            if (firm.latitude != null && firm.longitude != null) {
-                OutlinedButton(onClick = { context.openMap(firm.latitude, firm.longitude, firm.name) }, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Filled.LocationOn, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(stringResource(R.string.open_map))
+            if (hasMap) {
+                OutlinedButton(
+                    onClick = { context.openMap(firm.latitude!!, firm.longitude!!, firm.name) },
+                    modifier = Modifier.weight(1f).height(50.dp),
+                ) {
+                    Icon(Icons.Filled.LocationOn, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.open_map))
                 }
-            }
-        }
-
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        ) {
-            Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 8.dp)) {
-                DetailRow(stringResource(R.string.address), firm.address)
-                HorizontalDivider()
-                DetailRow(stringResource(R.string.working_hours), firm.workingHours)
-                HorizontalDivider()
-                DetailRow(stringResource(R.string.phone), firm.phone)
             }
         }
     }
 }
 
 @Composable
-private fun DetailRow(label: String, value: String?) {
-    Column(Modifier.padding(vertical = 10.dp)) {
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value?.takeIf { it.isNotBlank() } ?: "—", style = MaterialTheme.typography.bodyLarge)
+private fun InfoCard(title: String, content: @Composable () -> Unit) {
+    Card(shape = RoundedCornerShape(20.dp), colors = brandCardColors(), elevation = brandCardElevation()) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Info, null, Modifier.size(18.dp), tint = Gold500)
+                Spacer(Modifier.width(6.dp))
+                Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+            }
+            Spacer(Modifier.height(8.dp))
+            content()
+        }
     }
 }
 
-// ---- Intents ----
-
-private fun Context.startSafely(intent: Intent) {
-    try {
-        startActivity(intent)
-    } catch (_: ActivityNotFoundException) {
-        // No app can handle it (e.g. no maps app); nothing to do.
+@Composable
+private fun DetailRow(icon: ImageVector, label: String, value: String?, ltr: Boolean = false) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            Modifier.size(38.dp).background(Green50, RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = Green900, modifier = Modifier.size(20.dp))
+        }
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // Phone numbers are read left-to-right even inside Arabic text.
+            Text(
+                (value?.takeIf { it.isNotBlank() } ?: "—").let { if (ltr) "\u2066$it\u2069" else it },
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
     }
 }
-
-private fun Context.openDialer(phone: String) =
-    startSafely(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone")))
-
-/** Egyptian local numbers (01xxxxxxxxx) become international (201xxxxxxxxx) for wa.me links. */
-private fun Context.openWhatsApp(number: String) {
-    val digits = number.filter { it.isDigit() }
-    val international = if (digits.startsWith("0")) "2$digits" else digits
-    startSafely(Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/$international")))
-}
-
-private fun Context.openMap(lat: Double, lng: Double, label: String) =
-    startSafely(Intent(Intent.ACTION_VIEW, Uri.parse("geo:$lat,$lng?q=$lat,$lng(${Uri.encode(label)})")))

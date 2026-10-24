@@ -43,7 +43,9 @@ app/src/main/java/com/aghour/app/
 └── ui/
     ├── theme/       green & gold Material theme, forced right-to-left
     ├── navigation/  routes + bottom bar (الرئيسية، الأخبار، حسابي)
-    ├── home/        banner, categories, latest news
+    ├── components/  brand header, cards, skeletons, search pill, intents (call, WhatsApp, map, share)
+    ├── home/        greeting, search bar, categories, latest news
+    ├── search/      search firms in all categories
     ├── firms/       firms of a category (search + paging), firm details (call, WhatsApp, map)
     ├── news/        news list and article
     └── account/     profile, login, register
@@ -51,17 +53,32 @@ app/src/main/java/com/aghour/app/
 
 Every screen = a `ViewModel` (state as `StateFlow`) + a `@Composable` that draws that state.
 
+## Brand and UI
+
+- Colors from the logo: green `#053024`, gold `#C88E38`, cream `#F6F1E4` (`ui/theme/Theme.kt`).
+- Font: Cairo, bundled as one variable font (`res/font/cairo.ttf`, SIL Open Font License in `licenses/`).
+- Every screen starts with the green brand header (`BrandHeader`): village photo on the main screens,
+  faint logo watermark, rounded bottom. Status bar icons are light on it.
+- Loading uses skeleton placeholders shaped like the real cards; lists support pull-to-refresh.
+- Images in `res/drawable-nodpi/` are generated from `aghour_services/public/brand` (logo, light logo mark,
+  village scene, launcher icon foreground, splash icon).
+
 ## Screens in this version
 
-- Home: village banner, categories grid, latest 5 news.
-- Firms by category: search by name, loads more while scrolling.
-- Firm details: call, WhatsApp (Egyptian numbers converted to +20), open in maps.
-- News list and article page.
-- Account: login / register (phone + password), profile with role, logout.
+- Home: greeting, search bar, categories grid, latest news carousel, pull-to-refresh.
+- Search: searches firms in all categories while you type (waits 0.4 s after the last key).
+- Firms by category: count, search, call button on each card, loads more while scrolling.
+- Firm details: hero header, contact info, share, sticky Call / WhatsApp / Map bar
+  (Egyptian numbers converted to +20 for WhatsApp).
+- News list and article page with share.
+- Account: guest benefits + login / register, or profile header with role, about dialog,
+  logout with confirmation.
+- Login / register: checks the phone (11 digits, starts with 01), password length and match
+  before calling the server; show/hide password; keyboard "next" moves between fields.
 
 ## Next steps
 
 1. Firm owner area: subscription plans, payment request with screenshot, my firms (add / edit).
 2. Notifications screen (API already exists), then push notifications with FCM.
 3. Images for firms, categories and news (after the backend adds them).
-4. Bundle the Cairo font, enable R8 for release, app signing.
+4. Enable R8 for release, app signing, dark theme.

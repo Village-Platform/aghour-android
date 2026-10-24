@@ -23,6 +23,14 @@ interface AghourApi {
         @Query("per_page") perPage: Int = 20,
     ): ListResponse<FirmDto>
 
+    /** All visible firms, optionally filtered by name (used by the global search). */
+    @GET("firms")
+    suspend fun firms(
+        @Query("q") query: String? = null,
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+    ): ListResponse<FirmDto>
+
     @GET("firms/{id}")
     suspend fun firm(@Path("id") id: Long): ItemResponse<FirmDto>
 

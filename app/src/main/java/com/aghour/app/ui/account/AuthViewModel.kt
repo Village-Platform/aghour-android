@@ -1,7 +1,9 @@
 package com.aghour.app.ui.account
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aghour.app.R
 import com.aghour.app.data.remote.ApiResult
 import com.aghour.app.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,20 +19,53 @@ data class AuthFormState(
     val password: String = "",
     val passwordConfirmation: String = "",
     val submitting: Boolean = false,
+    /** Message from the server (already Arabic). */
     val error: String? = null,
+    /** Field errors found on the phone before calling the server. */
+    @StringRes val nameError: Int? = null,
+    @StringRes val phoneError: Int? = null,
+    @StringRes val passwordError: Int? = null,
+    @StringRes val confirmationError: Int? = null,
     val done: Boolean = false,
 )
+
+private val EgyptianMobile = Regex("^01[0125]\\d{8}$")
 
 /** Shared by the login and register screens. */
 class AuthViewModel(private val auth: AuthRepository) : ViewModel() {
     private val _state = MutableStateFlow(AuthFormState())
     val state: StateFlow<AuthFormState> = _state.asStateFlow()
 
-    fun update(transform: AuthFormState.() -> AuthFormState) = _state.update { it.transform().copy(error = null) }
+    /** Any edit clears the errors shown for the form. */
+    fun update(transform: AuthFormState.() -> AuthFormState) = _state.update {
+        it.transform().copy(error = null, nameError = null, phoneError = null, passwordError = null, confirmationError = null)
+    }
 
-    fun login() = submit { auth.login(it.phone, it.password) }
+    fun login() {
+        val s = _state.value
+        val phoneError = if (!EgyptianMobile.matches(s.phone.digitsOnly())) R.string.error_phone_invalid else null
+        val passwordError = if (s.password.isEmpty()) R.string.error_password_short else null
+        if (phoneError != null || passwordError != null) {
+            _state.update { it.copy(phoneError = phoneError, passwordError = passwordError) }
+            return
+        }
+        submit { auth.login(it.phone.digitsOnly(), it.password) }
+    }
 
-    fun register() = submit { auth.register(it.name, it.phone, it.email, it.password, it.passwordConfirmation) }
+    fun register() {
+        val s = _state.value
+        val nameError = if (s.name.isBlank()) R.string.error_name_required else null
+        val phoneError = if (!EgyptianMobile.matches(s.phone.digitsOnly())) R.string.error_phone_invalid else null
+        val passwordError = if (s.password.length < 8) R.string.error_password_short else null
+        val confirmationError = if (s.password != s.passwordConfirmation) R.string.error_password_mismatch else null
+        if (listOf(nameError, phoneError, passwordError, confirmationError).any { it != null }) {
+            _state.update {
+                it.copy(nameError = nameError, phoneError = phoneError, passwordError = passwordError, confirmationError = confirmationError)
+            }
+            return
+        }
+        submit { auth.register(it.name, it.phone.digitsOnly(), it.email, it.password, it.passwordConfirmation) }
+    }
 
     private fun submit(call: suspend (AuthFormState) -> ApiResult<*>) {
         if (_state.value.submitting) return
@@ -42,4 +77,6 @@ class AuthViewModel(private val auth: AuthRepository) : ViewModel() {
             }
         }
     }
+
+    private fun String.digitsOnly() = filter { it.isDigit() }
 }

@@ -2,10 +2,10 @@ package com.aghour.app.ui.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -17,24 +17,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -44,114 +42,128 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aghour.app.R
 import com.aghour.app.data.remote.ArticleDto
 import com.aghour.app.data.remote.CategoryDto
-import com.aghour.app.ui.components.LoadingBox
+import com.aghour.app.ui.components.BrandHeader
 import com.aghour.app.ui.components.MessageBox
-import com.aghour.app.ui.components.Pill
+import com.aghour.app.ui.components.NewsMeta
+import com.aghour.app.ui.components.SearchPill
 import com.aghour.app.ui.components.SectionTitle
 import com.aghour.app.ui.components.appContainer
-import com.aghour.app.ui.components.formatDate
-import com.aghour.app.ui.components.kindLabel
+import com.aghour.app.ui.components.brandCardColors
+import com.aghour.app.ui.components.brandCardElevation
+import com.aghour.app.ui.components.shimmer
+import com.aghour.app.ui.components.tileBackground
 import com.aghour.app.ui.theme.Cream
-import com.aghour.app.ui.theme.Gold100
 import com.aghour.app.ui.theme.Gold400
 import com.aghour.app.ui.theme.Green900
-import com.aghour.app.ui.theme.Green950
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onCategoryClick: (CategoryDto) -> Unit,
     onArticleClick: (ArticleDto) -> Unit,
     onSeeAllNews: () -> Unit,
+    onSearchClick: () -> Unit,
 ) {
     val container = appContainer()
     val vm: HomeViewModel = viewModel { HomeViewModel(container.catalog) }
     val state by vm.state.collectAsStateWithLifecycle()
+    val user by container.auth.currentUser.collectAsStateWithLifecycle()
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        item { HomeBanner() }
-
-        item { SectionTitle(stringResource(R.string.section_categories), Modifier.padding(horizontal = 16.dp)) }
-
-        when {
-            state.loading && state.categories.isEmpty() -> item { LoadingBox(Modifier.height(160.dp)) }
-
-            state.error != null && state.categories.isEmpty() -> item { MessageBox(state.error!!, onRetry = vm::load) }
-
-            state.categories.isEmpty() -> item { MessageBox(stringResource(R.string.no_categories)) }
-
-            // Rows of three tiles (simpler than nesting a grid inside a scrolling list).
-            else -> items(state.categories.chunked(3), key = { row -> row.first().id }) { row ->
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    row.forEach { category ->
-                        CategoryTile(category, Modifier.weight(1f), onClick = { onCategoryClick(category) })
-                    }
-                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
-                }
-            }
-        }
-
-        if (state.latestNews.isNotEmpty()) {
+    PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
             item {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    SectionTitle(stringResource(R.string.section_latest_news))
-                    TextButton(onClick = onSeeAllNews) { Text(stringResource(R.string.see_all)) }
+                HomeHeader(
+                    greeting = user?.name?.let { stringResource(R.string.greeting_user, it.substringBefore(' ')) }
+                        ?: stringResource(R.string.greeting_guest),
+                    onSearchClick = onSearchClick,
+                )
+            }
+
+            item { SectionTitle(stringResource(R.string.section_categories), Modifier.padding(horizontal = 20.dp)) }
+
+            when {
+                state.loading -> item { CategoriesSkeleton() }
+
+                state.error != null && state.categories.isEmpty() ->
+                    item { MessageBox(state.error!!, onRetry = { vm.load() }) }
+
+                state.categories.isEmpty() -> item { MessageBox(stringResource(R.string.no_categories)) }
+
+                // Rows of three tiles (simpler than nesting a grid inside a scrolling list).
+                else -> items(state.categories.chunked(3), key = { row -> row.first().id }) { row ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        row.forEach { category ->
+                            val index = state.categories.indexOf(category)
+                            CategoryTile(category, index, Modifier.weight(1f)) { onCategoryClick(category) }
+                        }
+                        repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
                 }
             }
-            items(state.latestNews, key = { "news-${it.id}" }) { article ->
-                NewsRow(article, onClick = { onArticleClick(article) })
+
+            if (state.latestNews.isNotEmpty()) {
+                item {
+                    Row(
+                        Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        SectionTitle(stringResource(R.string.section_latest_news))
+                        TextButton(onClick = onSeeAllNews) { Text(stringResource(R.string.see_all)) }
+                    }
+                }
+                item {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(state.latestNews, key = { it.id }) { article ->
+                            NewsCarouselCard(article) { onArticleClick(article) }
+                        }
+                    }
+                }
             }
         }
-
-        item { Spacer(Modifier.height(16.dp)) }
     }
 }
 
 @Composable
-private fun HomeBanner() {
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)),
-    ) {
-        Image(
-            painter = painterResource(R.drawable.brand_scene),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize(),
-        )
-        // Green gradient so the text stays readable on the photo.
-        Box(
-            Modifier
-                .matchParentSize()
-                .background(Brush.verticalGradient(listOf(Green900.copy(alpha = 0.55f), Green950.copy(alpha = 0.95f)))),
-        )
+private fun HomeHeader(greeting: String, onSearchClick: () -> Unit) {
+    BrandHeader {
         Column(
-            Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 20.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 24.dp),
         ) {
-            Image(
-                painter = painterResource(R.drawable.brand_mark_light),
-                contentDescription = null,
-                modifier = Modifier.size(84.dp),
-            )
-            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(R.drawable.brand_mark_light),
+                    contentDescription = null,
+                    modifier = Modifier.size(44.dp),
+                )
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text(stringResource(R.string.app_name), color = Cream, style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.tagline), color = Gold400, style = MaterialTheme.typography.labelMedium)
+                }
+            }
+            Spacer(Modifier.height(22.dp))
+            Text(greeting, color = Cream, style = MaterialTheme.typography.headlineSmall)
             Text(
-                stringResource(R.string.app_name),
-                color = Cream,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
+                stringResource(R.string.home_subtitle),
+                color = Cream.copy(alpha = 0.8f),
+                style = MaterialTheme.typography.bodyMedium,
             )
-            Text(stringResource(R.string.tagline), color = Gold400, style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(16.dp))
+            SearchPill(stringResource(R.string.search_hint), onClick = onSearchClick)
         }
     }
 }
@@ -166,16 +178,17 @@ private fun categorySymbol(category: CategoryDto): String = when (category.icon?
     "school", "education" -> "🏫"
     "bakery" -> "🥖"
     "car", "transport" -> "🚗"
-    else -> category.name.take(1)
+    else -> category.name.trim().take(1)
 }
 
 @Composable
-private fun CategoryTile(category: CategoryDto, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun CategoryTile(category: CategoryDto, index: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = modifier.aspectRatio(0.95f),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = modifier.aspectRatio(0.92f),
+        shape = RoundedCornerShape(20.dp),
+        colors = brandCardColors(),
+        elevation = brandCardElevation(),
     ) {
         Column(
             Modifier.fillMaxSize().padding(10.dp),
@@ -183,53 +196,58 @@ private fun CategoryTile(category: CategoryDto, modifier: Modifier = Modifier, o
             verticalArrangement = Arrangement.Center,
         ) {
             Box(
-                Modifier.size(52.dp).clip(CircleShape).background(Gold100),
+                Modifier.size(58.dp).clip(RoundedCornerShape(18.dp)).background(tileBackground(index)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(categorySymbol(category), fontSize = 24.sp, color = Green900, fontWeight = FontWeight.Bold)
+                Text(categorySymbol(category), fontSize = 26.sp, color = Green900, style = MaterialTheme.typography.titleLarge)
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(10.dp))
             Text(
                 category.name,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.titleSmall,
             )
         }
     }
 }
 
 @Composable
-fun NewsRow(article: ArticleDto, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp).clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-    ) {
-        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.Top) {
-            Box(
-                Modifier.width(4.dp).height(48.dp).clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colorScheme.secondary),
-            )
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Pill(kindLabel(article.kind), MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.width(8.dp))
-                    Text(formatDate(article.publishedAt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun CategoriesSkeleton() {
+    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        repeat(2) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                repeat(3) {
+                    Box(Modifier.weight(1f).aspectRatio(0.92f).clip(RoundedCornerShape(20.dp)).shimmer())
                 }
-                Spacer(Modifier.height(6.dp))
-                Text(article.title, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(
-                    article.body,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }
 }
+
+@Composable
+private fun NewsCarouselCard(article: ArticleDto, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.width(280.dp).height(150.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = brandCardColors(),
+        elevation = brandCardElevation(),
+    ) {
+        Column(Modifier.fillMaxSize().padding(16.dp)) {
+            NewsMeta(article)
+            Spacer(Modifier.height(8.dp))
+            Text(article.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                article.body,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+

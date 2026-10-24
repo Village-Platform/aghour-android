@@ -15,13 +15,15 @@ import kotlinx.coroutines.launch
 data class FirmsUiState(
     val query: String = "",
     val firms: List<FirmDto> = emptyList(),
+    val total: Int = 0,
     val page: Int = 0,
     val totalPages: Int = 1,
     val loading: Boolean = true,
+    val refreshing: Boolean = false,
     val loadingMore: Boolean = false,
     val error: String? = null,
 ) {
-    val canLoadMore: Boolean get() = page < totalPages && !loading && !loadingMore
+    val canLoadMore: Boolean get() = page < totalPages && !loading && !loadingMore && !refreshing
 }
 
 /** Firms of one category, with search and "load more" pagination (uses the API's page meta). */
@@ -35,14 +37,22 @@ class FirmsViewModel(
     private var job: Job? = null
 
     init {
-        refresh()
+        reload()
     }
 
     fun onQueryChange(query: String) = _state.update { it.copy(query = query) }
 
-    fun refresh() {
+    /** New search: show skeletons. */
+    fun reload() {
         job?.cancel()
         _state.update { it.copy(loading = true, error = null, firms = emptyList(), page = 0, totalPages = 1) }
+        job = viewModelScope.launch { loadPage(1) }
+    }
+
+    /** Pull-to-refresh: keep the list on screen while reloading. */
+    fun refresh() {
+        job?.cancel()
+        _state.update { it.copy(refreshing = true, error = null) }
         job = viewModelScope.launch { loadPage(1) }
     }
 
@@ -58,13 +68,17 @@ class FirmsViewModel(
             is ApiResult.Success -> _state.update {
                 it.copy(
                     firms = if (page == 1) result.data.data else it.firms + result.data.data,
+                    total = result.data.meta.total,
                     page = result.data.meta.page,
                     totalPages = result.data.meta.totalPages,
                     loading = false,
+                    refreshing = false,
                     loadingMore = false,
                 )
             }
-            is ApiResult.Failure -> _state.update { it.copy(error = result.message, loading = false, loadingMore = false) }
+            is ApiResult.Failure -> _state.update {
+                it.copy(error = result.message, loading = false, refreshing = false, loadingMore = false)
+            }
         }
     }
 }

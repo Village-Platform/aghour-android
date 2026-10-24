@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 
 data class HomeUiState(
     val loading: Boolean = true,
+    val refreshing: Boolean = false,
     val categories: List<CategoryDto> = emptyList(),
     val latestNews: List<ArticleDto> = emptyList(),
     val error: String? = null,
@@ -29,8 +30,9 @@ class HomeViewModel(private val catalog: CatalogRepository) : ViewModel() {
         load()
     }
 
-    fun load() {
-        _state.update { it.copy(loading = true, error = null) }
+    /** First load shows skeletons; pull-to-refresh keeps the current content visible. */
+    fun load(refresh: Boolean = false) {
+        _state.update { it.copy(loading = !refresh, refreshing = refresh, error = null) }
         viewModelScope.launch {
             val categories = async { catalog.categories() }
             val news = async { catalog.articles(page = 1, perPage = 5) }
@@ -43,7 +45,9 @@ class HomeViewModel(private val catalog: CatalogRepository) : ViewModel() {
             (news.await() as? ApiResult.Success)?.let { result ->
                 _state.update { it.copy(latestNews = result.data.data) }
             }
-            _state.update { it.copy(loading = false) }
+            _state.update { it.copy(loading = false, refreshing = false) }
         }
     }
+
+    fun refresh() = load(refresh = true)
 }

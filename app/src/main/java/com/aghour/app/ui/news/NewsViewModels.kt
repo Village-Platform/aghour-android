@@ -16,10 +16,11 @@ data class NewsUiState(
     val page: Int = 0,
     val totalPages: Int = 1,
     val loading: Boolean = true,
+    val refreshing: Boolean = false,
     val loadingMore: Boolean = false,
     val error: String? = null,
 ) {
-    val canLoadMore: Boolean get() = page < totalPages && !loading && !loadingMore
+    val canLoadMore: Boolean get() = page < totalPages && !loading && !loadingMore && !refreshing
 }
 
 class NewsViewModel(private val catalog: CatalogRepository) : ViewModel() {
@@ -27,11 +28,16 @@ class NewsViewModel(private val catalog: CatalogRepository) : ViewModel() {
     val state: StateFlow<NewsUiState> = _state.asStateFlow()
 
     init {
-        refresh()
+        reload()
+    }
+
+    fun reload() {
+        _state.value = NewsUiState(loading = true)
+        viewModelScope.launch { loadPage(1) }
     }
 
     fun refresh() {
-        _state.value = NewsUiState(loading = true)
+        _state.update { it.copy(refreshing = true, error = null) }
         viewModelScope.launch { loadPage(1) }
     }
 
@@ -50,10 +56,13 @@ class NewsViewModel(private val catalog: CatalogRepository) : ViewModel() {
                     page = result.data.meta.page,
                     totalPages = result.data.meta.totalPages,
                     loading = false,
+                    refreshing = false,
                     loadingMore = false,
                 )
             }
-            is ApiResult.Failure -> _state.update { it.copy(error = result.message, loading = false, loadingMore = false) }
+            is ApiResult.Failure -> _state.update {
+                it.copy(error = result.message, loading = false, refreshing = false, loadingMore = false)
+            }
         }
     }
 }
