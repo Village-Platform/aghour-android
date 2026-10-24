@@ -62,6 +62,9 @@ fun categorySymbol(icon: String?, name: String): String = when (icon?.lowercase(
     "school", "education" -> "🎓"
     "bakery" -> "🥖"
     "car", "transport" -> "🚗"
+    "mosque" -> "🕌"
+    "sports", "gym" -> "⚽"
+    "services", "government" -> "🏛️"
     else -> name.trim().take(1)
 }
 
