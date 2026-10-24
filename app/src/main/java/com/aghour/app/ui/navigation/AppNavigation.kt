@@ -1,5 +1,11 @@
 package com.aghour.app.ui.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
@@ -36,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -103,7 +110,6 @@ private val tabs = listOf(
 fun AppNavigation() {
     val container = appContainer()
     val welcomeDone by container.session.welcomeDone.collectAsStateWithLifecycle()
-    val user by container.auth.currentUser.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     // Welcome is shown once, on top of the app (not part of the back stack, so Home stays the
@@ -115,25 +121,34 @@ fun AppNavigation() {
         val done = welcomeDone ?: return Box(Modifier.fillMaxSize())
         showWelcome = !done
     }
-    if (showWelcome == true) {
-        WelcomeScreen(
-            onStart = {
-                scope.launch { container.session.setWelcomeDone() }
-                showWelcome = false
-            },
-            onLogin = {
-                scope.launch { container.session.setWelcomeDone() }
-                openLoginAfterWelcome = true
-                showWelcome = false
-            },
-        )
-        return
+    // Soft cross-fade from the welcome artwork into the app.
+    Crossfade(targetState = showWelcome == true, animationSpec = tween(450), label = "welcome") { welcome ->
+        if (welcome) {
+            WelcomeScreen(
+                onStart = {
+                    scope.launch { container.session.setWelcomeDone() }
+                    showWelcome = false
+                },
+                onLogin = {
+                    scope.launch { container.session.setWelcomeDone() }
+                    openLoginAfterWelcome = true
+                    showWelcome = false
+                },
+            )
+        } else {
+            MainNavigation(openLogin = openLoginAfterWelcome, onLoginOpened = { openLoginAfterWelcome = false })
+        }
     }
+}
 
+@Composable
+private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
+    val container = appContainer()
+    val user by container.auth.currentUser.collectAsStateWithLifecycle()
     val nav = rememberNavController()
-    LaunchedEffect(openLoginAfterWelcome) {
-        if (openLoginAfterWelcome) {
-            openLoginAfterWelcome = false
+    LaunchedEffect(openLogin) {
+        if (openLogin) {
+            onLoginOpened()
             nav.navigate(LoginRoute)
         }
     }
@@ -173,10 +188,12 @@ fun AppNavigation() {
             navController = nav,
             startDestination = HomeRoute,
             modifier = Modifier.padding(bottom).consumeWindowInsets(bottom),
-            enterTransition = { fadeIn(tween(220)) },
-            exitTransition = { fadeOut(tween(180)) },
-            popEnterTransition = { fadeIn(tween(220)) },
-            popExitTransition = { fadeOut(tween(180)) },
+            // Tabs cross-fade; pushed screens slide in from the reading side (right-to-left aware) and
+            // slide back on Back. Short distance + fade = smooth, no full-width jumps.
+            enterTransition = { if (isTabSwitch()) fadeIn(tween(TAB_MS)) else pushEnter() },
+            exitTransition = { if (isTabSwitch()) fadeOut(tween(TAB_MS)) else pushExit() },
+            popEnterTransition = { if (isTabSwitch()) fadeIn(tween(TAB_MS)) else popEnter() },
+            popExitTransition = { if (isTabSwitch()) fadeOut(tween(TAB_MS)) else popExit() },
         ) {
             // ---- Auth ----
             composable<LoginRoute> {
@@ -290,3 +307,24 @@ private fun NavHostController.afterAuth() {
         navigate(HomeRoute)
     }
 }
+
+// ---- Transitions ----
+
+private const val NAV_MS = 320
+private const val TAB_MS = 220
+private val navEasing = FastOutSlowInEasing
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.isTabSwitch(): Boolean =
+    tabs.any { it.matches(initialState.destination) } && tabs.any { it.matches(targetState.destination) }
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.pushEnter(): EnterTransition =
+    slideIntoContainer(SlideDirection.Start, tween(NAV_MS, easing = navEasing)) { it / 4 } + fadeIn(tween(NAV_MS))
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.pushExit(): ExitTransition =
+    slideOutOfContainer(SlideDirection.Start, tween(NAV_MS, easing = navEasing)) { it / 8 } + fadeOut(tween(NAV_MS / 2))
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.popEnter(): EnterTransition =
+    slideIntoContainer(SlideDirection.End, tween(NAV_MS, easing = navEasing)) { it / 8 } + fadeIn(tween(NAV_MS))
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.popExit(): ExitTransition =
+    slideOutOfContainer(SlideDirection.End, tween(NAV_MS, easing = navEasing)) { it / 4 } + fadeOut(tween(NAV_MS / 2))

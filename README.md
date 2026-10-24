@@ -63,6 +63,7 @@ The UI follows `ajhour_screens.html` (the screen designs):
 
 - Palette: forest `#0B3727`, gold `#C28D40`, cream `#FAF5EC`, sand `#E6DCC6` (`ui/theme/Theme.kt`).
 - Font: Cairo, bundled as one variable font (`res/font/cairo.ttf`, SIL Open Font License in `licenses/`).
+- Welcome screen text and "ابدأ الآن" button use Tajawal (`res/font/tajawal_*.ttf`, SIL Open Font License).
 - Dark screens (Home, Profile, Login, details) use `SheetLayout`: forest or photo header, then a cream
   sheet with rounded top corners. Light screens (Explore, News, Plans, Pay) use `ScreenTitle`.
   The status-bar icon color follows the screen.
@@ -82,6 +83,10 @@ The UI follows `ajhour_screens.html` (the screen designs):
 - `nav.go()` / `nav.back()` ignore taps while a screen is still animating, so double taps cannot
   open a screen twice and fast Back presses cannot leave an empty page.
 - Choosing a category on Home opens the Explore tab with that category selected.
+- Motion: tabs cross-fade; pushed screens slide a short distance from the reading side (right-to-left
+  aware) with a fade, and slide back on Back (320 ms, ease-out). Welcome cross-fades into the app.
+- Predictive back is enabled (`android:enableOnBackInvokedCallback`), so the back gesture previews
+  the previous screen on Android 14+.
 
 ## Screens
 

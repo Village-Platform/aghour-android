@@ -20,6 +20,15 @@ val Cairo = FontFamily(
     Font(R.font.cairo, FontWeight.ExtraBold),
 )
 
+/**
+ * Tajawal (SIL Open Font License, see licenses/Tajawal-OFL.txt) — a rounder display face used for
+ * the welcome screen call-to-action, to stand apart from the Cairo body text.
+ */
+val Tajawal = FontFamily(
+    Font(R.font.tajawal_bold, FontWeight.Bold),
+    Font(R.font.tajawal_extrabold, FontWeight.ExtraBold),
+)
+
 private val base = Typography()
 private fun TextStyle.cairo(weight: FontWeight? = null) =
     copy(fontFamily = Cairo, fontWeight = weight ?: fontWeight)

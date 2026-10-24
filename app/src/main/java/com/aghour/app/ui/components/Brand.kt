@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -295,6 +296,7 @@ fun GoldButton(
     modifier: Modifier = Modifier,
     loading: Boolean = false,
     enabled: Boolean = true,
+    fontFamily: FontFamily? = null,
 ) {
     Button(
         onClick = onClick,
@@ -311,7 +313,12 @@ fun GoldButton(
         if (loading) {
             CircularProgressIndicator(Modifier.size(22.dp), color = Forest, strokeWidth = 2.dp)
         } else {
-            Text(text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(
+                text,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                fontFamily = fontFamily ?: MaterialTheme.typography.titleSmall.fontFamily,
+            )
         }
     }
 }

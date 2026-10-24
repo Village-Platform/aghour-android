@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.aghour.app.R
@@ -27,6 +28,7 @@ import com.aghour.app.ui.components.StatusBarIcons
 import com.aghour.app.ui.theme.Cream
 import com.aghour.app.ui.theme.Forest
 import com.aghour.app.ui.theme.Gold
+import com.aghour.app.ui.theme.Tajawal
 
 /** First launch only: the splash artwork with a "start" button between the logo and the village skyline. */
 @Composable
@@ -50,13 +52,15 @@ fun WelcomeScreen(onStart: () -> Unit, onLogin: () -> Unit) {
             Text(
                 stringResource(R.string.welcome_title),
                 color = Cream.copy(alpha = 0.92f),
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleMedium,
+                fontFamily = Tajawal,
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(14.dp))
-            GoldButton(stringResource(R.string.start_now), onStart)
+            GoldButton(stringResource(R.string.start_now), onStart, fontFamily = Tajawal, modifier = Modifier.height(54.dp))
             TextButton(onClick = onLogin) {
-                Text(stringResource(R.string.have_account_login), color = Gold)
+                Text(stringResource(R.string.have_account_login), color = Gold, fontFamily = Tajawal, fontWeight = FontWeight.Bold)
             }
         }
     }
