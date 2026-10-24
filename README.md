@@ -66,9 +66,13 @@ The UI follows `ajhour_screens.html` (the screen designs):
 - Dark screens (Home, Profile, Login, details) use `SheetLayout`: forest or photo header, then a cream
   sheet with rounded top corners. Light screens (Explore, News, Plans, Pay) use `ScreenTitle`.
   The status-bar icon color follows the screen.
-- Logos come from the design file (`logo_cream` / `logo_green`, `mark_cream` / `mark_green`).
-  The welcome artwork and the home cover banner are made from the high-resolution originals in
-  `village-platform/public/brand`. Launcher and splash icons use the cream mark on forest.
+- Logos and icons are generated from the high-resolution original `village-platform/public/brand/logo.png`
+  (1254 px): faint edge noise removed, the symbol separated from the name, and the green parts recolored
+  to cream for dark backgrounds — `logo_cream` / `logo_green` (640 px), `mark_cream` / `mark_green` (512 px).
+- App icon: adaptive icon with the cream symbol on forest (`ic_launcher_foreground`, inside the 66dp safe
+  zone), a white `ic_launcher_monochrome` layer for Android 13+ themed icons, and a 512 px
+  `app/src/main/ic_launcher-playstore.png` for the Play Store listing. The splash uses the same symbol.
+- The welcome artwork and the home cover banner are made from the originals in `village-platform/public/brand`.
 
 ## Navigation
 
