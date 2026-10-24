@@ -6,6 +6,8 @@ import com.aghour.app.data.remote.AghourApi
 import com.aghour.app.data.remote.AuthInterceptor
 import com.aghour.app.data.repository.AuthRepository
 import com.aghour.app.data.repository.CatalogRepository
+import com.aghour.app.data.repository.OwnerRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 import com.aghour.app.data.session.SessionStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,4 +57,8 @@ class AppContainer(context: Context) {
 
     val catalog = CatalogRepository(api, json)
     val auth = AuthRepository(api, session, json)
+    val owner = OwnerRepository(api, json)
+
+    /** Category chosen on Home; the Explore tab reads it (tabs keep their own state otherwise). */
+    val exploreCategory = MutableStateFlow<Long?>(null)
 }

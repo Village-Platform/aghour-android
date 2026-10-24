@@ -12,6 +12,10 @@ data class ListResponse<T>(val data: List<T>, val meta: PageMeta)
 @Serializable
 data class ItemResponse<T>(val data: T)
 
+/** Lists that are not paginated (no meta), e.g. payment methods. */
+@Serializable
+data class DataList<T>(val data: List<T>)
+
 @Serializable
 data class PageMeta(
     val page: Int,
@@ -84,6 +88,55 @@ data class UserDto(
 @Serializable
 data class AuthPayload(val token: String, val user: UserDto)
 
+@Serializable
+data class SubscriptionPlanDto(
+    val id: Long,
+    val name: String,
+    val description: String? = null,
+    @SerialName("price_cents") val priceCents: Int,
+    @SerialName("duration_days") val durationDays: Int,
+    @SerialName("max_firms") val maxFirms: Int,
+    val position: Int = 0,
+)
+
+@Serializable
+data class PaymentMethodDto(val key: String, val name: String, val account: String? = null)
+
+@Serializable
+data class PlanRefDto(
+    val id: Long,
+    val name: String,
+    @SerialName("duration_days") val durationDays: Int,
+    @SerialName("max_firms") val maxFirms: Int,
+)
+
+@Serializable
+data class SubscriptionDto(
+    val id: Long,
+    val status: String,
+    /** pending / rejected / scheduled / current / expired */
+    val state: String,
+    val plan: PlanRefDto,
+    @SerialName("payment_method") val paymentMethod: String,
+    @SerialName("amount_cents") val amountCents: Int,
+    @SerialName("transaction_reference") val transactionReference: String,
+    @SerialName("days_left") val daysLeft: Int? = null,
+    @SerialName("starts_at") val startsAt: String? = null,
+    @SerialName("ends_at") val endsAt: String? = null,
+    @SerialName("rejection_reason") val rejectionReason: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+)
+
+@Serializable
+data class NotificationDto(
+    val id: Long,
+    val kind: String,
+    val title: String,
+    val body: String,
+    val read: Boolean,
+    @SerialName("created_at") val createdAt: String? = null,
+)
+
 // ---- Requests ----
 
 @Serializable
@@ -97,6 +150,26 @@ data class RegisterUser(
     val name: String,
     val phone: String,
     val email: String? = null,
+    val password: String,
+    @SerialName("password_confirmation") val passwordConfirmation: String,
+)
+
+@Serializable
+data class CreateSubscriptionRequest(val subscription: NewSubscription)
+
+@Serializable
+data class NewSubscription(
+    @SerialName("subscription_plan_id") val planId: Long,
+    @SerialName("payment_method") val paymentMethod: String,
+    @SerialName("transaction_reference") val transactionReference: String,
+    @SerialName("payer_phone") val payerPhone: String? = null,
+)
+
+@Serializable
+data class UpdateMeRequest(val user: UpdateMeUser)
+
+@Serializable
+data class UpdateMeUser(
     val password: String,
     @SerialName("password_confirmation") val passwordConfirmation: String,
 )

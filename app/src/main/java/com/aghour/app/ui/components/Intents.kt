@@ -28,3 +28,8 @@ fun Context.openMap(lat: Double, lng: Double, label: String) =
 
 fun Context.shareText(text: String) =
     startSafely(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), null))
+
+fun Context.copyToClipboard(label: String, text: String) {
+    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+    clipboard.setPrimaryClip(android.content.ClipData.newPlainText(label, text))
+}

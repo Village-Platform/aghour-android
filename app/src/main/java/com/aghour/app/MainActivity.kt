@@ -14,15 +14,17 @@ import com.aghour.app.ui.theme.AghourTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen() // must be called before super.onCreate
+        val splash = installSplashScreen() // must be called before super.onCreate
         super.onCreate(savedInstanceState)
-        // Every screen starts with the green brand header, so status bar icons are light.
+        val container = (application as AghourApp).container
+        // Keep the splash until we know whether to show the welcome screen (read from DataStore).
+        splash.setKeepOnScreenCondition { container.session.welcomeDone.value == null }
+        // Screens switch the status-bar icon color themselves (light on forest, dark on cream).
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
 
-        val container = (application as AghourApp).container
         setContent {
             CompositionLocalProvider(LocalAppContainer provides container) {
                 AghourTheme { AppNavigation() }

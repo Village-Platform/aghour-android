@@ -1,28 +1,46 @@
 package com.aghour.app.ui.navigation
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -32,135 +50,243 @@ import com.aghour.app.R
 import com.aghour.app.ui.account.AccountScreen
 import com.aghour.app.ui.account.LoginScreen
 import com.aghour.app.ui.account.RegisterScreen
+import com.aghour.app.ui.components.appContainer
+import com.aghour.app.ui.explore.ExploreScreen
 import com.aghour.app.ui.firms.FirmDetailScreen
-import com.aghour.app.ui.firms.FirmsScreen
 import com.aghour.app.ui.home.HomeScreen
 import com.aghour.app.ui.news.ArticleScreen
 import com.aghour.app.ui.news.NewsScreen
-import com.aghour.app.ui.search.SearchScreen
-import com.aghour.app.ui.theme.Gold100
-import com.aghour.app.ui.theme.Green900
-import com.aghour.app.ui.theme.Muted
-import androidx.compose.ui.unit.dp
+import com.aghour.app.ui.owner.ChangePasswordScreen
+import com.aghour.app.ui.owner.MyFirmsScreen
+import com.aghour.app.ui.owner.NotificationsScreen
+import com.aghour.app.ui.owner.PaymentsScreen
+import com.aghour.app.ui.owner.PayScreen
+import com.aghour.app.ui.owner.PlansScreen
+import com.aghour.app.ui.theme.Cream
+import com.aghour.app.ui.theme.Forest
+import com.aghour.app.ui.theme.Gold
+import com.aghour.app.ui.theme.Sand
+import com.aghour.app.ui.welcome.WelcomeScreen
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 // ---- Type-safe routes ----
-@Serializable data object HomeRoute
-@Serializable data object NewsRoute
-@Serializable data object AccountRoute
 @Serializable data object LoginRoute
 @Serializable data object RegisterRoute
-@Serializable data object SearchRoute
-@Serializable data class FirmsRoute(val categoryId: Long, val categoryName: String)
+
+// Bottom-bar tabs
+@Serializable data object HomeRoute
+@Serializable data object ExploreRoute
+@Serializable data object NewsRoute
+@Serializable data object AccountRoute
+
+// Pushed screens
 @Serializable data class FirmRoute(val firmId: Long)
 @Serializable data class ArticleRoute(val articleId: Long)
+@Serializable data object PlansRoute
+@Serializable data class PayRoute(val planId: Long)
+@Serializable data object PaymentsRoute
+@Serializable data object NotificationsRoute
+@Serializable data object ChangePasswordRoute
+@Serializable data object MyFirmsRoute
 
-private data class Tab(
-    val route: Any,
-    val labelRes: Int,
-    val icon: ImageVector,
-    val matches: (NavDestination) -> Boolean,
-)
+private data class Tab(val route: Any, val labelRes: Int, val icon: ImageVector, val matches: (NavDestination) -> Boolean)
 
 private val tabs = listOf(
     Tab(HomeRoute, R.string.tab_home, Icons.Filled.Home) { it.hasRoute<HomeRoute>() },
+    Tab(ExploreRoute, R.string.tab_explore, Icons.Filled.Search) { it.hasRoute<ExploreRoute>() },
     Tab(NewsRoute, R.string.tab_news, Icons.AutoMirrored.Filled.List) { it.hasRoute<NewsRoute>() },
     Tab(AccountRoute, R.string.tab_account, Icons.Filled.Person) { it.hasRoute<AccountRoute>() },
 )
 
 @Composable
 fun AppNavigation() {
+    val container = appContainer()
+    val welcomeDone by container.session.welcomeDone.collectAsStateWithLifecycle()
+    val user by container.auth.currentUser.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+
+    // Welcome is shown once, on top of the app (not part of the back stack, so Home stays the
+    // start destination and the bottom tabs always pop back to it correctly).
+    // The splash screen stays up until the flag is read from disk.
+    var showWelcome by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var openLoginAfterWelcome by rememberSaveable { mutableStateOf(false) }
+    if (showWelcome == null) {
+        val done = welcomeDone ?: return Box(Modifier.fillMaxSize())
+        showWelcome = !done
+    }
+    if (showWelcome == true) {
+        WelcomeScreen(
+            onStart = {
+                scope.launch { container.session.setWelcomeDone() }
+                showWelcome = false
+            },
+            onLogin = {
+                scope.launch { container.session.setWelcomeDone() }
+                openLoginAfterWelcome = true
+                showWelcome = false
+            },
+        )
+        return
+    }
+
     val nav = rememberNavController()
+    LaunchedEffect(openLoginAfterWelcome) {
+        if (openLoginAfterWelcome) {
+            openLoginAfterWelcome = false
+            nav.navigate(LoginRoute)
+        }
+    }
     val backStack by nav.currentBackStackEntryAsState()
     val destination = backStack?.destination
-    val showBottomBar = destination != null && tabs.any { it.matches(destination) }
+    val currentTab = destination?.let { d -> tabs.firstOrNull { it.matches(d) } }
 
     Scaffold(
+        containerColor = Cream,
         bottomBar = {
-            if (showBottomBar) {
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
-                    tabs.forEach { tab ->
-                        NavigationBarItem(
-                            selected = destination != null && tab.matches(destination),
-                            onClick = { nav.navigateToTab(tab.route) },
-                            icon = { Icon(tab.icon, contentDescription = null) },
-                            label = { Text(stringResource(tab.labelRes)) },
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = Gold100,
-                                selectedIconColor = Green900,
-                                selectedTextColor = Green900,
-                                unselectedIconColor = Muted,
-                                unselectedTextColor = Muted,
-                            ),
-                        )
+            if (currentTab != null) {
+                Column {
+                    HorizontalDivider(color = Sand)
+                    NavigationBar(containerColor = Color.White, tonalElevation = 0.dp) {
+                        tabs.forEach { tab ->
+                            NavigationBarItem(
+                                selected = tab == currentTab,
+                                onClick = { nav.navigateToTab(tab.route) },
+                                icon = { Icon(tab.icon, contentDescription = null) },
+                                label = { Text(stringResource(tab.labelRes), fontWeight = FontWeight.SemiBold) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    indicatorColor = Gold.copy(alpha = 0.15f),
+                                    selectedIconColor = Forest,
+                                    selectedTextColor = Gold,
+                                    unselectedIconColor = Forest.copy(alpha = 0.4f),
+                                    unselectedTextColor = Forest.copy(alpha = 0.4f),
+                                ),
+                            )
+                        }
                     }
                 }
             }
         },
     ) { padding ->
+        val bottom = PaddingValues(bottom = padding.calculateBottomPadding())
         NavHost(
             navController = nav,
             startDestination = HomeRoute,
-            // Inner screens have their own top bars; only keep space for the bottom bar.
-            modifier = Modifier
-                .padding(bottom = padding.calculateBottomPadding())
-                .consumeWindowInsets(PaddingValues(bottom = padding.calculateBottomPadding())),
+            modifier = Modifier.padding(bottom).consumeWindowInsets(bottom),
+            enterTransition = { fadeIn(tween(220)) },
+            exitTransition = { fadeOut(tween(180)) },
+            popEnterTransition = { fadeIn(tween(220)) },
+            popExitTransition = { fadeOut(tween(180)) },
         ) {
-            composable<HomeRoute> {
-                HomeScreen(
-                    onCategoryClick = { nav.navigate(FirmsRoute(it.id, it.name)) },
-                    onArticleClick = { nav.navigate(ArticleRoute(it.id)) },
-                    onSeeAllNews = { nav.navigateToTab(NewsRoute) },
-                    onSearchClick = { nav.navigate(SearchRoute) },
-                )
-            }
-            composable<SearchRoute> {
-                SearchScreen(onBack = { nav.popBackStack() }, onFirmClick = { nav.navigate(FirmRoute(it.id)) })
-            }
-            composable<NewsRoute> {
-                NewsScreen(onArticleClick = { nav.navigate(ArticleRoute(it.id)) })
-            }
-            composable<AccountRoute> {
-                AccountScreen(onLogin = { nav.navigate(LoginRoute) }, onRegister = { nav.navigate(RegisterRoute) })
-            }
-            composable<FirmsRoute> { entry ->
-                val route = entry.toRoute<FirmsRoute>()
-                FirmsScreen(
-                    categoryId = route.categoryId,
-                    categoryName = route.categoryName,
-                    onBack = { nav.popBackStack() },
-                    onFirmClick = { nav.navigate(FirmRoute(it.id)) },
-                )
-            }
-            composable<FirmRoute> { entry ->
-                FirmDetailScreen(firmId = entry.toRoute<FirmRoute>().firmId, onBack = { nav.popBackStack() })
-            }
-            composable<ArticleRoute> { entry ->
-                ArticleScreen(articleId = entry.toRoute<ArticleRoute>().articleId, onBack = { nav.popBackStack() })
-            }
+            // ---- Auth ----
             composable<LoginRoute> {
                 LoginScreen(
-                    onBack = { nav.popBackStack() },
-                    onDone = { nav.popBackStack(AccountRoute, inclusive = false) },
-                    onGoToRegister = { nav.navigate(RegisterRoute) { popUpTo<LoginRoute> { inclusive = true } } },
+                    onBack = { nav.back() },
+                    onDone = { nav.afterAuth() },
+                    onGoToRegister = { nav.go(RegisterRoute) { popUpTo<LoginRoute> { inclusive = true } } },
                 )
             }
             composable<RegisterRoute> {
                 RegisterScreen(
-                    onBack = { nav.popBackStack() },
-                    onDone = { nav.popBackStack(AccountRoute, inclusive = false) },
-                    onGoToLogin = { nav.navigate(LoginRoute) { popUpTo<RegisterRoute> { inclusive = true } } },
+                    onBack = { nav.back() },
+                    onDone = { nav.afterAuth() },
+                    onGoToLogin = { nav.go(LoginRoute) { popUpTo<RegisterRoute> { inclusive = true } } },
                 )
             }
+
+            // ---- Tabs ----
+            composable<HomeRoute> {
+                HomeScreen(
+                    onCategoryClick = { category ->
+                        container.exploreCategory.value = category.id
+                        nav.navigateToTab(ExploreRoute)
+                    },
+                    onExplore = { nav.navigateToTab(ExploreRoute) },
+                    onFirmClick = { nav.go(FirmRoute(it.id)) },
+                    onArticleClick = { nav.go(ArticleRoute(it.id)) },
+                    onSeeAllNews = { nav.navigateToTab(NewsRoute) },
+                    onAddFirm = { nav.go(PlansRoute) },
+                )
+            }
+            composable<ExploreRoute> { ExploreScreen(onFirmClick = { nav.go(FirmRoute(it.id)) }) }
+            composable<NewsRoute> { NewsScreen(onArticleClick = { nav.go(ArticleRoute(it.id)) }) }
+            composable<AccountRoute> {
+                AccountScreen(
+                    onLogin = { nav.go(LoginRoute) },
+                    onRegister = { nav.go(RegisterRoute) },
+                    onPlans = { nav.go(PlansRoute) },
+                    onPayments = { nav.go(PaymentsRoute) },
+                    onNotifications = { nav.go(NotificationsRoute) },
+                    onChangePassword = { nav.go(ChangePasswordRoute) },
+                    onMyFirms = { nav.go(MyFirmsRoute) },
+                )
+            }
+
+            // ---- Details ----
+            composable<FirmRoute> { entry ->
+                FirmDetailScreen(firmId = entry.toRoute<FirmRoute>().firmId, onBack = { nav.back() })
+            }
+            composable<ArticleRoute> { entry ->
+                ArticleScreen(articleId = entry.toRoute<ArticleRoute>().articleId, onBack = { nav.back() })
+            }
+
+            // ---- Firm owners ----
+            composable<PlansRoute> {
+                PlansScreen(
+                    onBack = { nav.back() },
+                    // Paying needs an account: guests sign in first, then come back here.
+                    onSubscribe = { plan -> if (user == null) nav.go(LoginRoute) else nav.go(PayRoute(plan.id)) },
+                )
+            }
+            composable<PayRoute> { entry ->
+                PayScreen(
+                    planId = entry.toRoute<PayRoute>().planId,
+                    onBack = { nav.back() },
+                    onDone = { nav.go(PaymentsRoute) { popUpTo<PlansRoute> { inclusive = true } } },
+                )
+            }
+            composable<PaymentsRoute> { PaymentsScreen(onBack = { nav.back() }) }
+            composable<NotificationsRoute> { NotificationsScreen(onBack = { nav.back() }) }
+            composable<ChangePasswordRoute> { ChangePasswordScreen(onBack = { nav.back() }) }
+            composable<MyFirmsRoute> { MyFirmsScreen(onBack = { nav.back() }, onFirmClick = { nav.go(FirmRoute(it.id)) }) }
         }
     }
 }
 
-/** Standard bottom-navigation behaviour: one copy per tab, state restored when switching back. */
-private fun NavHostController.navigateToTab(route: Any) {
+// ---- Safe navigation ----
+//
+// Taps that arrive while a screen is still animating in/out (double taps, fast back presses)
+// used to push the same screen twice or pop the last screen and leave a blank page.
+// Only the screen that is fully visible (RESUMED) may navigate.
+
+private fun NavHostController.isIdle(): Boolean =
+    currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED
+
+/** Navigate once, ignoring repeated taps during transitions. */
+fun NavHostController.go(route: Any, builder: NavOptionsBuilder.() -> Unit = {}) {
+    if (isIdle()) navigate(route, builder)
+}
+
+/** Back that never empties the stack. */
+fun NavHostController.back() {
+    if (isIdle() && previousBackStackEntry != null) popBackStack()
+}
+
+/** Bottom-bar behaviour: one copy per tab, state restored when switching back, Back returns to Home. */
+fun NavHostController.navigateToTab(route: Any) {
+    if (!isIdle()) return
     navigate(route) {
         popUpTo(graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
         restoreState = true
+    }
+}
+
+/** After login/register: return to the screen that asked for it (Account, Plans, or Home). */
+private fun NavHostController.afterAuth() {
+    if (previousBackStackEntry != null) {
+        popBackStack()
+    } else {
+        navigate(HomeRoute)
     }
 }

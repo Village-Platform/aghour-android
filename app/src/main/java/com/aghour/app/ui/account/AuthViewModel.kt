@@ -13,7 +13,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class AuthFormState(
-    val name: String = "",
+    val firstName: String = "",
+    val lastName: String = "",
     val phone: String = "",
     val email: String = "",
     val password: String = "",
@@ -54,7 +55,7 @@ class AuthViewModel(private val auth: AuthRepository) : ViewModel() {
 
     fun register() {
         val s = _state.value
-        val nameError = if (s.name.isBlank()) R.string.error_name_required else null
+        val nameError = if (s.firstName.isBlank()) R.string.error_name_required else null
         val phoneError = if (!EgyptianMobile.matches(s.phone.digitsOnly())) R.string.error_phone_invalid else null
         val passwordError = if (s.password.length < 8) R.string.error_password_short else null
         val confirmationError = if (s.password != s.passwordConfirmation) R.string.error_password_mismatch else null
@@ -64,7 +65,8 @@ class AuthViewModel(private val auth: AuthRepository) : ViewModel() {
             }
             return
         }
-        submit { auth.register(it.name, it.phone.digitsOnly(), it.email, it.password, it.passwordConfirmation) }
+        val fullName = "${s.firstName.trim()} ${s.lastName.trim()}".trim()
+        submit { auth.register(fullName, it.phone.digitsOnly(), it.email, it.password, it.passwordConfirmation) }
     }
 
     private fun submit(call: suspend (AuthFormState) -> ApiResult<*>) {

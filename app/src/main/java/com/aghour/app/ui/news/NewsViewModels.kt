@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class NewsUiState(
+    val kind: String? = null,
     val articles: List<ArticleDto> = emptyList(),
     val page: Int = 0,
     val totalPages: Int = 1,
@@ -31,8 +32,15 @@ class NewsViewModel(private val catalog: CatalogRepository) : ViewModel() {
         reload()
     }
 
+    /** null = all kinds; "news", "announcement" or "article". */
+    fun selectKind(kind: String?) {
+        if (kind == _state.value.kind) return
+        _state.value = NewsUiState(kind = kind, loading = true)
+        viewModelScope.launch { loadPage(1) }
+    }
+
     fun reload() {
-        _state.value = NewsUiState(loading = true)
+        _state.value = NewsUiState(kind = _state.value.kind, loading = true)
         viewModelScope.launch { loadPage(1) }
     }
 
@@ -49,7 +57,7 @@ class NewsViewModel(private val catalog: CatalogRepository) : ViewModel() {
     }
 
     private suspend fun loadPage(page: Int) {
-        when (val result = catalog.articles(page)) {
+        when (val result = catalog.articles(page, kind = _state.value.kind)) {
             is ApiResult.Success -> _state.update {
                 it.copy(
                     articles = if (page == 1) result.data.data else it.articles + result.data.data,

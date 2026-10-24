@@ -1,6 +1,7 @@
 package com.aghour.app.data.session
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -28,6 +29,15 @@ class SessionStore(context: Context, private val json: Json, scope: CoroutineSco
         .map { prefs -> prefs[USER]?.let { runCatching { json.decodeFromString<UserDto>(it) }.getOrNull() } }
         .stateIn(scope, SharingStarted.Eagerly, null)
 
+    /** null while loading from disk, then true once the welcome screen was completed. */
+    val welcomeDone: StateFlow<Boolean?> = store.data
+        .map { it[WELCOME_DONE] ?: false }
+        .stateIn(scope, SharingStarted.Eagerly, null)
+
+    suspend fun setWelcomeDone() {
+        store.edit { it[WELCOME_DONE] = true }
+    }
+
     suspend fun save(token: String, user: UserDto) {
         store.edit {
             it[TOKEN] = token
@@ -39,12 +49,17 @@ class SessionStore(context: Context, private val json: Json, scope: CoroutineSco
         store.edit { it[USER] = json.encodeToString(UserDto.serializer(), user) }
     }
 
+    /** Signs out but keeps app preferences such as the welcome flag. */
     suspend fun clear() {
-        store.edit { it.clear() }
+        store.edit {
+            it.remove(TOKEN)
+            it.remove(USER)
+        }
     }
 
     private companion object {
         val TOKEN = stringPreferencesKey("token")
         val USER = stringPreferencesKey("user")
+        val WELCOME_DONE = booleanPreferencesKey("welcome_done")
     }
 }

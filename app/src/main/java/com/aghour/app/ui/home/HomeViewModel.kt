@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.aghour.app.data.remote.ApiResult
 import com.aghour.app.data.remote.ArticleDto
 import com.aghour.app.data.remote.CategoryDto
+import com.aghour.app.data.remote.FirmDto
 import com.aghour.app.data.repository.CatalogRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ data class HomeUiState(
     val loading: Boolean = true,
     val refreshing: Boolean = false,
     val categories: List<CategoryDto> = emptyList(),
+    val featuredFirms: List<FirmDto> = emptyList(),
     val latestNews: List<ArticleDto> = emptyList(),
     val error: String? = null,
 )
@@ -32,19 +34,19 @@ class HomeViewModel(private val catalog: CatalogRepository) : ViewModel() {
 
     /** First load shows skeletons; pull-to-refresh keeps the current content visible. */
     fun load(refresh: Boolean = false) {
-        _state.update { it.copy(loading = !refresh, refreshing = refresh, error = null) }
+        _state.update { it.copy(loading = !refresh && it.categories.isEmpty(), refreshing = refresh, error = null) }
         viewModelScope.launch {
             val categories = async { catalog.categories() }
-            val news = async { catalog.articles(page = 1, perPage = 5) }
+            val firms = async { catalog.firms(query = null, categoryId = null, page = 1, perPage = 4) }
+            val news = async { catalog.articles(page = 1, perPage = 3) }
 
             when (val result = categories.await()) {
                 is ApiResult.Success -> _state.update { it.copy(categories = result.data) }
                 is ApiResult.Failure -> _state.update { it.copy(error = result.message) }
             }
-            // News is a bonus section: if it fails, the home page still shows the categories.
-            (news.await() as? ApiResult.Success)?.let { result ->
-                _state.update { it.copy(latestNews = result.data.data) }
-            }
+            // Featured firms and news are bonus sections: the page still works if they fail.
+            (firms.await() as? ApiResult.Success)?.let { r -> _state.update { it.copy(featuredFirms = r.data.data) } }
+            (news.await() as? ApiResult.Success)?.let { r -> _state.update { it.copy(latestNews = r.data.data) } }
             _state.update { it.copy(loading = false, refreshing = false) }
         }
     }

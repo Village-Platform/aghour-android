@@ -1,5 +1,6 @@
 package com.aghour.app.ui.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.lightColorScheme
@@ -8,45 +9,45 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 
-// Brand colors (from the logo), same as the admin dashboard.
-val Green950 = Color(0xFF031F17)
-val Green900 = Color(0xFF053024)
-val Green800 = Color(0xFF0C3829)
-val Green700 = Color(0xFF13513C)
-val Green50 = Color(0xFFEEF6F1)
-val Gold500 = Color(0xFFC88E38)
-val Gold400 = Color(0xFFD9A654)
-val Gold100 = Color(0xFFF6E8CF)
-val Cream = Color(0xFFF6F1E4)
-val Paper = Color(0xFFFBF9F3)
-val Ink = Color(0xFF17241E)
-val Muted = Color(0xFF66756D)
+// Palette from the screen designs (ajhour_screens.html).
+val Forest = Color(0xFF0B3727)   // headers, primary buttons, icon tiles
+val Moss = Color(0xFF244638)     // secondary dark surface
+val Gold = Color(0xFFC28D40)     // call-to-action buttons, highlights
+val GoldDark = Color(0xFF8A6A2F) // gold text on light gold
+val Cream = Color(0xFFFAF5EC)    // screen background, text on dark
+val Sand = Color(0xFFE6DCC6)     // borders, dividers, inactive
+val Ink = Color(0xFF163226)      // body text
+val Muted = Color(0xFF6B7F75)    // secondary text (forest at ~55%)
+val Danger = Color(0xFFDC2626)
+val DangerSoft = Color(0xFFFEF2F2)
 
 private val LightColors = lightColorScheme(
-    primary = Green900,
+    primary = Forest,
     onPrimary = Cream,
-    primaryContainer = Green50,
-    onPrimaryContainer = Green900,
-    secondary = Gold500,
-    onSecondary = Green950,
-    secondaryContainer = Gold100,
-    onSecondaryContainer = Green950,
-    background = Paper,
+    primaryContainer = Forest.copy(alpha = 0.10f),
+    onPrimaryContainer = Forest,
+    secondary = Gold,
+    onSecondary = Forest,
+    secondaryContainer = Gold.copy(alpha = 0.15f),
+    onSecondaryContainer = GoldDark,
+    tertiary = Moss,
+    background = Cream,
     onBackground = Ink,
     surface = Color.White,
     onSurface = Ink,
-    surfaceVariant = Green50,
+    surfaceVariant = Cream,
     onSurfaceVariant = Muted,
-    outline = Color(0xFFD6D9D2),
-    outlineVariant = Color(0xFFE4E2D8),
     surfaceContainerLowest = Color.White,
-    surfaceContainerLow = Color(0xFFFDFCF8),
-    surfaceContainer = Paper,
-    surfaceContainerHigh = Color(0xFFF4F1E8),
-    error = Color(0xFFB42318),
+    surfaceContainerLow = Color.White,
+    surfaceContainer = Cream,
+    surfaceContainerHigh = Color.White,
+    surfaceContainerHighest = Color.White,
+    outline = Sand,
+    outlineVariant = Sand.copy(alpha = 0.6f),
+    error = Danger,
+    errorContainer = DangerSoft,
 )
 
 private val AppShapes = Shapes(
@@ -54,7 +55,7 @@ private val AppShapes = Shapes(
     small = RoundedCornerShape(12.dp),
     medium = RoundedCornerShape(16.dp),
     large = RoundedCornerShape(24.dp),
-    extraLarge = RoundedCornerShape(32.dp),
+    extraLarge = RoundedCornerShape(28.dp),
 )
 
 /** Arabic-first app: the layout is always right-to-left, whatever the phone language is. */

@@ -34,51 +34,70 @@ Debug builds allow plain HTTP (local Rails). Release builds are HTTPS-only.
 
 ```
 app/src/main/java/com/aghour/app/
-├── AghourApp.kt / MainActivity.kt   app start, splash, theme
-├── di/AppContainer.kt               creates the API client, session and repositories
+├── AghourApp.kt / MainActivity.kt   app start, splash (kept until the welcome flag is read)
+├── di/AppContainer.kt               API client, session, repositories, Explore category filter
 ├── data/
-│   ├── remote/   AghourApi (endpoints), Dtos (JSON models), ApiResult (Arabic error messages), AuthInterceptor
-│   ├── session/  SessionStore (token + user in DataStore)
-│   └── repository/ CatalogRepository (categories, firms, news), AuthRepository (login, register, me)
+│   ├── remote/      AghourApi (endpoints), Dtos, ApiResult (Arabic error messages), AuthInterceptor
+│   ├── session/     SessionStore (token, user, welcome flag in DataStore)
+│   └── repository/  CatalogRepository (categories, firms, news), AuthRepository (login, register,
+│                    me, password), OwnerRepository (plans, payment, subscriptions, my firms, notifications)
 └── ui/
-    ├── theme/       green & gold Material theme, forced right-to-left
-    ├── navigation/  routes + bottom bar (الرئيسية، الأخبار، حسابي)
-    ├── components/  brand header, cards, skeletons, search pill, intents (call, WhatsApp, map, share)
-    ├── home/        greeting, search bar, categories, latest news
-    ├── search/      search firms in all categories
-    ├── firms/       firms of a category (search + paging), firm details (call, WhatsApp, map)
-    ├── news/        news list and article
-    └── account/     profile, login, register
+    ├── theme/       palette from the designs (forest, gold, cream, sand), Cairo font, right-to-left
+    ├── components/  SheetLayout, ScreenTitle, chips, badges, buttons, form fields, cards, skeletons, intents
+    ├── navigation/  type-safe routes, bottom tabs, safe navigation helpers
+    ├── welcome/     first-launch screen (splash artwork + "ابدأ الآن")
+    ├── home/        greeting, search, category tiles, cover banner, featured firms, latest news
+    ├── explore/     all firms: search + category chips + paging
+    ├── firms/       firm details (photo header, call / location / WhatsApp, hours, about)
+    ├── news/        news with kind chips (featured first item) and article page
+    ├── account/     profile (subscription progress, menu), login, register
+    └── owner/       plans, payment (InstaPay / Vodafone Cash), payments history, notifications,
+                     my firms, change password
 ```
 
 Every screen = a `ViewModel` (state as `StateFlow`) + a `@Composable` that draws that state.
 
-## Brand and UI
+## Design
 
-- Colors from the logo: green `#053024`, gold `#C88E38`, cream `#F6F1E4` (`ui/theme/Theme.kt`).
+The UI follows `ajhour_screens.html` (the screen designs):
+
+- Palette: forest `#0B3727`, gold `#C28D40`, cream `#FAF5EC`, sand `#E6DCC6` (`ui/theme/Theme.kt`).
 - Font: Cairo, bundled as one variable font (`res/font/cairo.ttf`, SIL Open Font License in `licenses/`).
-- Every screen starts with the green brand header (`BrandHeader`): village photo on the main screens,
-  faint logo watermark, rounded bottom. Status bar icons are light on it.
-- Loading uses skeleton placeholders shaped like the real cards; lists support pull-to-refresh.
-- Images in `res/drawable-nodpi/` are generated from `aghour_services/public/brand` (logo, light logo mark,
-  village scene, launcher icon foreground, splash icon).
+- Dark screens (Home, Profile, Login, details) use `SheetLayout`: forest or photo header, then a cream
+  sheet with rounded top corners. Light screens (Explore, News, Plans, Pay) use `ScreenTitle`.
+  The status-bar icon color follows the screen.
+- Logos come from the design file (`logo_cream` / `logo_green`, `mark_cream` / `mark_green`).
+  The welcome artwork and the home cover banner are made from the high-resolution originals in
+  `village-platform/public/brand`. Launcher and splash icons use the cream mark on forest.
 
-## Screens in this version
+## Navigation
 
-- Home: greeting, search bar, categories grid, latest news carousel, pull-to-refresh.
-- Search: searches firms in all categories while you type (waits 0.4 s after the last key).
-- Firms by category: count, search, call button on each card, loads more while scrolling.
-- Firm details: hero header, contact info, share, sticky Call / WhatsApp / Map bar
-  (Egyptian numbers converted to +20 for WhatsApp).
-- News list and article page with share.
-- Account: guest benefits + login / register, or profile header with role, about dialog,
-  logout with confirmation.
-- Login / register: checks the phone (11 digits, starts with 01), password length and match
-  before calling the server; show/hide password; keyboard "next" moves between fields.
+- Bottom tabs: الرئيسية، استكشف، الأخبار، حسابي. Each tab keeps its state; Back from a tab returns to Home.
+- Welcome is shown once on first launch, on top of the app (not in the back stack).
+- Login/Register return to the screen that asked for them (e.g. Plans → Login → back to Plans).
+- `nav.go()` / `nav.back()` ignore taps while a screen is still animating, so double taps cannot
+  open a screen twice and fast Back presses cannot leave an empty page.
+- Choosing a category on Home opens the Explore tab with that category selected.
+
+## Screens
+
+| Screen | What it does |
+|--------|--------------|
+| Welcome | First launch: start, or go straight to login |
+| Login / Register | Phone + password; checks the phone (11 digits, 01…), password length and match |
+| Home | Greeting, search, categories, cover banner (→ plans), featured firms, latest news, pull-to-refresh |
+| Explore | Search while typing + category chips, results count, paging |
+| Firm | Photo header, share, call / location / WhatsApp tiles, hours, phone, address, about |
+| News | Kind chips (all, news, announcements, articles), featured first item, paging |
+| Plans | Plans from the API, middle one highlighted; guests are asked to log in first |
+| Pay | InstaPay / Vodafone Cash account with copy button, transfer reference → sends the request |
+| Profile | Subscription progress (days left) or "subscribe now", menu, logout with confirmation |
+| Payments / Notifications / My firms / Change password | From the profile menu |
 
 ## Next steps
 
-1. Firm owner area: subscription plans, payment request with screenshot, my firms (add / edit).
-2. Notifications screen (API already exists), then push notifications with FCM.
-3. Images for firms, categories and news (after the backend adds them).
-4. Enable R8 for release, app signing, dark theme.
+1. Owners: add / edit their firm from the app, attach the payment screenshot.
+2. Push notifications with FCM (the in-app notifications screen already works).
+3. Real photos for firms, categories and news (after the backend adds image uploads).
+4. Ratings and reviews (shown in the designs; needs a backend model first).
+5. Enable R8 for release, app signing, dark theme.

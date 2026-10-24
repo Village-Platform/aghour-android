@@ -5,6 +5,8 @@ import com.aghour.app.data.remote.ApiResult
 import com.aghour.app.data.remote.LoginRequest
 import com.aghour.app.data.remote.RegisterRequest
 import com.aghour.app.data.remote.RegisterUser
+import com.aghour.app.data.remote.UpdateMeRequest
+import com.aghour.app.data.remote.UpdateMeUser
 import com.aghour.app.data.remote.UserDto
 import com.aghour.app.data.remote.safeApiCall
 import com.aghour.app.data.session.SessionStore
@@ -61,6 +63,9 @@ class AuthRepository(
             }
             is ApiResult.Failure -> result
         }
+
+    suspend fun changePassword(password: String, confirmation: String): ApiResult<UserDto> =
+        safeApiCall(json) { api.updateMe(UpdateMeRequest(UpdateMeUser(password, confirmation))).data }
 
     suspend fun logout() = session.clear()
 }
