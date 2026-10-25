@@ -1,14 +1,14 @@
 # Aghour Android — أجهور الكبرى
 
 Native Android app for the village services platform. It talks to the Rails API in
-`../aghour_services` (`/api/v1`).
+`../village-platform` (`/api/v1`).
 
 ## Stack
 
 | Part | Choice |
 |------|--------|
 | Language / UI | Kotlin 2.4.21, Jetpack Compose (Material 3), right-to-left Arabic |
-| Build | Android Gradle Plugin 9.4.0 (built-in Kotlin), Gradle 9.8.2, JDK 17+ |
+| Build | Android Gradle Plugin 9.4.1 (built-in Kotlin), Gradle 9.8.2, JDK 17+ |
 | SDK | minSdk 26, targetSdk 36 (Google Play requirement), compileSdk 37 |
 | Networking | Retrofit 3 + OkHttp + kotlinx.serialization |
 | Navigation | Navigation Compose with type-safe routes |
@@ -19,7 +19,8 @@ Versions live in `gradle/libs.versions.toml`.
 
 ## Run it
 
-1. Start the backend: `cd ../aghour_services && bin/rails s -b 0.0.0.0`
+1. Start the backend: `cd ../village-platform && bin/rails s -b 0.0.0.0`
+   (defaults to port 3000; set `PORT` to use another one)
 2. Open this folder in Android Studio (File → Open) and let Gradle sync.
    If it asks to install SDK Platform 37 or build tools, accept.
 3. Pick the API address in `gradle.properties`:
@@ -59,7 +60,8 @@ Every screen = a `ViewModel` (state as `StateFlow`) + a `@Composable` that draws
 
 ## Design
 
-The UI follows `ajhour_screens.html` (the screen designs):
+The UI follows the screen designs in `ajhour_screens.html`, which is kept outside this repo
+(`~/Downloads/Village Platform/ajhour_screens.html`):
 
 - Palette: forest `#0B3727`, gold `#C28D40`, cream `#FAF5EC`, sand `#E6DCC6` (`ui/theme/Theme.kt`).
 - Font: Cairo, bundled as one variable font (`res/font/cairo.ttf`, SIL Open Font License in `licenses/`).
@@ -67,13 +69,13 @@ The UI follows `ajhour_screens.html` (the screen designs):
 - Dark screens (Home, Profile, Login, details) use `SheetLayout`: forest or photo header, then a cream
   sheet with rounded top corners. Light screens (Explore, News, Plans, Pay) use `ScreenTitle`.
   The status-bar icon color follows the screen.
-- Logos and icons are generated from the high-resolution original `village-platform/public/brand/logo.png`
+- Logos and icons are generated from the high-resolution original `../village-platform/public/brand/logo.png`
   (1254 px): faint edge noise removed, the symbol separated from the name, and the green parts recolored
   to cream for dark backgrounds — `logo_cream` / `logo_green` (640 px), `mark_cream` / `mark_green` (512 px).
 - App icon: adaptive icon with the cream symbol on forest (`ic_launcher_foreground`, inside the 66dp safe
   zone), a white `ic_launcher_monochrome` layer for Android 13+ themed icons, and a 512 px
   `app/src/main/ic_launcher-playstore.png` for the Play Store listing. The splash uses the same symbol.
-- The welcome artwork and the home cover banner are made from the originals in `village-platform/public/brand`.
+- The welcome artwork and the home cover banner are made from the originals in `../village-platform/public/brand`.
 
 ## Navigation
 
