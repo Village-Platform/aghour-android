@@ -51,7 +51,7 @@ import com.aghour.app.ui.components.MutedText
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.StatusBarIcons
 import com.aghour.app.ui.components.appContainer
-import com.aghour.app.ui.components.firmSymbol
+import com.aghour.app.ui.components.firmIcon
 import com.aghour.app.ui.theme.Aghour
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,7 +124,7 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(state.firms, key = { it.id }) { firm ->
-                        FirmRow(firm, onClick = { onFirmClick(firm) }, symbol = firmSymbol(firm, state.categories))
+                        FirmRow(firm, onClick = { onFirmClick(firm) }, icon = firmIcon(firm, state.categories))
                     }
                     if (state.loadingMore) {
                         item {

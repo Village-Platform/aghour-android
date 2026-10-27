@@ -2,11 +2,11 @@ package com.aghour.app.ui.components
 
 import android.app.Activity
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -37,6 +37,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -55,6 +57,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -192,15 +195,15 @@ fun MarkTile(size: Dp = 44.dp, corner: Dp = 12.dp) {
     }
 }
 
-/** Tinted rounded square with an emoji/letter (categories). */
+/** Tinted rounded square with a Material icon (categories). */
 @Composable
-fun SymbolTile(symbol: String, size: Dp = 48.dp) {
+fun IconTile(icon: ImageVector, size: Dp = 48.dp) {
     val c = Aghour.colors
     Box(
         Modifier.size(size).clip(RoundedCornerShape(size * 0.32f)).background(c.brand.copy(alpha = 0.10f)),
         contentAlignment = Alignment.Center,
     ) {
-        Text(symbol, fontSize = (size.value * 0.40f).sp, color = c.ink, fontWeight = FontWeight.Bold)
+        Icon(icon, contentDescription = null, tint = c.brand, modifier = Modifier.size(size * 0.5f))
     }
 }
 
@@ -219,7 +222,7 @@ fun LetterAvatar(text: String, size: Dp = 56.dp) {
 enum class BadgeTone { Green, Gold, Red, Gray }
 
 @Composable
-fun Badge(text: String, tone: BadgeTone = BadgeTone.Green, modifier: Modifier = Modifier) {
+fun Badge(text: String, tone: BadgeTone = BadgeTone.Green, modifier: Modifier = Modifier, icon: ImageVector? = null) {
     val c = Aghour.colors
     val (bg, fg) = when (tone) {
         BadgeTone.Green -> c.ok.copy(alpha = 0.12f) to c.ok
@@ -227,14 +230,16 @@ fun Badge(text: String, tone: BadgeTone = BadgeTone.Green, modifier: Modifier = 
         BadgeTone.Red -> c.bad.copy(alpha = 0.12f) to c.bad
         BadgeTone.Gray -> c.surface2 to c.muted
     }
-    Text(
-        text,
-        modifier = modifier.background(bg, RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 1.dp),
-        color = fg,
-        fontSize = 11.sp,
-        fontWeight = FontWeight.SemiBold,
-        maxLines = 1,
-    )
+    Row(
+        modifier.background(bg, RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 1.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) {
+            Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(12.dp))
+            Spacer(Modifier.width(3.dp))
+        }
+        Text(text, color = fg, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+    }
 }
 
 @Composable
@@ -279,9 +284,15 @@ fun <T> FilterChipsRow(
     }
 }
 
-/** Segmented control (theme picker): selected = gold. */
+/** Segmented control (theme picker): selected = gold. A label may be empty when [icons] has an icon for it. */
 @Composable
-fun <T> Segmented(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier) {
+fun <T> Segmented(
+    options: List<Pair<T, String>>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    icons: Map<T, ImageVector> = emptyMap(),
+) {
     val c = Aghour.colors
     Row(
         modifier
@@ -292,17 +303,19 @@ fun <T> Segmented(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> 
     ) {
         options.forEach { (value, label) ->
             val isSelected = value == selected
-            Text(
-                label,
-                modifier = Modifier
+            val fg = if (isSelected) c.onGold else c.muted
+            Row(
+                Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(if (isSelected) c.gold else Color.Transparent)
                     .clickable { onSelect(value) }
-                    .padding(horizontal = 14.dp, vertical = 6.dp),
-                color = if (isSelected) c.onGold else c.muted,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-            )
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                icons[value]?.let { Icon(it, contentDescription = label.ifEmpty { null }, tint = fg, modifier = Modifier.size(16.dp)) }
+                if (icons[value] != null && label.isNotEmpty()) Spacer(Modifier.width(4.dp))
+                if (label.isNotEmpty()) Text(label, color = fg, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -399,9 +412,24 @@ fun SurfaceCard(
     )
 }
 
-/** "‹" pointing to the reading end, for menu rows. */
+/** A feature line with a check icon (plan features, guest benefits). */
 @Composable
-fun Chevron() = Text("‹", color = Aghour.colors.muted, style = MaterialTheme.typography.titleMedium)
+fun CheckLine(text: String, color: Color = Aghour.colors.muted) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Filled.Check, contentDescription = null, tint = Aghour.colors.ok, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(text, color = color, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+/** Arrow pointing to the reading end (left in RTL), for menu rows. */
+@Composable
+fun Chevron() = Icon(
+    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+    contentDescription = null,
+    tint = Aghour.colors.muted,
+    modifier = Modifier.size(20.dp),
+)
 
 // ---------------------------------------------------------------- states
 

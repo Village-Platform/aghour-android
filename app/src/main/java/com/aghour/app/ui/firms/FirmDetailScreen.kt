@@ -24,6 +24,9 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.outlined.PhoneAndroid
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -53,10 +56,10 @@ import com.aghour.app.ui.components.Badge
 import com.aghour.app.ui.components.BadgeTone
 import com.aghour.app.ui.components.MessageBox
 import com.aghour.app.ui.components.OverlayIconButton
-import com.aghour.app.ui.components.SurfaceCard
 import com.aghour.app.ui.components.ScreenTitle
 import com.aghour.app.ui.components.SheetLayout
 import com.aghour.app.ui.components.SkeletonRows
+import com.aghour.app.ui.components.SurfaceCard
 import com.aghour.app.ui.components.appContainer
 import com.aghour.app.ui.components.openDialer
 import com.aghour.app.ui.components.openMap
@@ -177,12 +180,12 @@ private fun FirmDetailContent(firm: FirmDto, onBack: () -> Unit) {
 
         // Hours + phone + address
         SurfaceCard {
-            InfoLine("🕐", firm.workingHours)
+            InfoLine(Icons.Outlined.Schedule, firm.workingHours)
             HorizontalDivider(color = c.line, modifier = Modifier.padding(vertical = 8.dp))
             // \u2066…\u2069 keeps the number left-to-right inside Arabic text.
-            InfoLine("📱", firm.phone?.let { "\u2066$it\u2069" })
+            InfoLine(Icons.Outlined.PhoneAndroid, firm.phone?.let { "\u2066$it\u2069" })
             HorizontalDivider(color = c.line, modifier = Modifier.padding(vertical = 8.dp))
-            InfoLine("📍", firm.address)
+            InfoLine(Icons.Outlined.Place, firm.address)
         }
 
         firm.description?.takeIf { it.isNotBlank() }?.let { description ->
@@ -213,9 +216,9 @@ private fun ActionTile(icon: ImageVector, label: String, enabled: Boolean, modif
 }
 
 @Composable
-private fun InfoLine(emoji: String, value: String?) {
+private fun InfoLine(icon: ImageVector, value: String?) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(emoji)
+        Icon(icon, contentDescription = null, tint = Aghour.colors.goldInk, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(10.dp))
         Text(value?.takeIf { it.isNotBlank() } ?: "—", style = MaterialTheme.typography.bodyMedium, color = Aghour.colors.ink)
     }

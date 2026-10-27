@@ -3,14 +3,24 @@ package com.aghour.app.ui.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BrightnessAuto
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,7 +68,11 @@ fun SettingsScreen(onBack: () -> Unit) {
         ScreenTitle(stringResource(R.string.settings), onBack = onBack)
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SurfaceCard(padding = 16.dp) {
-                Text("🎨 ${stringResource(R.string.appearance)}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = c.ink)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Palette, contentDescription = null, tint = c.goldInk, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.appearance), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = c.ink)
+                }
                 Spacer(Modifier.height(10.dp))
                 Segmented(
                     options = listOf(
@@ -68,6 +82,11 @@ fun SettingsScreen(onBack: () -> Unit) {
                     ),
                     selected = state.themeMode,
                     onSelect = vm::setThemeMode,
+                    icons = mapOf(
+                        ThemeMode.Light to Icons.Outlined.LightMode,
+                        ThemeMode.Dark to Icons.Outlined.DarkMode,
+                        ThemeMode.System to Icons.Outlined.BrightnessAuto,
+                    ),
                 )
                 Spacer(Modifier.height(8.dp))
                 MutedText(stringResource(R.string.theme_system_hint))

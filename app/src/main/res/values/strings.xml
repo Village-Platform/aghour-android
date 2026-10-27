@@ -153,14 +153,14 @@
     <string name="settings">الإعدادات</string>
     <string name="appearance">المظهر</string>
     <string name="appearance_menu">المظهر (فاتح / داكن)</string>
-    <string name="theme_light">☀ فاتح</string>
-    <string name="theme_dark">☾ داكن</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
     <string name="theme_system">حسب الجهاز</string>
     <string name="theme_system_hint">«حسب الجهاز» يتبع إعداد الوضع الليلي في أندرويد</string>
     <string name="send_for_review">إرسال للمراجعة</string>
     <string name="pay_activation_note">يتم التفعيل بعد تأكيد الإدارة وصول المبلغ</string>
-    <string name="notif_open_subscription">← تفاصيل الاشتراك</string>
-    <string name="notif_open_plans">← الباقات</string>
-    <string name="notif_open_firm">← صفحة المنشأة</string>
-    <string name="notif_open_news">← الخبر</string>
+    <string name="notif_open_subscription">تفاصيل الاشتراك</string>
+    <string name="notif_open_plans">الباقات</string>
+    <string name="notif_open_firm">صفحة المنشأة</string>
+    <string name="notif_open_news">الخبر</string>
 </resources>

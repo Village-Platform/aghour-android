@@ -15,6 +15,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -172,7 +174,8 @@ private fun AuthLayout(
             Spacer(Modifier.weight(1f))
             // Quick switch; "follow the phone" lives in Settings.
             Segmented(
-                options = listOf(false to "☀", true to "☾"),
+                options = listOf(false to "", true to ""),
+                icons = mapOf(false to Icons.Outlined.LightMode, true to Icons.Outlined.DarkMode),
                 selected = c.isDark,
                 onSelect = { dark -> scope.launch { container.settings.setThemeMode(if (dark) ThemeMode.Dark else ThemeMode.Light) } },
             )

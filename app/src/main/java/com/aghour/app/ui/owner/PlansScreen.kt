@@ -34,6 +34,7 @@ import com.aghour.app.data.remote.SubscriptionPlanDto
 import com.aghour.app.data.repository.OwnerRepository
 import com.aghour.app.ui.components.Badge
 import com.aghour.app.ui.components.BadgeTone
+import com.aghour.app.ui.components.CheckLine
 import com.aghour.app.ui.components.GhostButton
 import com.aghour.app.ui.components.GoldButton
 import com.aghour.app.ui.components.MessageBox
@@ -132,9 +133,7 @@ private fun PlanCard(plan: SubscriptionPlanDto, highlighted: Boolean, onSubscrib
             )
         }
         Spacer(Modifier.height(8.dp))
-        features.forEach { feature ->
-            Text("✓ $feature", color = c.muted, style = MaterialTheme.typography.bodySmall)
-        }
+        features.forEach { feature -> CheckLine(feature) }
         Spacer(Modifier.height(12.dp))
         if (highlighted) GoldButton(stringResource(R.string.subscribe), onSubscribe) else GhostButton(stringResource(R.string.subscribe), onSubscribe)
     }

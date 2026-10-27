@@ -18,10 +18,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.Storefront
+import androidx.compose.material.icons.outlined.Verified
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -56,6 +67,7 @@ import com.aghour.app.data.repository.OwnerRepository
 import com.aghour.app.ui.components.Badge
 import com.aghour.app.ui.components.BadgeTone
 import com.aghour.app.ui.components.BrandLogo
+import com.aghour.app.ui.components.CheckLine
 import com.aghour.app.ui.components.Chevron
 import com.aghour.app.ui.components.GhostButton
 import com.aghour.app.ui.components.GoldButton
@@ -131,20 +143,20 @@ fun AccountScreen(
                 SubscriptionCard(state, onPlans)
                 SurfaceCard(padding = 0.dp) {
                     if (state.firms.isNotEmpty()) {
-                        MenuRow("🏪", stringResource(R.string.my_firms), "${state.firms.size}", onMyFirms)
+                        MenuRow(Icons.Outlined.Storefront, stringResource(R.string.my_firms), "${state.firms.size}", onMyFirms)
                         MenuDivider()
                     }
-                    MenuRow("💳", stringResource(R.string.subscription_and_plans), null, onPlans)
+                    MenuRow(Icons.Outlined.CreditCard, stringResource(R.string.subscription_and_plans), null, onPlans)
                     MenuDivider()
-                    MenuRow("💰", stringResource(R.string.payments_history), null, onPayments)
+                    MenuRow(Icons.Outlined.Payments, stringResource(R.string.payments_history), null, onPayments)
                     MenuDivider()
-                    MenuRow("🔔", stringResource(R.string.notifications), null, onNotifications)
+                    MenuRow(Icons.Outlined.Notifications, stringResource(R.string.notifications), null, onNotifications)
                     MenuDivider()
-                    MenuRow("🎨", stringResource(R.string.appearance_menu), null, onSettings)
+                    MenuRow(Icons.Outlined.Palette, stringResource(R.string.appearance_menu), null, onSettings)
                     MenuDivider()
-                    MenuRow("🔒", stringResource(R.string.change_password), null, onChangePassword)
+                    MenuRow(Icons.Outlined.Lock, stringResource(R.string.change_password), null, onChangePassword)
                     MenuDivider()
-                    MenuRow("ℹ️", stringResource(R.string.about_app), null) { showAbout = true }
+                    MenuRow(Icons.Outlined.Info, stringResource(R.string.about_app), null) { showAbout = true }
                 }
                 Button(
                     onClick = { confirmLogout = true },
@@ -213,7 +225,7 @@ private fun SubscriptionCard(state: ProfileUiState, onPlans: () -> Unit) {
                 modifier = Modifier.weight(1f),
             )
             when {
-                state.current != null -> Badge("✓ موثّق")
+                state.current != null -> Badge("موثّق", icon = Icons.Outlined.Verified)
                 state.pending != null -> Badge("قيد المراجعة", BadgeTone.Gold)
             }
         }
@@ -248,13 +260,13 @@ private fun SubscriptionCard(state: ProfileUiState, onPlans: () -> Unit) {
 }
 
 @Composable
-private fun MenuRow(emoji: String, title: String, trailing: String?, onClick: () -> Unit) {
+private fun MenuRow(icon: ImageVector, title: String, trailing: String?, onClick: () -> Unit) {
     val c = Aghour.colors
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(emoji)
+        Icon(icon, contentDescription = null, tint = c.goldInk, modifier = Modifier.size(22.dp))
         Spacer(Modifier.width(12.dp))
         Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = c.ink, modifier = Modifier.weight(1f))
         if (trailing != null) {
@@ -281,14 +293,14 @@ private fun GuestProfile(onLogin: () -> Unit, onRegister: () -> Unit, onSettings
         Text(stringResource(R.string.guest_profile_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = c.ink)
         MutedText(stringResource(R.string.guest_profile_body))
         listOf(R.string.benefit_firms, R.string.benefit_notifications, R.string.benefit_free).forEach { res ->
-            Text("✓ ${stringResource(res)}", style = MaterialTheme.typography.bodyMedium, color = c.ink)
+            CheckLine(stringResource(res), color = c.ink)
         }
         GoldButton(stringResource(R.string.login), onLogin)
         GhostButton(stringResource(R.string.register), onRegister, height = 50.dp)
         SurfaceCard(padding = 0.dp) {
-            MenuRow("🎨", stringResource(R.string.appearance_menu), null, onSettings)
+            MenuRow(Icons.Outlined.Palette, stringResource(R.string.appearance_menu), null, onSettings)
             MenuDivider()
-            MenuRow("ℹ️", stringResource(R.string.about_app), null, onAbout)
+            MenuRow(Icons.Outlined.Info, stringResource(R.string.about_app), null, onAbout)
         }
     }
 }

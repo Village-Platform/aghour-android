@@ -1,6 +1,24 @@
 package com.aghour.app.ui.components
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.BakeryDining
+import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.material.icons.outlined.Handshake
+import androidx.compose.material.icons.outlined.Handyman
+import androidx.compose.material.icons.outlined.LocalHospital
+import androidx.compose.material.icons.outlined.LocalPharmacy
+import androidx.compose.material.icons.outlined.Mosque
+import androidx.compose.material.icons.outlined.Newspaper
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.outlined.SportsSoccer
+import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.aghour.app.R
 import com.aghour.app.data.remote.CategoryDto
@@ -51,35 +69,35 @@ fun egp(cents: Int): String {
 
 fun greeting(): String = if (LocalTime.now().hour < 12) "صباح الخير" else "مساء الخير"
 
-/** Symbols for the category icon keys used by the admin dashboard; falls back to the first letter. */
-fun categorySymbol(category: CategoryDto): String = categorySymbol(category.icon, category.name)
+/** Material icon for the category icon keys used by the admin dashboard; unknown keys get a generic icon. */
+fun categoryIcon(category: CategoryDto): ImageVector = categoryIcon(category.icon)
 
-fun categorySymbol(icon: String?, name: String): String = when (icon?.lowercase()) {
-    "doctor", "doctors", "clinic" -> "🩺"
-    "pharmacy" -> "💊"
-    "restaurant", "food" -> "🍽️"
-    "shop", "store", "market" -> "🛒"
-    "craft", "crafts", "worker" -> "🛠️"
-    "school", "education" -> "🎓"
-    "bakery" -> "🥖"
-    "car", "transport" -> "🚗"
-    "mosque" -> "🕌"
-    "sports", "gym" -> "⚽"
-    "services", "government" -> "🏛️"
-    else -> name.trim().take(1)
+fun categoryIcon(icon: String?): ImageVector = when (icon?.lowercase()) {
+    "doctor", "doctors", "clinic" -> Icons.Outlined.LocalHospital
+    "pharmacy" -> Icons.Outlined.LocalPharmacy
+    "restaurant", "food" -> Icons.Outlined.Restaurant
+    "shop", "store", "market" -> Icons.Outlined.Storefront
+    "craft", "crafts", "worker" -> Icons.Outlined.Handyman
+    "school", "education" -> Icons.Outlined.School
+    "bakery" -> Icons.Outlined.BakeryDining
+    "car", "transport" -> Icons.Outlined.DirectionsCar
+    "mosque" -> Icons.Outlined.Mosque
+    "sports", "gym" -> Icons.Outlined.SportsSoccer
+    "services", "government" -> Icons.Outlined.AccountBalance
+    else -> Icons.Outlined.Category
 }
 
-/** The firm's category emoji, looked up in an already-loaded category list (null = unknown, show the logo). */
-fun firmSymbol(firm: FirmDto, categories: List<CategoryDto>): String? =
-    categories.firstOrNull { it.id == firm.category.id }?.let { categorySymbol(it) }
+/** The firm's category icon, looked up in an already-loaded category list (null = unknown, show the logo). */
+fun firmIcon(firm: FirmDto, categories: List<CategoryDto>): ImageVector? =
+    categories.firstOrNull { it.id == firm.category.id }?.let { categoryIcon(it) }
 
 /** Icon for a notification row, from the server's `kind` (unknown kinds get a bell). */
-fun notificationSymbol(kind: String): String = when {
-    "payment" in kind || "subscription" in kind -> "💳"
-    "firm" in kind -> "🏪"
-    "article" in kind || "news" in kind -> "📰"
-    "invit" in kind -> "🤝"
-    else -> "🔔"
+fun notificationIcon(kind: String): ImageVector = when {
+    "payment" in kind || "subscription" in kind -> Icons.Outlined.CreditCard
+    "firm" in kind -> Icons.Outlined.Storefront
+    "article" in kind || "news" in kind -> Icons.Outlined.Newspaper
+    "invit" in kind -> Icons.Outlined.Handshake
+    else -> Icons.Outlined.Notifications
 }
 
 @Composable

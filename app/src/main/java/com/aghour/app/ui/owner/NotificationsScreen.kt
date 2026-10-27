@@ -19,6 +19,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,8 +30,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,7 +46,7 @@ import com.aghour.app.ui.components.MessageBox
 import com.aghour.app.ui.components.ScreenTitle
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.appContainer
-import com.aghour.app.ui.components.notificationSymbol
+import com.aghour.app.ui.components.notificationIcon
 import com.aghour.app.ui.components.relativeTime
 import com.aghour.app.ui.theme.Aghour
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,7 +98,7 @@ class NotificationsViewModel(private val owner: OwnerRepository) : ViewModel() {
     }
 }
 
-/** Where a notification row's gold "←" link leads, guessed from the server's `kind`. */
+/** Where a notification row's gold link leads, guessed from the server's `kind`. */
 enum class NotificationTarget(val labelRes: Int) {
     Payments(R.string.notif_open_subscription),
     Plans(R.string.notif_open_plans),
@@ -167,7 +170,7 @@ private fun NotificationRow(n: NotificationDto, target: NotificationTarget?, onC
             .padding(12.dp),
     ) {
         Box(Modifier.size(38.dp).background(c.surface2, CircleShape), contentAlignment = Alignment.Center) {
-            Text(notificationSymbol(n.kind))
+            Icon(notificationIcon(n.kind), contentDescription = null, tint = c.ink, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -179,6 +182,7 @@ private fun NotificationRow(n: NotificationDto, target: NotificationTarget?, onC
             Row(Modifier.fillMaxWidth().padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (target != null) {
                     Text(stringResource(target.labelRes), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = c.goldInk)
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = c.goldInk, modifier = Modifier.size(14.dp))
                 }
                 Spacer(Modifier.weight(1f))
                 Text(relativeTime(n.createdAt), style = MaterialTheme.typography.labelSmall, color = c.muted)

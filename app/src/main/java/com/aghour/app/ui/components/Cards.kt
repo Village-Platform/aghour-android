@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -43,10 +46,10 @@ import com.aghour.app.ui.theme.Aghour
 
 /**
  * Firm row (Explore / Home): category tile, name, "category · address", hours, quick call.
- * [symbol] is the category emoji when the caller knows it; otherwise the logo mark is shown.
+ * [icon] is the category icon when the caller knows it; otherwise the logo mark is shown.
  */
 @Composable
-fun FirmRow(firm: FirmDto, onClick: () -> Unit, modifier: Modifier = Modifier, symbol: String? = null) {
+fun FirmRow(firm: FirmDto, onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVector? = null) {
     val context = LocalContext.current
     val c = Aghour.colors
     Row(
@@ -59,7 +62,7 @@ fun FirmRow(firm: FirmDto, onClick: () -> Unit, modifier: Modifier = Modifier, s
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (symbol != null) SymbolTile(symbol, size = 46.dp) else MarkTile(size = 46.dp)
+        if (icon != null) IconTile(icon, size = 46.dp) else MarkTile(size = 46.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(firm.name, style = MaterialTheme.typography.titleSmall, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -71,7 +74,11 @@ fun FirmRow(firm: FirmDto, onClick: () -> Unit, modifier: Modifier = Modifier, s
                 overflow = TextOverflow.Ellipsis,
             )
             firm.workingHours?.takeIf { it.isNotBlank() }?.let {
-                Text("🕐 $it", style = MaterialTheme.typography.labelSmall, color = c.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Schedule, contentDescription = null, tint = c.muted, modifier = Modifier.size(13.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(it, style = MaterialTheme.typography.labelSmall, color = c.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
         }
         firm.phone?.takeIf { it.isNotBlank() }?.let { phone ->
@@ -137,13 +144,14 @@ fun FeaturedNewsCard(article: ArticleDto, badge: String, onClick: () -> Unit, mo
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f)))))
         Column(Modifier.align(Alignment.BottomStart).padding(14.dp)) {
             // Solid gold over the photo: the soft badge tint is unreadable on a dark image.
-            Text(
-                "📌 $badge",
-                modifier = Modifier.background(c.gold, RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 1.dp),
-                color = c.onGold,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
+            Row(
+                Modifier.background(c.gold, RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 1.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Outlined.PushPin, contentDescription = null, tint = c.onGold, modifier = Modifier.size(12.dp))
+                Spacer(Modifier.width(3.dp))
+                Text(badge, color = c.onGold, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
             Spacer(Modifier.height(6.dp))
             Text(article.title, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(relativeTime(article.publishedAt), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
