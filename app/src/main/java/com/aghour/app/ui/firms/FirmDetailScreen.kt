@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Share
@@ -37,7 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -174,12 +175,19 @@ private fun FirmDetailContent(firm: FirmDto, categoryIcon: CategoryIcon?, onBack
 
         // Call / location / WhatsApp tiles
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            ActionTile(Icons.Filled.Call, stringResource(R.string.call), firm.phone != null, Modifier.weight(1f)) {
+            ActionTile(
+                rememberVectorPainter(Icons.Filled.Call),
+                stringResource(R.string.call),
+                if (c.isDark) CallDark else CallLight,
+                firm.phone != null,
+                Modifier.weight(1f),
+            ) {
                 firm.phone?.let { context.openDialer(it) }
             }
             ActionTile(
-                Icons.Filled.LocationOn,
+                rememberVectorPainter(Icons.Filled.LocationOn),
                 stringResource(R.string.location),
+                if (c.isDark) MapDark else MapLight,
                 firm.latitude != null && firm.longitude != null,
                 Modifier.weight(1f),
             ) {
@@ -187,7 +195,13 @@ private fun FirmDetailContent(firm: FirmDto, categoryIcon: CategoryIcon?, onBack
                 val lng = firm.longitude
                 if (lat != null && lng != null) context.openMap(lat, lng, firm.name)
             }
-            ActionTile(Icons.AutoMirrored.Filled.Send, stringResource(R.string.whatsapp), firm.whatsapp != null, Modifier.weight(1f)) {
+            ActionTile(
+                painterResource(R.drawable.ic_whatsapp),
+                stringResource(R.string.whatsapp),
+                WhatsAppGreen,
+                firm.whatsapp != null,
+                Modifier.weight(1f),
+            ) {
                 firm.whatsapp?.let { context.openWhatsApp(it) }
             }
         }
@@ -211,21 +225,30 @@ private fun FirmDetailContent(firm: FirmDto, categoryIcon: CategoryIcon?, onBack
     }
 }
 
+// Action colours (light / dark shade): green call, red map pin, WhatsApp brand green.
+private val CallLight = Color(0xFF1A7F37)
+private val CallDark = Color(0xFF3FB950)
+private val MapLight = Color(0xFFD1242F)
+private val MapDark = Color(0xFFFF7B72)
+private val WhatsAppGreen = Color(0xFF25D366)
+
+/** Call / location / WhatsApp tile: the icon in its own colour on a light tint of it; grey when unavailable. */
 @Composable
-private fun ActionTile(icon: ImageVector, label: String, enabled: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun ActionTile(icon: Painter, label: String, color: Color, enabled: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val c = Aghour.colors
+    val shape = RoundedCornerShape(12.dp)
     Column(
         modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(c.surface)
-            .border(1.dp, c.line, RoundedCornerShape(12.dp))
+            .clip(shape)
+            .background(if (enabled) color.copy(alpha = if (c.isDark) 0.16f else 0.10f) else c.surface)
+            .border(1.dp, if (enabled) color.copy(alpha = 0.35f) else c.line, shape)
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(icon, contentDescription = null, tint = if (enabled) c.goldInk else c.line, modifier = Modifier.size(22.dp))
+        Icon(icon, contentDescription = null, tint = if (enabled) color else c.line, modifier = Modifier.size(24.dp))
         Spacer(Modifier.height(4.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = if (enabled) c.ink else c.muted)
+        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = if (enabled) c.ink else c.muted)
     }
 }
 
