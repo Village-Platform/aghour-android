@@ -63,9 +63,9 @@ import com.aghour.app.ui.components.SheetLayout
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.SurfaceCard
 import com.aghour.app.ui.components.appContainer
+import com.aghour.app.ui.components.asHeading
 import com.aghour.app.ui.components.categoryLine
 import com.aghour.app.ui.components.firmIcon
-import com.aghour.app.ui.components.asHeading
 import com.aghour.app.ui.components.openDialer
 import com.aghour.app.ui.components.openMap
 import com.aghour.app.ui.components.openWhatsApp
@@ -122,7 +122,7 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit) {
 
 /** Design: village photo on top, a sheet with name, three action tiles and the details. */
 @Composable
-private fun FirmDetailContent(firm: FirmDto, categoryIcon: ImageVector, onBack: () -> Unit) {
+private fun FirmDetailContent(firm: FirmDto, categoryIcon: ImageVector?, onBack: () -> Unit) {
     val context = LocalContext.current
     val c = Aghour.colors
     val shareMessage = stringResource(R.string.share_firm_text, firm.name, firm.category.name, firm.phone ?: "")

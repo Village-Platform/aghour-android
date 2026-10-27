@@ -195,15 +195,19 @@ fun MarkTile(size: Dp = 44.dp, corner: Dp = 12.dp) {
     }
 }
 
-/** Tinted rounded square with a Material icon (categories). */
+/** Tinted rounded square with a category icon; the app logo mark when the category has none. */
 @Composable
-fun IconTile(icon: ImageVector, size: Dp = 48.dp) {
+fun IconTile(icon: ImageVector?, size: Dp = 48.dp) {
     val c = Aghour.colors
     Box(
         Modifier.size(size).clip(RoundedCornerShape(size * 0.32f)).background(c.brand.copy(alpha = 0.10f)),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription = null, tint = c.brand, modifier = Modifier.size(size * 0.5f))
+        if (icon != null) {
+            Icon(icon, contentDescription = null, tint = c.brand, modifier = Modifier.size(size * 0.5f))
+        } else {
+            BrandMark(Modifier.size(size * 0.66f))
+        }
     }
 }
 
@@ -258,14 +262,17 @@ fun SectionHeader(title: String, action: String? = null, onAction: (() -> Unit)?
     }
 }
 
-/** Filter chips row: selected = gold, others = soft grey (surface2); [icons] adds an icon per option. */
+/**
+ * Filter chips row: selected = gold, others = soft grey (surface2). [icons] adds an icon per option;
+ * an option mapped to null shows the app logo mark (category without an icon).
+ */
 @Composable
 fun <T> FilterChipsRow(
     options: List<Pair<T, String>>,
     selected: T,
     onSelect: (T) -> Unit,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp),
-    icons: Map<T, ImageVector> = emptyMap(),
+    icons: Map<T, ImageVector?> = emptyMap(),
 ) {
     val c = Aghour.colors
     LazyRow(contentPadding = contentPadding, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -280,8 +287,10 @@ fun <T> FilterChipsRow(
                     .padding(horizontal = 14.dp, vertical = 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                icons[value]?.let {
-                    Icon(it, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
+                if (value in icons) {
+                    val icon = icons[value]
+                    if (icon != null) Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
+                    else BrandMark(Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                 }
                 Text(label, color = fg, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)

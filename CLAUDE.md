@@ -94,6 +94,7 @@ ViewModel.
   `Cream` vals are only for the welcome artwork and text drawn over photos.
 - **Icons** are Material icons (`Icons.Outlined.*`, `material-icons-extended`), tinted with a token —
   never emoji. Map server keys to icons in `Common.kt` (`categoryIcon`, `notificationIcon`).
+  A category's icon comes from its API `icon` key; empty/unknown keys show the app logo (`IconTile(null)`).
 - **Logos:** use `BrandMark` / `BrandLogo` — they switch between the green and cream artwork by theme.
 - **Page shell:** `SheetLayout` for photo-header screens (firm, article), `ScreenTitle` for plain
   screens. Both set the status-bar icon colour via `StatusBarIcons`; screens without either

@@ -3,7 +3,6 @@ package com.aghour.app.ui.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.BakeryDining
-import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Handshake
@@ -69,26 +68,30 @@ fun egp(cents: Int): String {
 
 fun greeting(): String = if (LocalTime.now().hour < 12) "صباح الخير" else "مساء الخير"
 
-/** Material icon for the category icon keys used by the admin dashboard; unknown keys get a generic icon. */
-fun categoryIcon(category: CategoryDto): ImageVector = categoryIcon(category.icon)
+/**
+ * Icon for a category, from the `icon` key the admin sets on the category (API `categories[].icon`).
+ * Accepts the short keys used by the seeds (doctor, pharmacy…) and the Material names
+ * (local_hospital, local_pharmacy…). Empty or unknown keys return null: callers show the app logo.
+ */
+fun categoryIcon(category: CategoryDto): ImageVector? = categoryIcon(category.icon)
 
-fun categoryIcon(icon: String?): ImageVector = when (icon?.lowercase()) {
-    "doctor", "doctors", "clinic" -> Icons.Outlined.LocalHospital
-    "pharmacy" -> Icons.Outlined.LocalPharmacy
+fun categoryIcon(icon: String?): ImageVector? = when (icon?.trim()?.lowercase()?.replace('-', '_')?.replace(' ', '_')) {
+    "doctor", "doctors", "clinic", "local_hospital" -> Icons.Outlined.LocalHospital
+    "pharmacy", "local_pharmacy" -> Icons.Outlined.LocalPharmacy
     "restaurant", "food" -> Icons.Outlined.Restaurant
-    "shop", "store", "market" -> Icons.Outlined.Storefront
-    "craft", "crafts", "worker" -> Icons.Outlined.Handyman
+    "shop", "store", "market", "storefront" -> Icons.Outlined.Storefront
+    "craft", "crafts", "worker", "handyman" -> Icons.Outlined.Handyman
     "school", "education" -> Icons.Outlined.School
-    "bakery" -> Icons.Outlined.BakeryDining
-    "car", "transport" -> Icons.Outlined.DirectionsCar
+    "bakery", "bakery_dining" -> Icons.Outlined.BakeryDining
+    "car", "transport", "directions_car" -> Icons.Outlined.DirectionsCar
     "mosque" -> Icons.Outlined.Mosque
-    "sports", "gym" -> Icons.Outlined.SportsSoccer
-    "services", "government" -> Icons.Outlined.AccountBalance
-    else -> Icons.Outlined.Category
+    "sports", "gym", "sports_soccer" -> Icons.Outlined.SportsSoccer
+    "services", "government", "account_balance" -> Icons.Outlined.AccountBalance
+    else -> null
 }
 
 /** The firm's category icon: from the firm's own category if the API sent it, else from the loaded list. */
-fun firmIcon(firm: FirmDto, categories: List<CategoryDto>): ImageVector =
+fun firmIcon(firm: FirmDto, categories: List<CategoryDto>): ImageVector? =
     categoryIcon(firm.category.icon ?: categories.firstOrNull { it.id == firm.category.id }?.icon)
 
 /** Icon for a notification row, from the server's `kind` (unknown kinds get a bell). */
