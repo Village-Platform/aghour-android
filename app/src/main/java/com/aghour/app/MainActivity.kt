@@ -20,11 +20,9 @@ class MainActivity : ComponentActivity() {
         val splash = installSplashScreen() // must be called before super.onCreate
         super.onCreate(savedInstanceState)
         val container = (application as AghourApp).container
-        // Keep the splash until the welcome flag and the theme are read from DataStore,
-        // so the first frame is already in the right theme (no light flash in dark mode).
-        splash.setKeepOnScreenCondition {
-            container.session.welcomeDone.value == null || container.settings.themeMode.value == null
-        }
+        // Keep the system splash until the theme is read from DataStore, so the launch logo that
+        // follows (LaunchScreen) is already in the right theme and takes over seamlessly.
+        splash.setKeepOnScreenCondition { container.settings.themeMode.value == null }
         // Screens switch the status-bar icon colour themselves; AghourTheme sets the navigation bar.
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),

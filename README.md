@@ -77,7 +77,12 @@ The UI follows the screen designs artifact "أجهور الكبرى — تصمي
   to cream for dark backgrounds — `logo_cream` / `logo_green` (640 px), `mark_cream` / `mark_green` (512 px).
 - App icon: adaptive icon with the cream symbol on forest (`ic_launcher_foreground`, inside the 66dp safe
   zone), a white `ic_launcher_monochrome` layer for Android 13+ themed icons, and a 512 px
-  `app/src/main/ic_launcher-playstore.png` for the Play Store listing. The splash uses the same symbol.
+  `app/src/main/ic_launcher-playstore.png` for the Play Store listing.
+- Splash: the system splash shows the logo mark on the page colour (white / `#0D1117`), then
+  `LaunchScreen` keeps the mark in place and fades in the name + "تطبيق القرية" (~1.2 s), then
+  Welcome (first launch) or Home. Assets `splash_mark` / `splash_name` in `drawable-nodpi` (light)
+  and `drawable-night-nodpi` (dark), cut from the 2000 px logo. On Android 12+ the app's theme choice
+  is passed to the system (`UiModeManager.setApplicationNightMode`) so the system splash matches it.
 - The welcome artwork and the home cover banner are made from the originals in `../village-platform/public/brand`.
 
 ## Navigation

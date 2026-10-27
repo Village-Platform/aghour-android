@@ -9,11 +9,9 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -76,7 +74,9 @@ import com.aghour.app.ui.owner.PayScreen
 import com.aghour.app.ui.owner.PlansScreen
 import com.aghour.app.ui.settings.SettingsScreen
 import com.aghour.app.ui.theme.Aghour
+import com.aghour.app.ui.welcome.LaunchScreen
 import com.aghour.app.ui.welcome.WelcomeScreen
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -117,25 +117,42 @@ private val tabs = listOf(
     Tab(AccountRoute, R.string.tab_account, Icons.Filled.Person, Icons.Outlined.Person) { it.hasRoute<AccountRoute>() },
 )
 
+private enum class Stage { Launch, Welcome, Main }
+
+/** Minimum time the logo stays up after the system splash, so the name can be read. */
+private const val LAUNCH_MS = 1200L
+
 @Composable
 fun AppNavigation() {
     val container = appContainer()
     val welcomeDone by container.session.welcomeDone.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
+    // Launch logo once per app start (not again after rotation or returning from the background).
+    var launchDone by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!launchDone) {
+            delay(LAUNCH_MS)
+            launchDone = true
+        }
+    }
+
     // Welcome is shown once, on top of the app (not part of the back stack, so Home stays the
     // start destination and the bottom tabs always pop back to it correctly).
-    // The splash screen stays up until the flag is read from disk.
     var showWelcome by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var openLoginAfterWelcome by rememberSaveable { mutableStateOf(false) }
-    if (showWelcome == null) {
-        val done = welcomeDone ?: return Box(Modifier.fillMaxSize())
-        showWelcome = !done
+    if (showWelcome == null) welcomeDone?.let { showWelcome = !it }
+
+    val stage = when {
+        !launchDone || showWelcome == null -> Stage.Launch
+        showWelcome == true -> Stage.Welcome
+        else -> Stage.Main
     }
-    // Soft cross-fade from the welcome artwork into the app.
-    Crossfade(targetState = showWelcome == true, animationSpec = tween(450), label = "welcome") { welcome ->
-        if (welcome) {
-            WelcomeScreen(
+    // Soft cross-fades: logo -> welcome artwork (first launch) or straight into the app.
+    Crossfade(targetState = stage, animationSpec = tween(450), label = "stage") { current ->
+        when (current) {
+            Stage.Launch -> LaunchScreen()
+            Stage.Welcome -> WelcomeScreen(
                 onStart = {
                     scope.launch { container.session.setWelcomeDone() }
                     showWelcome = false
@@ -146,8 +163,7 @@ fun AppNavigation() {
                     showWelcome = false
                 },
             )
-        } else {
-            MainNavigation(openLogin = openLoginAfterWelcome, onLoginOpened = { openLoginAfterWelcome = false })
+            Stage.Main -> MainNavigation(openLogin = openLoginAfterWelcome, onLoginOpened = { openLoginAfterWelcome = false })
         }
     }
 }

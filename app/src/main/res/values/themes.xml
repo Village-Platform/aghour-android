@@ -4,10 +4,11 @@
         <item name="android:windowBackground">@color/page_light</item>
     </style>
 
-    <!-- Android 12+ splash API (backported by core-splashscreen) -->
+    <!-- Splash: the logo mark on the page colour (white / GitHub-dark). Mark has no icon background:
+         288dp canvas, content inside the central 192dp circle (drawable[-night]-nodpi/splash_mark). -->
     <style name="Theme.Aghour.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/brand_green</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="windowSplashScreenBackground">@color/page_light</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_mark</item>
         <item name="postSplashScreenTheme">@style/Theme.Aghour</item>
     </style>
 </resources>
