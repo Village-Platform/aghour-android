@@ -104,7 +104,7 @@ fun FirmRow(firm: FirmDto, icon: ImageVector, onClick: () -> Unit, modifier: Mod
 }
 
 /** Marks a title for TalkBack, so screen-reader users can jump between headings. */
-fun Modifier.asHeading(): Modifier = semantics { heading() }
+fun Modifier.asHeading(): Modifier = semantics { this.heading() }
 
 /** "category · address" with the category name bold and in the text colour (the address stays muted). */
 @Composable
@@ -112,7 +112,10 @@ fun categoryLine(category: String, address: String?): AnnotatedString {
     val c = Aghour.colors
     return buildAnnotatedString {
         withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = c.ink)) { append(category) }
-        address?.takeIf { it.isNotBlank() }?.let { append(" · ").append(it) }
+        address?.takeIf { it.isNotBlank() }?.let { place ->
+            append(" · ")
+            append(place)
+        }
     }
 }
 
