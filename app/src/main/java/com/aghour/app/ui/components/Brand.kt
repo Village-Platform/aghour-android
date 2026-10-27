@@ -58,6 +58,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -70,6 +71,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import coil3.compose.AsyncImage
 import com.aghour.app.R
 import com.aghour.app.ui.theme.Aghour
 
@@ -196,22 +198,19 @@ fun MarkTile(size: Dp = 44.dp, corner: Dp = 12.dp) {
 }
 
 /**
- * Rounded square with a category icon in the category's own colour on a light tint of it;
- * the app logo mark on the neutral tint when the category has no icon.
+ * Rounded square with the category image from the API. The app logo sits underneath on a neutral
+ * tint: it shows when the category has no image and while the image loads or if it fails.
  */
 @Composable
-fun IconTile(icon: CategoryIcon?, size: Dp = 48.dp) {
+fun IconTile(iconUrl: String?, size: Dp = 48.dp) {
     val c = Aghour.colors
-    val tint = icon?.color
-    val background = tint?.copy(alpha = if (c.isDark) 0.18f else 0.12f) ?: c.brand.copy(alpha = 0.10f)
     Box(
-        Modifier.size(size).clip(RoundedCornerShape(size * 0.32f)).background(background),
+        Modifier.size(size).clip(RoundedCornerShape(size * 0.32f)).background(c.brand.copy(alpha = 0.10f)),
         contentAlignment = Alignment.Center,
     ) {
-        if (icon != null && tint != null) {
-            Icon(icon.vector, contentDescription = null, tint = tint, modifier = Modifier.size(size * 0.5f))
-        } else {
-            BrandMark(Modifier.size(size * 0.66f))
+        BrandMark(Modifier.size(size * 0.66f))
+        if (iconUrl != null) {
+            AsyncImage(model = iconUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         }
     }
 }
@@ -269,8 +268,8 @@ fun SectionHeader(title: String, action: String? = null, onAction: (() -> Unit)?
 
 /**
  * Filter chips row: selected = gold, others = soft grey (surface2). [icons] adds an icon per option;
- * an option mapped to null shows the app logo mark (category without an icon). [iconTints] colours
- * an icon while its chip is not selected (category colours); a selected chip's icon is black on gold.
+ * an option mapped to null shows the app logo mark (category without an image). [imageUrls] shows
+ * an image instead (category images from the API).
  */
 @Composable
 fun <T> FilterChipsRow(
@@ -279,7 +278,7 @@ fun <T> FilterChipsRow(
     onSelect: (T) -> Unit,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp),
     icons: Map<T, ImageVector?> = emptyMap(),
-    iconTints: Map<out T, Color> = emptyMap(),
+    imageUrls: Map<out T, String> = emptyMap(),
 ) {
     val c = Aghour.colors
     LazyRow(contentPadding = contentPadding, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -294,10 +293,18 @@ fun <T> FilterChipsRow(
                     .padding(horizontal = 14.dp, vertical = 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (value in icons) {
+                val imageUrl = imageUrls[value]
+                if (imageUrl != null) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(20.dp).clip(RoundedCornerShape(6.dp)),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                } else if (value in icons) {
                     val icon = icons[value]
-                    val tint = if (isSelected) fg else iconTints[value] ?: fg
-                    if (icon != null) Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(16.dp))
+                    if (icon != null) Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
                     else BrandMark(Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                 }

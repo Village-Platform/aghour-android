@@ -80,11 +80,11 @@ The UI follows the screen designs artifact "أجهور الكبرى — تصمي
 - App icon: adaptive icon with the green symbol (`mark_green`) on white (`ic_launcher_foreground`, inside the 66dp safe
   zone), a white `ic_launcher_monochrome` layer for Android 13+ themed icons, and a 512 px
   `app/src/main/ic_launcher-playstore.png` for the Play Store listing.
-- Categories always show their Material icon (Home tiles, Explore chips and rows, My firms, firm page):
-  `categoryIcon()` maps the category's API `icon` key (set by the admin; seed keys such as `doctor`,
-  `pharmacy`, `mosque`, or Material names such as `local_hospital`). Empty or unknown keys show the app
-  logo mark. Each known category has its own colour (light and dark shade): the icon is drawn in it on a
-  light tint of the same colour. Categories are cached in memory by `CatalogRepository`.
+- Category icons are images from the API: `icon_url` on categories and on each firm's `category`
+  (uploaded in the admin dashboard, default artwork for the seed categories). The app resolves the
+  relative URL against `API_BASE_URL` and loads it with Coil (memory + disk cache; the server marks
+  each image version cacheable for a year). No image, or while it loads → the app logo.
+  Categories are cached in memory by `CatalogRepository`.
 - Splash: the system splash shows the logo mark on the page colour (white / `#0D1117`), then
   `LaunchScreen` keeps the mark in place and fades in the name + "تطبيق القرية" (~1.2 s), then
   Welcome (first launch) or Home. Assets `splash_mark` / `splash_name` in `drawable-nodpi` (light)

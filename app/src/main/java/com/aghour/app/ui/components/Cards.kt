@@ -51,10 +51,10 @@ import com.aghour.app.ui.theme.Aghour
 
 /**
  * Firm row (Explore / Home / My firms): category icon tile, name, "category · address", hours, quick call.
- * [icon] is the category icon (see firmIcon); null shows the app logo.
+ * [iconUrl] is the category image (see firmIconUrl); null shows the app logo.
  */
 @Composable
-fun FirmRow(firm: FirmDto, icon: CategoryIcon?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun FirmRow(firm: FirmDto, iconUrl: String?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val c = Aghour.colors
     Row(
@@ -67,7 +67,7 @@ fun FirmRow(firm: FirmDto, icon: CategoryIcon?, onClick: () -> Unit, modifier: M
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconTile(icon, size = 46.dp)
+        IconTile(iconUrl, size = 46.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(firm.name, style = MaterialTheme.typography.titleSmall, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.asHeading())

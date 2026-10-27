@@ -63,8 +63,8 @@ import com.aghour.app.ui.components.SectionHeader
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.StatusBarIcons
 import com.aghour.app.ui.components.appContainer
-import com.aghour.app.ui.components.categoryIcon
-import com.aghour.app.ui.components.firmIcon
+import com.aghour.app.ui.components.categoryIconUrl
+import com.aghour.app.ui.components.firmIconUrl
 import com.aghour.app.ui.components.greeting
 import com.aghour.app.ui.components.shimmer
 import com.aghour.app.ui.theme.Aghour
@@ -137,7 +137,7 @@ fun HomeScreen(
                             Modifier.width(62.dp).clip(RoundedCornerShape(12.dp)).clickable { onCategoryClick(category) },
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            IconTile(categoryIcon(category), size = 50.dp)
+                            IconTile(categoryIconUrl(category.iconUrl), size = 50.dp)
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 category.name,
@@ -170,7 +170,7 @@ fun HomeScreen(
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionHeader(stringResource(R.string.featured_firms), stringResource(R.string.see_all), onExplore)
                     state.featuredFirms.forEach { firm ->
-                        FirmRow(firm, onClick = { onFirmClick(firm) }, icon = firmIcon(firm, state.categories))
+                        FirmRow(firm, onClick = { onFirmClick(firm) }, iconUrl = firmIconUrl(firm, state.categories))
                     }
                 }
             }

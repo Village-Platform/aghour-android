@@ -53,8 +53,8 @@ import com.aghour.app.ui.components.MutedText
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.StatusBarIcons
 import com.aghour.app.ui.components.appContainer
-import com.aghour.app.ui.components.categoryIcon
-import com.aghour.app.ui.components.firmIcon
+import com.aghour.app.ui.components.categoryIconUrl
+import com.aghour.app.ui.components.firmIconUrl
 import com.aghour.app.ui.theme.Aghour
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -109,8 +109,9 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
                 options = listOf<Pair<Long?, String>>(null to allLabel) + state.categories.map { it.id to it.name },
                 selected = state.categoryId,
                 onSelect = vm::selectCategory,
-                icons = mapOf<Long?, ImageVector?>(null to Icons.Outlined.Apps) + state.categories.associate { it.id to categoryIcon(it)?.vector },
-                iconTints = state.categories.mapNotNull { category -> categoryIcon(category)?.let { category.id to it.color } }.toMap(),
+                // "الكل" gets a grid icon; categories show their API image, or the app logo without one.
+                icons = mapOf<Long?, ImageVector?>(null to Icons.Outlined.Apps) + state.categories.associate { it.id to null },
+                imageUrls = state.categories.mapNotNull { category -> categoryIconUrl(category.iconUrl)?.let { category.id to it } }.toMap(),
             )
             if (!state.loading && state.error == null) {
                 MutedText(stringResource(R.string.results_count, state.total), Modifier.padding(start = 18.dp, top = 8.dp))
@@ -129,7 +130,7 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(state.firms, key = { it.id }) { firm ->
-                        FirmRow(firm, onClick = { onFirmClick(firm) }, icon = firmIcon(firm, state.categories))
+                        FirmRow(firm, onClick = { onFirmClick(firm) }, iconUrl = firmIconUrl(firm, state.categories))
                     }
                     if (state.loadingMore) {
                         item {

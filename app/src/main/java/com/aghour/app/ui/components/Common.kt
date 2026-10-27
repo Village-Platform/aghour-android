@@ -1,34 +1,23 @@
 package com.aghour.app.ui.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountBalance
-import androidx.compose.material.icons.outlined.BakeryDining
 import androidx.compose.material.icons.outlined.CreditCard
-import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Handshake
-import androidx.compose.material.icons.outlined.Handyman
-import androidx.compose.material.icons.outlined.LocalHospital
-import androidx.compose.material.icons.outlined.LocalPharmacy
-import androidx.compose.material.icons.outlined.Mosque
 import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Restaurant
-import androidx.compose.material.icons.outlined.School
-import androidx.compose.material.icons.outlined.SportsSoccer
 import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import com.aghour.app.BuildConfig
 import com.aghour.app.R
 import com.aghour.app.data.remote.CategoryDto
 import com.aghour.app.data.remote.FirmDto
-import com.aghour.app.ui.theme.Aghour
 import java.time.Duration
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import okhttp3.HttpUrl.Companion.toHttpUrl
 
 private val DateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
 
@@ -72,42 +61,16 @@ fun egp(cents: Int): String {
 fun greeting(): String = if (LocalTime.now().hour < 12) "صباح الخير" else "مساء الخير"
 
 /**
- * Icon for a category, from the `icon` key the admin sets on the category (API `categories[].icon`).
- * Accepts the short keys used by the seeds (doctor, pharmacy…) and the Material names
- * (local_hospital, local_pharmacy…). Empty or unknown keys return null: callers show the app logo.
+ * Absolute URL of a category image. The API sends `icon_url` relative to its host
+ * (e.g. /api/v1/categories/3/icon?v=…), so it is resolved against the API base URL.
+ * null when the category has no image: callers show the app logo instead.
  */
-fun categoryIcon(category: CategoryDto): CategoryIcon? = categoryIcon(category.icon)
+fun categoryIconUrl(iconUrl: String?): String? =
+    iconUrl?.takeIf { it.isNotBlank() }?.let { BuildConfig.API_BASE_URL.toHttpUrl().resolve(it)?.toString() }
 
-fun categoryIcon(icon: String?): CategoryIcon? = when (icon?.trim()?.lowercase()?.replace('-', '_')?.replace(' ', '_')) {
-    "doctor", "doctors", "clinic", "local_hospital" -> CategoryIcon(Icons.Outlined.LocalHospital, 0xFFD1242F, 0xFFFF7B72) // red
-    "pharmacy", "local_pharmacy" -> CategoryIcon(Icons.Outlined.LocalPharmacy, 0xFF1A7F37, 0xFF3FB950) // green
-    "restaurant", "food" -> CategoryIcon(Icons.Outlined.Restaurant, 0xFFD15704, 0xFFFFA657) // orange
-    "shop", "store", "market", "storefront" -> CategoryIcon(Icons.Outlined.Storefront, 0xFF8250DF, 0xFFD2A8FF) // purple
-    "craft", "crafts", "worker", "handyman" -> CategoryIcon(Icons.Outlined.Handyman, 0xFF8A5A2B, 0xFFD9A066) // brown
-    "school", "education" -> CategoryIcon(Icons.Outlined.School, 0xFF0969DA, 0xFF58A6FF) // blue
-    "bakery", "bakery_dining" -> CategoryIcon(Icons.Outlined.BakeryDining, 0xFFB08800, 0xFFE3B341) // amber
-    "car", "transport", "directions_car" -> CategoryIcon(Icons.Outlined.DirectionsCar, 0xFF1B7C83, 0xFF39C5CF) // teal
-    "mosque" -> CategoryIcon(Icons.Outlined.Mosque, 0xFF0B6E4F, 0xFF56D364) // forest green
-    "sports", "gym", "sports_soccer" -> CategoryIcon(Icons.Outlined.SportsSoccer, 0xFFBF3989, 0xFFF778BA) // pink
-    "services", "government", "account_balance" -> CategoryIcon(Icons.Outlined.AccountBalance, 0xFF4F5BD5, 0xFF8C95FF) // indigo
-    else -> null
-}
-
-/**
- * A category's icon and its own colour (one shade per theme, readable on white and on #0D1117).
- * Drawn by IconTile as the coloured icon on a light tint of the same colour.
- */
-class CategoryIcon(val vector: ImageVector, light: Long, dark: Long) {
-    private val lightColor = Color(light)
-    private val darkColor = Color(dark)
-
-    val color: Color
-        @Composable @ReadOnlyComposable get() = if (Aghour.colors.isDark) darkColor else lightColor
-}
-
-/** The firm's category icon: from the firm's own category if the API sent it, else from the loaded list. */
-fun firmIcon(firm: FirmDto, categories: List<CategoryDto>): CategoryIcon? =
-    categoryIcon(firm.category.icon ?: categories.firstOrNull { it.id == firm.category.id }?.icon)
+/** The firm's category image: from the firm's own category if the API sent it, else from the loaded list. */
+fun firmIconUrl(firm: FirmDto, categories: List<CategoryDto>): String? =
+    categoryIconUrl(firm.category.iconUrl ?: categories.firstOrNull { it.id == firm.category.id }?.iconUrl)
 
 /** Icon for a notification row, from the server's `kind` (unknown kinds get a bell). */
 fun notificationIcon(kind: String): ImageVector = when {

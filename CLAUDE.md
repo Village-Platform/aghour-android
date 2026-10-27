@@ -93,8 +93,9 @@ ViewModel.
   Settings (`SettingsStore`). Never hard-code a colour for page content. The fixed `Forest`, `Gold`,
   `Cream` vals are only for the welcome artwork and text drawn over photos.
 - **Icons** are Material icons (`Icons.Outlined.*`, `material-icons-extended`), tinted with a token —
-  never emoji. Map server keys to icons in `Common.kt` (`categoryIcon`, `notificationIcon`).
-  A category's icon comes from its API `icon` key; empty/unknown keys show the app logo (`IconTile(null)`).
+  never emoji. Notification icons map server keys in `Common.kt` (`notificationIcon`).
+- **Category icons are images from the API** (`icon_url`, relative to the API host → resolve with
+  `categoryIconUrl()` / `firmIconUrl()`), drawn by `IconTile(url)` with Coil; no image = the app logo.
 - **Logos:** use `BrandMark` / `BrandLogo` — they switch between the green and cream artwork by theme.
 - **Page shell:** `SheetLayout` for photo-header screens (firm, article), `ScreenTitle` for plain
   screens. Both set the status-bar icon colour via `StatusBarIcons`; screens without either

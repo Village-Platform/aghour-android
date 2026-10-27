@@ -30,7 +30,7 @@ import com.aghour.app.ui.components.MessageBox
 import com.aghour.app.ui.components.ScreenTitle
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.appContainer
-import com.aghour.app.ui.components.firmIcon
+import com.aghour.app.ui.components.firmIconUrl
 import com.aghour.app.ui.theme.Aghour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -85,7 +85,7 @@ fun MyFirmsScreen(onBack: () -> Unit, onFirmClick: (FirmDto) -> Unit) {
                             "suspended" -> Badge("موقوف", BadgeTone.Red)
                             else -> Badge("نشط")
                         }
-                        FirmRow(firm, firmIcon(firm, state.categories), onClick = { onFirmClick(firm) })
+                        FirmRow(firm, firmIconUrl(firm, state.categories), onClick = { onFirmClick(firm) })
                     }
                 }
             }

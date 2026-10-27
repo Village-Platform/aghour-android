@@ -67,4 +67,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)
     implementation(libs.okhttp.logging)
+    // Category icon images from the API (memory + disk cache, honours the server's Cache-Control).
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 }

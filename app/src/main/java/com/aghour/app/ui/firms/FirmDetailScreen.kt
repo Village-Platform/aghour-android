@@ -56,7 +56,6 @@ import com.aghour.app.data.remote.FirmDto
 import com.aghour.app.data.repository.CatalogRepository
 import com.aghour.app.ui.components.Badge
 import com.aghour.app.ui.components.BadgeTone
-import com.aghour.app.ui.components.CategoryIcon
 import com.aghour.app.ui.components.IconTile
 import com.aghour.app.ui.components.MessageBox
 import com.aghour.app.ui.components.OverlayIconButton
@@ -67,7 +66,7 @@ import com.aghour.app.ui.components.SurfaceCard
 import com.aghour.app.ui.components.appContainer
 import com.aghour.app.ui.components.asHeading
 import com.aghour.app.ui.components.categoryLine
-import com.aghour.app.ui.components.firmIcon
+import com.aghour.app.ui.components.firmIconUrl
 import com.aghour.app.ui.components.openDialer
 import com.aghour.app.ui.components.openMap
 import com.aghour.app.ui.components.openWhatsApp
@@ -113,7 +112,7 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit) {
     val firm = state.firm
 
     if (firm != null) {
-        FirmDetailContent(firm, firmIcon(firm, state.categories), onBack)
+        FirmDetailContent(firm, firmIconUrl(firm, state.categories), onBack)
     } else {
         Column(Modifier.fillMaxSize().background(Aghour.colors.page)) {
             ScreenTitle(title = "", onBack = onBack)
@@ -124,7 +123,7 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit) {
 
 /** Design: village photo on top, a sheet with name, three action tiles and the details. */
 @Composable
-private fun FirmDetailContent(firm: FirmDto, categoryIcon: CategoryIcon?, onBack: () -> Unit) {
+private fun FirmDetailContent(firm: FirmDto, categoryIconUrl: String?, onBack: () -> Unit) {
     val context = LocalContext.current
     val c = Aghour.colors
     val shareMessage = stringResource(R.string.share_firm_text, firm.name, firm.category.name, firm.phone ?: "")
@@ -156,7 +155,7 @@ private fun FirmDetailContent(firm: FirmDto, categoryIcon: CategoryIcon?, onBack
     ) {
         // Category icon + name + category
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconTile(categoryIcon, size = 52.dp)
+            IconTile(categoryIconUrl, size = 52.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(firm.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = c.ink, modifier = Modifier.asHeading())

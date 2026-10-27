@@ -42,6 +42,8 @@ data class CategoryDto(
     val name: String,
     val description: String? = null,
     val icon: String? = null,
+    /** Category image (relative to the API host, see categoryIconUrl); null = show the app logo. */
+    @SerialName("icon_url") val iconUrl: String? = null,
     val position: Int = 0,
 )
 
@@ -51,6 +53,7 @@ data class CategoryRefDto(
     val name: String,
     /** Same key as CategoryDto.icon; optional so the app works before/after the API includes it. */
     val icon: String? = null,
+    @SerialName("icon_url") val iconUrl: String? = null,
 )
 
 @Serializable
