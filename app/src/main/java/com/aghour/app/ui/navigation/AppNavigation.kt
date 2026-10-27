@@ -9,17 +9,19 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -65,15 +67,16 @@ import com.aghour.app.ui.news.ArticleScreen
 import com.aghour.app.ui.news.NewsScreen
 import com.aghour.app.ui.owner.ChangePasswordScreen
 import com.aghour.app.ui.owner.MyFirmsScreen
+import com.aghour.app.ui.owner.NotificationTarget
 import com.aghour.app.ui.owner.NotificationsScreen
 import com.aghour.app.ui.owner.PaymentsScreen
 import com.aghour.app.ui.owner.PayScreen
 import com.aghour.app.ui.owner.PlansScreen
-import com.aghour.app.ui.theme.Cream
-import com.aghour.app.ui.theme.Forest
-import com.aghour.app.ui.theme.Gold
-import com.aghour.app.ui.theme.Sand
+import com.aghour.app.ui.settings.SettingsScreen
+import com.aghour.app.ui.theme.Aghour
+import com.aghour.app.ui.welcome.LaunchScreen
 import com.aghour.app.ui.welcome.WelcomeScreen
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -96,15 +99,28 @@ import kotlinx.serialization.Serializable
 @Serializable data object NotificationsRoute
 @Serializable data object ChangePasswordRoute
 @Serializable data object MyFirmsRoute
+@Serializable data object SettingsRoute
 
-private data class Tab(val route: Any, val labelRes: Int, val icon: ImageVector, val matches: (NavDestination) -> Boolean)
+/** Filled icon on the selected tab, outlined on the others; the gold label also marks the selection. */
+private data class Tab(
+    val route: Any,
+    val labelRes: Int,
+    val selectedIcon: ImageVector,
+    val icon: ImageVector,
+    val matches: (NavDestination) -> Boolean,
+)
 
 private val tabs = listOf(
-    Tab(HomeRoute, R.string.tab_home, Icons.Filled.Home) { it.hasRoute<HomeRoute>() },
-    Tab(ExploreRoute, R.string.tab_explore, Icons.Filled.Search) { it.hasRoute<ExploreRoute>() },
-    Tab(NewsRoute, R.string.tab_news, Icons.AutoMirrored.Filled.List) { it.hasRoute<NewsRoute>() },
-    Tab(AccountRoute, R.string.tab_account, Icons.Filled.Person) { it.hasRoute<AccountRoute>() },
+    Tab(HomeRoute, R.string.tab_home, Icons.Filled.Home, Icons.Outlined.Home) { it.hasRoute<HomeRoute>() },
+    Tab(ExploreRoute, R.string.tab_explore, Icons.Filled.Search, Icons.Outlined.Search) { it.hasRoute<ExploreRoute>() },
+    Tab(NewsRoute, R.string.tab_news, Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List) { it.hasRoute<NewsRoute>() },
+    Tab(AccountRoute, R.string.tab_account, Icons.Filled.Person, Icons.Outlined.Person) { it.hasRoute<AccountRoute>() },
 )
+
+private enum class Stage { Launch, Welcome, Main }
+
+/** Minimum time the logo stays up after the system splash, so the name can be read. */
+private const val LAUNCH_MS = 1200L
 
 @Composable
 fun AppNavigation() {
@@ -112,19 +128,31 @@ fun AppNavigation() {
     val welcomeDone by container.session.welcomeDone.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
+    // Launch logo once per app start (not again after rotation or returning from the background).
+    var launchDone by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!launchDone) {
+            delay(LAUNCH_MS)
+            launchDone = true
+        }
+    }
+
     // Welcome is shown once, on top of the app (not part of the back stack, so Home stays the
     // start destination and the bottom tabs always pop back to it correctly).
-    // The splash screen stays up until the flag is read from disk.
     var showWelcome by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var openLoginAfterWelcome by rememberSaveable { mutableStateOf(false) }
-    if (showWelcome == null) {
-        val done = welcomeDone ?: return Box(Modifier.fillMaxSize())
-        showWelcome = !done
+    if (showWelcome == null) welcomeDone?.let { showWelcome = !it }
+
+    val stage = when {
+        !launchDone || showWelcome == null -> Stage.Launch
+        showWelcome == true -> Stage.Welcome
+        else -> Stage.Main
     }
-    // Soft cross-fade from the welcome artwork into the app.
-    Crossfade(targetState = showWelcome == true, animationSpec = tween(450), label = "welcome") { welcome ->
-        if (welcome) {
-            WelcomeScreen(
+    // Soft cross-fades: logo -> welcome artwork (first launch) or straight into the app.
+    Crossfade(targetState = stage, animationSpec = tween(450), label = "stage") { current ->
+        when (current) {
+            Stage.Launch -> LaunchScreen()
+            Stage.Welcome -> WelcomeScreen(
                 onStart = {
                     scope.launch { container.session.setWelcomeDone() }
                     showWelcome = false
@@ -135,8 +163,7 @@ fun AppNavigation() {
                     showWelcome = false
                 },
             )
-        } else {
-            MainNavigation(openLogin = openLoginAfterWelcome, onLoginOpened = { openLoginAfterWelcome = false })
+            Stage.Main -> MainNavigation(openLogin = openLoginAfterWelcome, onLoginOpened = { openLoginAfterWelcome = false })
         }
     }
 }
@@ -155,26 +182,28 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
     val backStack by nav.currentBackStackEntryAsState()
     val destination = backStack?.destination
     val currentTab = destination?.let { d -> tabs.firstOrNull { it.matches(d) } }
+    val c = Aghour.colors
 
     Scaffold(
-        containerColor = Cream,
+        containerColor = c.page,
+        contentColor = c.ink,
         bottomBar = {
             if (currentTab != null) {
                 Column {
-                    HorizontalDivider(color = Sand)
-                    NavigationBar(containerColor = Color.White, tonalElevation = 0.dp) {
+                    HorizontalDivider(color = c.line)
+                    NavigationBar(containerColor = c.surface, tonalElevation = 0.dp) {
                         tabs.forEach { tab ->
                             NavigationBarItem(
                                 selected = tab == currentTab,
                                 onClick = { nav.navigateToTab(tab.route) },
-                                icon = { Icon(tab.icon, contentDescription = null) },
+                                icon = { Icon(if (tab == currentTab) tab.selectedIcon else tab.icon, contentDescription = null) },
                                 label = { Text(stringResource(tab.labelRes), fontWeight = FontWeight.SemiBold) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    indicatorColor = Gold.copy(alpha = 0.15f),
-                                    selectedIconColor = Forest,
-                                    selectedTextColor = Gold,
-                                    unselectedIconColor = Forest.copy(alpha = 0.4f),
-                                    unselectedTextColor = Forest.copy(alpha = 0.4f),
+                                    indicatorColor = Color.Transparent,
+                                    selectedIconColor = c.goldInk,
+                                    selectedTextColor = c.goldInk,
+                                    unselectedIconColor = c.muted,
+                                    unselectedTextColor = c.muted,
                                 ),
                             )
                         }
@@ -223,6 +252,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onArticleClick = { nav.go(ArticleRoute(it.id)) },
                     onSeeAllNews = { nav.navigateToTab(NewsRoute) },
                     onAddFirm = { nav.go(PlansRoute) },
+                    onNotifications = { nav.go(NotificationsRoute) },
                 )
             }
             composable<ExploreRoute> { ExploreScreen(onFirmClick = { nav.go(FirmRoute(it.id)) }) }
@@ -236,6 +266,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onNotifications = { nav.go(NotificationsRoute) },
                     onChangePassword = { nav.go(ChangePasswordRoute) },
                     onMyFirms = { nav.go(MyFirmsRoute) },
+                    onSettings = { nav.go(SettingsRoute) },
                 )
             }
 
@@ -263,9 +294,22 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                 )
             }
             composable<PaymentsRoute> { PaymentsScreen(onBack = { nav.back() }) }
-            composable<NotificationsRoute> { NotificationsScreen(onBack = { nav.back() }) }
+            composable<NotificationsRoute> {
+                NotificationsScreen(
+                    onBack = { nav.back() },
+                    onOpen = { target ->
+                        when (target) {
+                            NotificationTarget.Payments -> nav.go(PaymentsRoute)
+                            NotificationTarget.Plans -> nav.go(PlansRoute)
+                            NotificationTarget.MyFirms -> nav.go(MyFirmsRoute)
+                            NotificationTarget.News -> nav.navigateToTab(NewsRoute)
+                        }
+                    },
+                )
+            }
             composable<ChangePasswordRoute> { ChangePasswordScreen(onBack = { nav.back() }) }
             composable<MyFirmsRoute> { MyFirmsScreen(onBack = { nav.back() }, onFirmClick = { nav.go(FirmRoute(it.id)) }) }
+            composable<SettingsRoute> { SettingsScreen(onBack = { nav.back() }) }
         }
     }
 }

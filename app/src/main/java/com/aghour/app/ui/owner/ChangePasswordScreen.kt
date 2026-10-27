@@ -27,7 +27,7 @@ import com.aghour.app.ui.components.FormField
 import com.aghour.app.ui.components.GoldButton
 import com.aghour.app.ui.components.ScreenTitle
 import com.aghour.app.ui.components.appContainer
-import com.aghour.app.ui.theme.Cream
+import com.aghour.app.ui.theme.Aghour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -84,7 +84,7 @@ fun ChangePasswordScreen(onBack: () -> Unit) {
         }
     }
 
-    Column(Modifier.fillMaxSize().background(Cream).imePadding()) {
+    Column(Modifier.fillMaxSize().background(Aghour.colors.page).imePadding()) {
         ScreenTitle(stringResource(R.string.change_password), onBack = onBack)
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             FormField(

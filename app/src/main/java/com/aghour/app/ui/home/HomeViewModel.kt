@@ -7,6 +7,7 @@ import com.aghour.app.data.remote.ArticleDto
 import com.aghour.app.data.remote.CategoryDto
 import com.aghour.app.data.remote.FirmDto
 import com.aghour.app.data.repository.CatalogRepository
+import com.aghour.app.data.repository.OwnerRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,10 +21,12 @@ data class HomeUiState(
     val categories: List<CategoryDto> = emptyList(),
     val featuredFirms: List<FirmDto> = emptyList(),
     val latestNews: List<ArticleDto> = emptyList(),
+    /** Unread notifications for the bell; 0 for guests. */
+    val unreadCount: Int = 0,
     val error: String? = null,
 )
 
-class HomeViewModel(private val catalog: CatalogRepository) : ViewModel() {
+class HomeViewModel(private val catalog: CatalogRepository, private val owner: OwnerRepository) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeUiState())
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
@@ -36,7 +39,7 @@ class HomeViewModel(private val catalog: CatalogRepository) : ViewModel() {
     fun load(refresh: Boolean = false) {
         _state.update { it.copy(loading = !refresh && it.categories.isEmpty(), refreshing = refresh, error = null) }
         viewModelScope.launch {
-            val categories = async { catalog.categories() }
+            val categories = async { catalog.categories(refresh) }
             val firms = async { catalog.firms(query = null, categoryId = null, page = 1, perPage = 4) }
             val news = async { catalog.articles(page = 1, perPage = 3) }
 
@@ -52,4 +55,13 @@ class HomeViewModel(private val catalog: CatalogRepository) : ViewModel() {
     }
 
     fun refresh() = load(refresh = true)
+
+    /** Called each time Home is shown while signed in (notifications may have been read elsewhere). */
+    fun loadUnread() {
+        viewModelScope.launch {
+            (owner.notifications() as? ApiResult.Success)?.let { r -> _state.update { it.copy(unreadCount = r.data.second) } }
+        }
+    }
+
+    fun clearUnread() = _state.update { it.copy(unreadCount = 0) }
 }

@@ -1,13 +1,23 @@
 package com.aghour.app.ui.components
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.material.icons.outlined.Handshake
+import androidx.compose.material.icons.outlined.Newspaper
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import com.aghour.app.BuildConfig
 import com.aghour.app.R
 import com.aghour.app.data.remote.CategoryDto
+import com.aghour.app.data.remote.FirmDto
 import java.time.Duration
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import okhttp3.HttpUrl.Companion.toHttpUrl
 
 private val DateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
 
@@ -50,22 +60,25 @@ fun egp(cents: Int): String {
 
 fun greeting(): String = if (LocalTime.now().hour < 12) "صباح الخير" else "مساء الخير"
 
-/** Symbols for the category icon keys used by the admin dashboard; falls back to the first letter. */
-fun categorySymbol(category: CategoryDto): String = categorySymbol(category.icon, category.name)
+/**
+ * Absolute URL of a category image. The API sends `icon_url` relative to its host
+ * (e.g. /api/v1/categories/3/icon?v=…), so it is resolved against the API base URL.
+ * null when the category has no image: callers show the app logo instead.
+ */
+fun categoryIconUrl(iconUrl: String?): String? =
+    iconUrl?.takeIf { it.isNotBlank() }?.let { BuildConfig.API_BASE_URL.toHttpUrl().resolve(it)?.toString() }
 
-fun categorySymbol(icon: String?, name: String): String = when (icon?.lowercase()) {
-    "doctor", "doctors", "clinic" -> "🩺"
-    "pharmacy" -> "💊"
-    "restaurant", "food" -> "🍽️"
-    "shop", "store", "market" -> "🛒"
-    "craft", "crafts", "worker" -> "🛠️"
-    "school", "education" -> "🎓"
-    "bakery" -> "🥖"
-    "car", "transport" -> "🚗"
-    "mosque" -> "🕌"
-    "sports", "gym" -> "⚽"
-    "services", "government" -> "🏛️"
-    else -> name.trim().take(1)
+/** The firm's category image: from the firm's own category if the API sent it, else from the loaded list. */
+fun firmIconUrl(firm: FirmDto, categories: List<CategoryDto>): String? =
+    categoryIconUrl(firm.category.iconUrl ?: categories.firstOrNull { it.id == firm.category.id }?.iconUrl)
+
+/** Icon for a notification row, from the server's `kind` (unknown kinds get a bell). */
+fun notificationIcon(kind: String): ImageVector = when {
+    "payment" in kind || "subscription" in kind -> Icons.Outlined.CreditCard
+    "firm" in kind -> Icons.Outlined.Storefront
+    "article" in kind || "news" in kind -> Icons.Outlined.Newspaper
+    "invit" in kind -> Icons.Outlined.Handshake
+    else -> Icons.Outlined.Notifications
 }
 
 @Composable

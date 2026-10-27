@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,7 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -52,10 +53,9 @@ import com.aghour.app.ui.components.MutedText
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.StatusBarIcons
 import com.aghour.app.ui.components.appContainer
-import com.aghour.app.ui.theme.Cream
-import com.aghour.app.ui.theme.Forest
-import com.aghour.app.ui.theme.Gold
-import com.aghour.app.ui.theme.Sand
+import com.aghour.app.ui.components.categoryIconUrl
+import com.aghour.app.ui.components.firmIconUrl
+import com.aghour.app.ui.theme.Aghour
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +65,8 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val focus = LocalFocusManager.current
     val listState = rememberLazyListState()
-    StatusBarIcons(light = false)
+    val c = Aghour.colors
+    StatusBarIcons()
 
     val reachedEnd by remember {
         derivedStateOf {
@@ -75,26 +76,29 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
     }
     LaunchedEffect(reachedEnd, state.canLoadMore) { if (reachedEnd && state.canLoadMore) vm.loadMore() }
 
-    Column(Modifier.fillMaxSize().background(Cream)) {
+    Column(Modifier.fillMaxSize().background(c.page)) {
         Column(Modifier.statusBarsPadding().padding(top = 12.dp, bottom = 8.dp)) {
             OutlinedTextField(
                 value = state.query,
                 onValueChange = vm::onQueryChange,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                placeholder = { Text(stringResource(R.string.explore_hint), color = Forest.copy(alpha = 0.4f)) },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Gold) },
+                placeholder = { Text(stringResource(R.string.explore_hint), color = c.muted) },
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = c.muted) },
                 trailingIcon = {
                     if (state.query.isNotEmpty()) {
-                        IconButton(onClick = { vm.onQueryChange("") }) { Icon(Icons.Filled.Clear, contentDescription = null) }
+                        IconButton(onClick = { vm.onQueryChange("") }) { Icon(Icons.Filled.Clear, contentDescription = null, tint = c.muted) }
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = Gold,
-                    unfocusedBorderColor = Sand,
+                    focusedContainerColor = c.surface2,
+                    unfocusedContainerColor = c.surface2,
+                    focusedTextColor = c.ink,
+                    unfocusedTextColor = c.ink,
+                    focusedBorderColor = c.gold,
+                    unfocusedBorderColor = c.line,
+                    cursorColor = c.gold,
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { focus.clearFocus(); vm.reload() }),
@@ -105,6 +109,9 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
                 options = listOf<Pair<Long?, String>>(null to allLabel) + state.categories.map { it.id to it.name },
                 selected = state.categoryId,
                 onSelect = vm::selectCategory,
+                // "الكل" gets a grid icon; categories show their API image, or the app logo without one.
+                icons = mapOf<Long?, ImageVector?>(null to Icons.Outlined.Apps) + state.categories.associate { it.id to null },
+                imageUrls = state.categories.mapNotNull { category -> categoryIconUrl(category.iconUrl)?.let { category.id to it } }.toMap(),
             )
             if (!state.loading && state.error == null) {
                 MutedText(stringResource(R.string.results_count, state.total), Modifier.padding(start = 18.dp, top = 8.dp))
@@ -122,11 +129,13 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    items(state.firms, key = { it.id }) { firm -> FirmRow(firm, onClick = { onFirmClick(firm) }) }
+                    items(state.firms, key = { it.id }) { firm ->
+                        FirmRow(firm, onClick = { onFirmClick(firm) }, iconUrl = firmIconUrl(firm, state.categories))
+                    }
                     if (state.loadingMore) {
                         item {
                             Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(Modifier.size(28.dp), color = Gold)
+                                CircularProgressIndicator(Modifier.size(28.dp), color = c.gold)
                             }
                         }
                     }

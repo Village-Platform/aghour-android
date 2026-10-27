@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark window background so "System" dark mode never flashes a light window. -->
+    <style name="Theme.Aghour" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/page_dark</item>
+    </style>
+
+    <style name="Theme.Aghour.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/page_dark</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_mark</item>
+        <item name="postSplashScreenTheme">@style/Theme.Aghour</item>
+    </style>
+</resources>

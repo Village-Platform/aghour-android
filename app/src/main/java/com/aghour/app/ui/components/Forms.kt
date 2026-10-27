@@ -28,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,14 +38,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import com.aghour.app.R
-import com.aghour.app.ui.theme.Danger
-import com.aghour.app.ui.theme.DangerSoft
-import com.aghour.app.ui.theme.Forest
-import com.aghour.app.ui.theme.Gold
-import com.aghour.app.ui.theme.Muted
-import com.aghour.app.ui.theme.Sand
+import com.aghour.app.ui.theme.Aghour
 
-/** Label above a white rounded field with a sand border (as in the designs). */
+/** Label above a soft grey rounded field with a thin border (as in the designs). */
 @Composable
 fun FormField(
     label: String,
@@ -62,16 +56,17 @@ fun FormField(
     isPassword: Boolean = false,
 ) {
     val focus = LocalFocusManager.current
+    val c = Aghour.colors
     var visible by rememberSaveable { mutableStateOf(false) }
     Column(modifier) {
-        Text(label, style = MaterialTheme.typography.labelMedium, color = Forest.copy(alpha = 0.75f))
+        Text(label, style = MaterialTheme.typography.labelMedium, color = c.muted)
         Spacer(Modifier.height(4.dp))
         OutlinedTextField(
             value = value,
             onValueChange = onChange,
             modifier = Modifier.fillMaxWidth(),
             placeholder = if (placeholder != null) {
-                { Text(placeholder, color = Forest.copy(alpha = 0.3f)) }
+                { Text(placeholder, color = c.muted.copy(alpha = 0.6f)) }
             } else {
                 null
             },
@@ -87,7 +82,7 @@ fun FormField(
             trailingIcon = if (isPassword) {
                 {
                     TextButton(onClick = { visible = !visible }) {
-                        Text(stringResource(if (visible) R.string.hide_password else R.string.show_password), color = Gold)
+                        Text(stringResource(if (visible) R.string.hide_password else R.string.show_password), color = c.goldInk)
                     }
                 }
             } else {
@@ -106,12 +101,16 @@ fun FormField(
                 textDirection = if (ltr) TextDirection.Ltr else TextDirection.Content,
             ),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                errorContainerColor = Color.White,
-                focusedBorderColor = Gold,
-                unfocusedBorderColor = Sand,
-                cursorColor = Forest,
+                focusedContainerColor = c.surface2,
+                unfocusedContainerColor = c.surface2,
+                errorContainerColor = c.surface2,
+                focusedTextColor = c.ink,
+                unfocusedTextColor = c.ink,
+                focusedBorderColor = c.gold,
+                unfocusedBorderColor = c.line,
+                errorBorderColor = c.bad,
+                errorSupportingTextColor = c.bad,
+                cursorColor = c.gold,
             ),
         )
     }
@@ -120,16 +119,17 @@ fun FormField(
 @Composable
 fun ErrorBanner(message: String?) {
     if (message == null) return
+    val c = Aghour.colors
     Row(
-        Modifier.fillMaxWidth().background(DangerSoft, RoundedCornerShape(12.dp)).padding(12.dp),
+        Modifier.fillMaxWidth().background(c.bad.copy(alpha = 0.10f), RoundedCornerShape(12.dp)).padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Filled.Warning, contentDescription = null, tint = Danger, modifier = Modifier.size(18.dp))
+        Icon(Icons.Filled.Warning, contentDescription = null, tint = c.bad, modifier = Modifier.size(18.dp))
         Spacer(Modifier.size(8.dp))
-        Text(message, color = Danger, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+        Text(message, color = c.bad, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
     }
 }
 
 @Composable
 fun MutedText(text: String, modifier: Modifier = Modifier) =
-    Text(text, modifier = modifier, color = Muted, style = MaterialTheme.typography.bodySmall)
+    Text(text, modifier = modifier, color = Aghour.colors.muted, style = MaterialTheme.typography.bodySmall)
