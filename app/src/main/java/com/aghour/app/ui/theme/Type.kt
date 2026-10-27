@@ -9,15 +9,18 @@ import androidx.compose.ui.unit.sp
 import com.aghour.app.R
 
 /**
- * Cairo (SIL Open Font License, see licenses/Cairo-OFL.txt) — one variable font file,
- * each weight below picks its point on the font's weight axis.
+ * Cairo (SIL Open Font License, see licenses/Cairo-OFL.txt) — one static file per weight
+ * (cairo_regular … cairo_black), cut from the variable font. Android does not reliably apply a
+ * variable font's weight axis to resource fonts, so a single variable file rendered every weight
+ * as Regular and nothing looked bold.
  */
 val Cairo = FontFamily(
-    Font(R.font.cairo, FontWeight.Normal),
-    Font(R.font.cairo, FontWeight.Medium),
-    Font(R.font.cairo, FontWeight.SemiBold),
-    Font(R.font.cairo, FontWeight.Bold),
-    Font(R.font.cairo, FontWeight.ExtraBold),
+    Font(R.font.cairo_regular, FontWeight.Normal),
+    Font(R.font.cairo_medium, FontWeight.Medium),
+    Font(R.font.cairo_semibold, FontWeight.SemiBold),
+    Font(R.font.cairo_bold, FontWeight.Bold),
+    Font(R.font.cairo_extrabold, FontWeight.ExtraBold),
+    Font(R.font.cairo_black, FontWeight.Black),
 )
 
 /**

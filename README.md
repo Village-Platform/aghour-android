@@ -67,7 +67,9 @@ The UI follows the screen designs artifact "أجهور الكبرى — تصمي
   dark = GitHub Dark greys (page `#0D1117`, cards `#161B22`, borders `#30363D`, text `#E6EDF3`), gold `#D9A458` actions.
 - Theme: follows the phone's dark mode by default ("حسب الجهاز"); Light or Dark can be forced in
   Settings (Profile → المظهر). Saved on the device in `SettingsStore` (survives logout).
-- Font: Cairo, bundled as one variable font (`res/font/cairo.ttf`, SIL Open Font License in `licenses/`).
+- Font: Cairo, one static file per weight (`res/font/cairo_regular.ttf` … `cairo_black.ttf`, cut from
+  the variable font, because Android rendered the variable file as Regular for every weight; SIL Open
+  Font License in `licenses/`).
 - Welcome screen text and "ابدأ الآن" button use Tajawal (`res/font/tajawal_*.ttf`, SIL Open Font License).
 - Detail screens (firm, article) use `SheetLayout`: photo header, then a sheet with rounded top
   corners. Other screens are plain pages with `ScreenTitle` or their own header (Home, Profile, Login).
