@@ -167,7 +167,7 @@ private fun AuthLayout(
             }
             Column {
                 Text(title, color = c.ink, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                Text(subtitle, color = c.muted, style = MaterialTheme.typography.bodySmall)
+                Text(subtitle, color = c.muted, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
             }
             form()
         }

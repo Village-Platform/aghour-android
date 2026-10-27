@@ -170,7 +170,7 @@ fun ArticleScreen(articleId: Long, onBack: () -> Unit) {
             Text(formatDate(article.publishedAt), style = MaterialTheme.typography.labelSmall, color = c.muted)
         }
         Text(article.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = c.ink, modifier = Modifier.asHeading())
-        Text(article.author.name, style = MaterialTheme.typography.labelMedium, color = c.goldInk)
+        Text(article.author.name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = c.goldInk)
         Text(article.body, style = MaterialTheme.typography.bodyLarge, color = c.ink)
     }
 }

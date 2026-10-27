@@ -148,7 +148,7 @@ fun ScreenTitle(
         }
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = c.ink, modifier = Modifier.asHeading())
-            if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = c.muted)
+            if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = c.muted)
         }
         Row(verticalAlignment = Alignment.CenterVertically, content = actions)
     }

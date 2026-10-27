@@ -268,7 +268,7 @@ private fun MenuRow(icon: ImageVector, title: String, trailing: String?, onClick
     ) {
         Icon(icon, contentDescription = null, tint = c.goldInk, modifier = Modifier.size(22.dp))
         Spacer(Modifier.width(12.dp))
-        Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = c.ink, modifier = Modifier.weight(1f))
+        Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = c.ink, modifier = Modifier.weight(1f))
         if (trailing != null) {
             Box(Modifier.background(c.gold.copy(alpha = 0.20f), CircleShape).padding(horizontal = 8.dp)) {
                 Text(trailing, style = MaterialTheme.typography.labelSmall, color = c.goldInk)
