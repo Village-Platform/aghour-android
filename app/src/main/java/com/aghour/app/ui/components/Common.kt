@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.aghour.app.R
 import com.aghour.app.data.remote.CategoryDto
+import com.aghour.app.data.remote.FirmDto
 import java.time.Duration
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -66,6 +67,19 @@ fun categorySymbol(icon: String?, name: String): String = when (icon?.lowercase(
     "sports", "gym" -> "⚽"
     "services", "government" -> "🏛️"
     else -> name.trim().take(1)
+}
+
+/** The firm's category emoji, looked up in an already-loaded category list (null = unknown, show the logo). */
+fun firmSymbol(firm: FirmDto, categories: List<CategoryDto>): String? =
+    categories.firstOrNull { it.id == firm.category.id }?.let { categorySymbol(it) }
+
+/** Icon for a notification row, from the server's `kind` (unknown kinds get a bell). */
+fun notificationSymbol(kind: String): String = when {
+    "payment" in kind || "subscription" in kind -> "💳"
+    "firm" in kind -> "🏪"
+    "article" in kind || "news" in kind -> "📰"
+    "invit" in kind -> "🤝"
+    else -> "🔔"
 }
 
 @Composable

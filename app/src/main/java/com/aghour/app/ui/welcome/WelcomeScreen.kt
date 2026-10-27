@@ -33,7 +33,7 @@ import com.aghour.app.ui.theme.Tajawal
 /** First launch only: the splash artwork with a "start" button between the logo and the village skyline. */
 @Composable
 fun WelcomeScreen(onStart: () -> Unit, onLogin: () -> Unit) {
-    StatusBarIcons(light = true)
+    StatusBarIcons(overPhoto = true)
     BoxWithConstraints(Modifier.fillMaxSize().background(Forest)) {
         Image(
             painter = painterResource(R.drawable.welcome_splash),

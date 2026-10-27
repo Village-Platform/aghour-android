@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -58,10 +59,7 @@ import com.aghour.app.ui.components.formatDate
 import com.aghour.app.ui.components.kindLabel
 import com.aghour.app.ui.components.kindTone
 import com.aghour.app.ui.components.shareText
-import com.aghour.app.ui.theme.Cream
-import com.aghour.app.ui.theme.Forest
-import com.aghour.app.ui.theme.Gold
-import com.aghour.app.ui.theme.Muted
+import com.aghour.app.ui.theme.Aghour
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,8 +76,9 @@ fun NewsScreen(onArticleClick: (ArticleDto) -> Unit) {
         }
     }
     LaunchedEffect(reachedEnd, state.canLoadMore) { if (reachedEnd && state.canLoadMore) vm.loadMore() }
+    val c = Aghour.colors
 
-    Column(Modifier.fillMaxSize().background(Cream)) {
+    Column(Modifier.fillMaxSize().background(c.page)) {
         ScreenTitle(stringResource(R.string.news_title))
         FilterChipsRow(
             options = listOf<Pair<String?, String>>(
@@ -114,7 +113,7 @@ fun NewsScreen(onArticleClick: (ArticleDto) -> Unit) {
                     if (state.loadingMore) {
                         item {
                             Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(Modifier.size(28.dp), color = Gold)
+                                CircularProgressIndicator(Modifier.size(28.dp), color = c.gold)
                             }
                         }
                     }
@@ -131,9 +130,10 @@ fun ArticleScreen(articleId: Long, onBack: () -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val article = state.article
+    val c = Aghour.colors
 
     if (article == null) {
-        Column(Modifier.fillMaxSize().background(Cream)) {
+        Column(Modifier.fillMaxSize().background(c.page)) {
             ScreenTitle(title = stringResource(R.string.tab_news), onBack = onBack)
             if (state.loading) SkeletonRows(2, Modifier.padding(16.dp)) else MessageBox(state.error ?: "", onRetry = vm::load)
         }
@@ -143,21 +143,21 @@ fun ArticleScreen(articleId: Long, onBack: () -> Unit) {
     SheetLayout(
         sheetPadding = PaddingValues(20.dp),
         header = {
-            Box(Modifier.fillMaxWidth().height(200.dp)) {
+            Box(Modifier.fillMaxWidth().height(190.dp)) {
                 Image(
                     painter = painterResource(R.drawable.brand_scene),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
-                Box(Modifier.fillMaxSize().background(Forest.copy(alpha = 0.40f)))
+                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.30f)))
                 Row(
                     Modifier.fillMaxWidth().statusBarsPadding().padding(12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    OverlayIconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Cream) }
+                    OverlayIconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Color.White) }
                     OverlayIconButton({ context.shareText("${article.title}\n\n${article.body}") }) {
-                        Icon(Icons.Filled.Share, stringResource(R.string.share), tint = Cream)
+                        Icon(Icons.Filled.Share, stringResource(R.string.share), tint = Color.White)
                     }
                 }
             }
@@ -166,10 +166,10 @@ fun ArticleScreen(articleId: Long, onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Badge(kindLabel(article.kind), kindTone(article.kind))
             Spacer(Modifier.width(8.dp))
-            Text(formatDate(article.publishedAt), style = MaterialTheme.typography.labelSmall, color = Muted)
+            Text(formatDate(article.publishedAt), style = MaterialTheme.typography.labelSmall, color = c.muted)
         }
-        Text(article.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = Forest)
-        Text(article.author.name, style = MaterialTheme.typography.labelMedium, color = Gold)
-        Text(article.body, style = MaterialTheme.typography.bodyLarge, color = Forest.copy(alpha = 0.9f))
+        Text(article.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = c.ink)
+        Text(article.author.name, style = MaterialTheme.typography.labelMedium, color = c.goldInk)
+        Text(article.body, style = MaterialTheme.typography.bodyLarge, color = c.ink)
     }
 }

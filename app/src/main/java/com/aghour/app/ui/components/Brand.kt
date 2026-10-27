@@ -2,6 +2,7 @@ package com.aghour.app.ui.components
 
 import android.app.Activity
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -59,27 +61,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.aghour.app.R
-import com.aghour.app.ui.theme.Cream
-import com.aghour.app.ui.theme.Danger
-import com.aghour.app.ui.theme.DangerSoft
-import com.aghour.app.ui.theme.Forest
-import com.aghour.app.ui.theme.Gold
-import com.aghour.app.ui.theme.GoldDark
-import com.aghour.app.ui.theme.Muted
-import com.aghour.app.ui.theme.Sand
+import com.aghour.app.ui.theme.Aghour
 
 // ---------------------------------------------------------------- system bars
 
-/** Light status-bar icons on dark (forest/photo) screens, dark icons on cream screens. */
+/** Light status-bar icons over photos and in the dark theme, dark icons on light pages. */
 @Composable
-fun StatusBarIcons(light: Boolean) {
+fun StatusBarIcons(overPhoto: Boolean = false) {
     val view = LocalView.current
+    val light = overPhoto || Aghour.colors.isDark
     if (view.isInEditMode) return
     SideEffect {
         val window = (view.context as? Activity)?.window ?: return@SideEffect
@@ -90,8 +87,8 @@ fun StatusBarIcons(light: Boolean) {
 // ---------------------------------------------------------------- layouts
 
 /**
- * The layout used by most designs: a dark header, then a cream "sheet" with rounded top corners
- * that fills the rest of the screen. Scrolls as one piece.
+ * Detail layout (firm, article): a photo header, then a page-coloured "sheet" with rounded top
+ * corners that slides up over the photo. Scrolls as one piece.
  */
 @Composable
 fun SheetLayout(
@@ -101,28 +98,30 @@ fun SheetLayout(
     header: @Composable ColumnScope.() -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    StatusBarIcons(light = true)
+    StatusBarIcons(overPhoto = true)
+    val c = Aghour.colors
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     Column(
         modifier
             .fillMaxSize()
-            .background(Forest)
+            .background(c.page)
             .verticalScroll(scrollState),
     ) {
         header()
         Column(
             Modifier
                 .fillMaxWidth()
+                .offset(y = (-20).dp)
                 .heightIn(min = screenHeight)
-                .background(Cream, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .background(c.page, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 .padding(sheetPadding),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
             content = content,
         )
     }
 }
 
-/** Title area for cream screens (Explore, News, Plans, Pay). */
+/** Title area for plain screens (Explore, News, Plans, Pay, Settings…). */
 @Composable
 fun ScreenTitle(
     title: String,
@@ -130,7 +129,8 @@ fun ScreenTitle(
     onBack: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    StatusBarIcons(light = false)
+    StatusBarIcons()
+    val c = Aghour.colors
     Row(
         Modifier
             .fillMaxWidth()
@@ -140,14 +140,14 @@ fun ScreenTitle(
     ) {
         if (onBack != null) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = Forest)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = c.ink)
             }
         }
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = Forest)
-            if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Muted)
+            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = c.ink)
+            if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = c.muted)
         }
-        Row(content = actions)
+        Row(verticalAlignment = Alignment.CenterVertically, content = actions)
     }
 }
 
@@ -158,7 +158,7 @@ fun OverlayIconButton(onClick: () -> Unit, content: @Composable () -> Unit) {
         Modifier
             .size(40.dp)
             .clip(CircleShape)
-            .background(Forest.copy(alpha = 0.55f))
+            .background(Color.Black.copy(alpha = 0.35f))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
         content = { content() },
@@ -167,36 +167,52 @@ fun OverlayIconButton(onClick: () -> Unit, content: @Composable () -> Unit) {
 
 // ---------------------------------------------------------------- brand pieces
 
-/** Forest rounded square with the cream logo mark (placeholder for firms and news without photos). */
+/** The logo mark: green on light pages, cream on dark ones. */
+@Composable
+fun BrandMark(modifier: Modifier = Modifier, alpha: Float = 1f) {
+    val res = if (Aghour.colors.isDark) R.drawable.mark_cream else R.drawable.mark_green
+    Image(painterResource(res), contentDescription = null, modifier = modifier, alpha = alpha)
+}
+
+/** The full logo (mark + name): green on light pages, cream on dark ones. */
+@Composable
+fun BrandLogo(modifier: Modifier = Modifier) {
+    val res = if (Aghour.colors.isDark) R.drawable.logo_cream else R.drawable.logo_green
+    Image(painterResource(res), contentDescription = null, modifier = modifier)
+}
+
+/** Tinted rounded square with the logo mark (placeholder for firms and news without photos). */
 @Composable
 fun MarkTile(size: Dp = 44.dp, corner: Dp = 12.dp) {
     Box(
-        Modifier.size(size).clip(RoundedCornerShape(corner)).background(Forest),
+        Modifier.size(size).clip(RoundedCornerShape(corner)).background(Aghour.colors.brand.copy(alpha = 0.10f)),
         contentAlignment = Alignment.Center,
     ) {
-        Image(painterResource(R.drawable.mark_cream), contentDescription = null, modifier = Modifier.size(size * 0.64f))
+        BrandMark(Modifier.size(size * 0.66f))
     }
 }
 
-/** Forest rounded square with an emoji/letter (categories). */
+/** Tinted rounded square with an emoji/letter (categories). */
 @Composable
-fun SymbolTile(symbol: String, size: Dp = 48.dp, background: Color = Forest, content: Color = Cream) {
+fun SymbolTile(symbol: String, size: Dp = 48.dp) {
+    val c = Aghour.colors
     Box(
-        Modifier.size(size).clip(RoundedCornerShape(size * 0.32f)).background(background),
+        Modifier.size(size).clip(RoundedCornerShape(size * 0.32f)).background(c.brand.copy(alpha = 0.10f)),
         contentAlignment = Alignment.Center,
     ) {
-        Text(symbol, fontSize = (size.value * 0.42f).sp, color = content, fontWeight = FontWeight.Bold)
+        Text(symbol, fontSize = (size.value * 0.40f).sp, color = c.ink, fontWeight = FontWeight.Bold)
     }
 }
 
 /** Gold rounded-square avatar with the first letter (profile). */
 @Composable
-fun LetterAvatar(text: String, size: Dp = 56.dp, background: Color = Gold, content: Color = Forest) {
+fun LetterAvatar(text: String, size: Dp = 56.dp) {
+    val c = Aghour.colors
     Box(
-        Modifier.size(size).clip(RoundedCornerShape(size * 0.28f)).background(background),
+        Modifier.size(size).clip(RoundedCornerShape(size * 0.28f)).background(c.gold),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text.trim().take(1), color = content, fontWeight = FontWeight.Black, fontSize = (size.value * 0.42f).sp)
+        Text(text.trim().take(1), color = c.onGold, fontWeight = FontWeight.Black, fontSize = (size.value * 0.42f).sp)
     }
 }
 
@@ -204,11 +220,12 @@ enum class BadgeTone { Green, Gold, Red, Gray }
 
 @Composable
 fun Badge(text: String, tone: BadgeTone = BadgeTone.Green, modifier: Modifier = Modifier) {
+    val c = Aghour.colors
     val (bg, fg) = when (tone) {
-        BadgeTone.Green -> Forest.copy(alpha = 0.10f) to Forest
-        BadgeTone.Gold -> Gold.copy(alpha = 0.15f) to GoldDark
-        BadgeTone.Red -> DangerSoft to Danger
-        BadgeTone.Gray -> Sand.copy(alpha = 0.6f) to Forest.copy(alpha = 0.6f)
+        BadgeTone.Green -> c.ok.copy(alpha = 0.12f) to c.ok
+        BadgeTone.Gold -> c.gold.copy(alpha = 0.22f) to c.goldInk
+        BadgeTone.Red -> c.bad.copy(alpha = 0.12f) to c.bad
+        BadgeTone.Gray -> c.surface2 to c.muted
     }
     Text(
         text,
@@ -222,12 +239,13 @@ fun Badge(text: String, tone: BadgeTone = BadgeTone.Green, modifier: Modifier = 
 
 @Composable
 fun SectionHeader(title: String, action: String? = null, onAction: (() -> Unit)? = null) {
+    val c = Aghour.colors
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = MaterialTheme.typography.titleMedium, color = Forest, modifier = Modifier.weight(1f))
+        Text(title, style = MaterialTheme.typography.titleMedium, color = c.ink, modifier = Modifier.weight(1f))
         if (action != null && onAction != null) {
             Text(
                 action,
-                color = Gold,
+                color = c.goldInk,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onAction).padding(6.dp),
             )
@@ -235,7 +253,7 @@ fun SectionHeader(title: String, action: String? = null, onAction: (() -> Unit)?
     }
 }
 
-/** Filter chips row: selected = forest, others = white with a sand border. */
+/** Filter chips row: selected = gold, others = soft grey (surface2). */
 @Composable
 fun <T> FilterChipsRow(
     options: List<Pair<T, String>>,
@@ -243,6 +261,7 @@ fun <T> FilterChipsRow(
     onSelect: (T) -> Unit,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp),
 ) {
+    val c = Aghour.colors
     LazyRow(contentPadding = contentPadding, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(options, key = { it.first.toString() }) { (value, label) ->
             val isSelected = value == selected
@@ -250,40 +269,62 @@ fun <T> FilterChipsRow(
                 label,
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .background(if (isSelected) Forest else Color.White)
-                    .then(if (isSelected) Modifier else Modifier.border(1.dp, Sand, RoundedCornerShape(50)))
+                    .background(if (isSelected) c.gold else c.surface2)
                     .clickable { onSelect(value) }
                     .padding(horizontal = 14.dp, vertical = 7.dp),
-                color = if (isSelected) Cream else Forest.copy(alpha = 0.65f),
+                color = if (isSelected) c.onGold else c.muted,
                 style = MaterialTheme.typography.labelMedium,
             )
         }
     }
 }
 
-/** Fake search field that opens the Explore tab (Home header, on forest). */
+/** Segmented control (theme picker): selected = gold. */
 @Composable
-fun SearchPill(text: String, onClick: () -> Unit, onDark: Boolean = true) {
+fun <T> Segmented(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier) {
+    val c = Aghour.colors
+    Row(
+        modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(c.surface2)
+            .border(1.dp, c.line, RoundedCornerShape(10.dp))
+            .padding(2.dp),
+    ) {
+        options.forEach { (value, label) ->
+            val isSelected = value == selected
+            Text(
+                label,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (isSelected) c.gold else Color.Transparent)
+                    .clickable { onSelect(value) }
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                color = if (isSelected) c.onGold else c.muted,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    }
+}
+
+/** Fake search field that opens the Explore tab (Home). */
+@Composable
+fun SearchPill(text: String, onClick: () -> Unit) {
+    val c = Aghour.colors
     Row(
         Modifier
             .fillMaxWidth()
             .height(46.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(if (onDark) Color.White.copy(alpha = 0.10f) else Color.White)
-            .then(if (onDark) Modifier else Modifier.border(1.dp, Sand, RoundedCornerShape(14.dp)))
+            .clip(RoundedCornerShape(12.dp))
+            .background(c.surface2)
+            .border(1.dp, c.line, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Filled.Search, contentDescription = null, tint = if (onDark) Cream.copy(alpha = 0.7f) else Gold, modifier = Modifier.size(20.dp))
+        Icon(Icons.Filled.Search, contentDescription = null, tint = c.muted, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(8.dp))
-        Text(
-            text,
-            color = if (onDark) Cream.copy(alpha = 0.6f) else Muted,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Text(text, color = c.muted, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -298,20 +339,21 @@ fun GoldButton(
     enabled: Boolean = true,
     fontFamily: FontFamily? = null,
 ) {
+    val c = Aghour.colors
     Button(
         onClick = onClick,
         enabled = enabled && !loading,
         modifier = modifier.fillMaxWidth().height(50.dp),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Gold,
-            contentColor = Forest,
-            disabledContainerColor = Gold.copy(alpha = 0.5f),
-            disabledContentColor = Forest.copy(alpha = 0.6f),
+            containerColor = c.gold,
+            contentColor = c.onGold,
+            disabledContainerColor = c.gold.copy(alpha = 0.5f),
+            disabledContentColor = c.onGold.copy(alpha = 0.6f),
         ),
     ) {
         if (loading) {
-            CircularProgressIndicator(Modifier.size(22.dp), color = Forest, strokeWidth = 2.dp)
+            CircularProgressIndicator(Modifier.size(22.dp), color = c.onGold, strokeWidth = 2.dp)
         } else {
             Text(
                 text,
@@ -323,35 +365,43 @@ fun GoldButton(
     }
 }
 
+/** Secondary button: soft grey with a thin border (the designs' "ghost" button). */
 @Composable
-fun ForestButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, height: Dp = 44.dp) {
+fun GhostButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, height: Dp = 44.dp) {
+    val c = Aghour.colors
     Button(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().height(height),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Forest, contentColor = Cream),
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, c.line),
+        colors = ButtonDefaults.buttonColors(containerColor = c.surface2, contentColor = c.ink),
     ) { Text(text, style = MaterialTheme.typography.labelLarge) }
 }
 
-/** Card container used across screens: white, sand border, rounded. */
+/** Card container used across screens: surface colour, thin border, rounded. */
 @Composable
-fun SandCard(
+fun SurfaceCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     padding: Dp = 14.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val c = Aghour.colors
     Column(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
-            .border(1.dp, Sand, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(14.dp))
+            .background(c.surface)
+            .border(1.dp, c.line, RoundedCornerShape(14.dp))
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(padding),
         content = content,
     )
 }
+
+/** "‹" pointing to the reading end, for menu rows. */
+@Composable
+fun Chevron() = Text("‹", color = Aghour.colors.muted, style = MaterialTheme.typography.titleMedium)
 
 // ---------------------------------------------------------------- states
 
@@ -362,23 +412,19 @@ fun MessageBox(message: String, modifier: Modifier = Modifier, onRetry: (() -> U
         modifier.fillMaxWidth().padding(vertical = 40.dp, horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(
-            painter = painterResource(R.drawable.mark_green),
-            contentDescription = null,
-            modifier = Modifier.size(72.dp),
-            alpha = 0.25f,
-        )
+        BrandMark(Modifier.size(72.dp), alpha = 0.25f)
         Spacer(Modifier.height(12.dp))
-        Text(message, color = Muted, style = MaterialTheme.typography.bodyMedium, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        Text(message, color = Aghour.colors.muted, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
         if (onRetry != null) {
             Spacer(Modifier.height(16.dp))
-            ForestButton(stringResource(R.string.retry), onRetry, Modifier.width(180.dp))
+            GhostButton(stringResource(R.string.retry), onRetry, Modifier.width(180.dp))
         }
     }
 }
 
 /** Moving light band over a placeholder shape while content loads. */
 fun Modifier.shimmer(): Modifier = composed {
+    val c = Aghour.colors
     val transition = rememberInfiniteTransition(label = "shimmer")
     val x by transition.animateFloat(
         initialValue = -400f,
@@ -388,7 +434,7 @@ fun Modifier.shimmer(): Modifier = composed {
     )
     background(
         Brush.linearGradient(
-            colors = listOf(Sand.copy(alpha = 0.55f), Cream, Sand.copy(alpha = 0.55f)),
+            colors = listOf(c.surface2, c.line, c.surface2),
             start = Offset(x, 0f),
             end = Offset(x + 400f, 200f),
         ),
@@ -398,14 +444,15 @@ fun Modifier.shimmer(): Modifier = composed {
 /** Placeholder rows shaped like the real list items. */
 @Composable
 fun SkeletonRows(count: Int = 5, modifier: Modifier = Modifier) {
+    val c = Aghour.colors
     Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         repeat(count) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Sand, RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(c.surface)
+                    .border(1.dp, c.line, RoundedCornerShape(14.dp))
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -419,4 +466,3 @@ fun SkeletonRows(count: Int = 5, modifier: Modifier = Modifier) {
         }
     }
 }
-

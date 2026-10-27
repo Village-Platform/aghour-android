@@ -7,12 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,10 +25,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -52,10 +50,7 @@ import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.appContainer
 import com.aghour.app.ui.components.copyToClipboard
 import com.aghour.app.ui.components.egp
-import com.aghour.app.ui.theme.Cream
-import com.aghour.app.ui.theme.Forest
-import com.aghour.app.ui.theme.Gold
-import com.aghour.app.ui.theme.Sand
+import com.aghour.app.ui.theme.Aghour
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -126,8 +121,9 @@ fun PayScreen(planId: Long, onBack: () -> Unit, onDone: () -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val copied = stringResource(R.string.copied)
+    val c = Aghour.colors
 
-    Column(Modifier.fillMaxSize().background(Cream).imePadding()) {
+    Column(Modifier.fillMaxSize().background(c.page).imePadding()) {
         ScreenTitle(stringResource(R.string.pay_title), onBack = onBack)
         val plan = state.plan
         when {
@@ -139,14 +135,19 @@ fun PayScreen(planId: Long, onBack: () -> Unit, onDone: () -> Unit) {
             ) {
                 // Plan summary
                 Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Forest).padding(16.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(c.gold.copy(alpha = 0.15f))
+                        .border(1.dp, c.gold.copy(alpha = 0.40f), RoundedCornerShape(16.dp))
+                        .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(stringResource(R.string.plan_label), color = Gold, style = MaterialTheme.typography.labelSmall)
-                        Text("${plan.name} · ${plan.durationDays} يوم", color = Cream, style = MaterialTheme.typography.titleSmall)
+                        Text(stringResource(R.string.plan_label), color = c.goldInk, style = MaterialTheme.typography.labelSmall)
+                        Text("${plan.name} · ${plan.durationDays} يوم", color = c.ink, style = MaterialTheme.typography.titleSmall)
                     }
-                    Text(egp(plan.priceCents), color = Cream, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    Text(egp(plan.priceCents), color = c.ink, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 }
 
                 // Payment methods
@@ -155,9 +156,9 @@ fun PayScreen(planId: Long, onBack: () -> Unit, onDone: () -> Unit) {
                     Column(
                         Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(Color.White)
-                            .border(if (selected) 2.dp else 1.dp, if (selected) Gold else Sand, RoundedCornerShape(18.dp))
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(c.surface)
+                            .border(if (selected) 2.dp else 1.dp, if (selected) c.gold else c.line, RoundedCornerShape(16.dp))
                             .clickable { vm.update { copy(method = pm.key) } }
                             .padding(12.dp),
                     ) {
@@ -165,18 +166,18 @@ fun PayScreen(planId: Long, onBack: () -> Unit, onDone: () -> Unit) {
                             Text(
                                 (if (pm.key == "instapay") "🏦 " else "📱 ") + pm.name,
                                 style = MaterialTheme.typography.titleSmall,
-                                color = Forest,
+                                color = c.ink,
                                 modifier = Modifier.weight(1f),
                             )
                             RadioButton(
                                 selected = selected,
                                 onClick = { vm.update { copy(method = pm.key) } },
-                                colors = RadioButtonDefaults.colors(selectedColor = Gold),
+                                colors = RadioButtonDefaults.colors(selectedColor = c.goldInk, unselectedColor = c.muted),
                             )
                         }
                         if (selected && pm.account != null) {
                             Column(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Cream).padding(10.dp),
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(c.surface2).padding(10.dp),
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -184,15 +185,15 @@ fun PayScreen(planId: Long, onBack: () -> Unit, onDone: () -> Unit) {
                                         stringResource(R.string.transfer_to, "⁦${pm.account}⁩"),
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = Forest,
+                                        color = c.ink,
                                         modifier = Modifier.weight(1f),
                                     )
                                     TextButton(onClick = {
                                         context.copyToClipboard(pm.name, pm.account)
                                         Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
-                                    }) { Text(stringResource(R.string.copy), color = Gold) }
+                                    }) { Text(stringResource(R.string.copy), color = c.goldInk) }
                                 }
-                                Text(stringResource(R.string.amount, egp(plan.priceCents)), style = MaterialTheme.typography.bodySmall, color = Forest)
+                                Text(stringResource(R.string.amount, egp(plan.priceCents)), style = MaterialTheme.typography.bodySmall, color = c.ink)
                             }
                         }
                     }
@@ -216,8 +217,14 @@ fun PayScreen(planId: Long, onBack: () -> Unit, onDone: () -> Unit) {
                     ltr = true,
                 )
                 ErrorBanner(state.error)
-                GoldButton("${stringResource(R.string.confirm_payment)} ✓", vm::submit, loading = state.submitting, enabled = state.method != null)
-                Spacer(Modifier.width(1.dp))
+                GoldButton(stringResource(R.string.send_for_review), vm::submit, loading = state.submitting, enabled = state.method != null)
+                Text(
+                    stringResource(R.string.pay_activation_note),
+                    color = c.muted,
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }
@@ -227,7 +234,7 @@ fun PayScreen(planId: Long, onBack: () -> Unit, onDone: () -> Unit) {
             onDismissRequest = onDone,
             title = { Text(stringResource(R.string.payment_sent_title)) },
             text = { Text(stringResource(R.string.payment_sent_body)) },
-            confirmButton = { TextButton(onClick = onDone) { Text(stringResource(R.string.ok), color = Forest) } },
+            confirmButton = { TextButton(onClick = onDone) { Text(stringResource(R.string.ok), color = c.goldInk) } },
         )
     }
 }

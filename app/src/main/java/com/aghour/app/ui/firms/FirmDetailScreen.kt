@@ -53,7 +53,7 @@ import com.aghour.app.ui.components.Badge
 import com.aghour.app.ui.components.BadgeTone
 import com.aghour.app.ui.components.MessageBox
 import com.aghour.app.ui.components.OverlayIconButton
-import com.aghour.app.ui.components.SandCard
+import com.aghour.app.ui.components.SurfaceCard
 import com.aghour.app.ui.components.ScreenTitle
 import com.aghour.app.ui.components.SheetLayout
 import com.aghour.app.ui.components.SkeletonRows
@@ -62,11 +62,7 @@ import com.aghour.app.ui.components.openDialer
 import com.aghour.app.ui.components.openMap
 import com.aghour.app.ui.components.openWhatsApp
 import com.aghour.app.ui.components.shareText
-import com.aghour.app.ui.theme.Cream
-import com.aghour.app.ui.theme.Forest
-import com.aghour.app.ui.theme.Gold
-import com.aghour.app.ui.theme.Muted
-import com.aghour.app.ui.theme.Sand
+import com.aghour.app.ui.theme.Aghour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -103,39 +99,40 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit) {
     if (firm != null) {
         FirmDetailContent(firm, onBack)
     } else {
-        Column(Modifier.fillMaxSize().background(Cream)) {
+        Column(Modifier.fillMaxSize().background(Aghour.colors.page)) {
             ScreenTitle(title = "", onBack = onBack)
             if (state.loading) SkeletonRows(3, Modifier.padding(16.dp)) else MessageBox(state.error ?: "", onRetry = vm::load)
         }
     }
 }
 
-/** Design: village photo on top, cream sheet with name, three action tiles and the details. */
+/** Design: village photo on top, a sheet with name, three action tiles and the details. */
 @Composable
 private fun FirmDetailContent(firm: FirmDto, onBack: () -> Unit) {
     val context = LocalContext.current
+    val c = Aghour.colors
     val shareMessage = stringResource(R.string.share_firm_text, firm.name, firm.category.name, firm.phone ?: "")
 
     SheetLayout(
         sheetPadding = PaddingValues(20.dp),
         header = {
-            Box(Modifier.fillMaxWidth().height(200.dp)) {
+            Box(Modifier.fillMaxWidth().height(190.dp)) {
                 Image(
                     painter = painterResource(R.drawable.brand_scene),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
-                Box(Modifier.fillMaxSize().background(Forest.copy(alpha = 0.40f)))
+                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.30f)))
                 Row(
                     Modifier.fillMaxWidth().statusBarsPadding().padding(12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     OverlayIconButton(onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Cream)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Color.White)
                     }
                     OverlayIconButton({ context.shareText(shareMessage) }) {
-                        Icon(Icons.Filled.Share, stringResource(R.string.share), tint = Cream)
+                        Icon(Icons.Filled.Share, stringResource(R.string.share), tint = Color.White)
                     }
                 }
             }
@@ -144,11 +141,11 @@ private fun FirmDetailContent(firm: FirmDto, onBack: () -> Unit) {
         // Name + category
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(firm.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = Forest)
+                Text(firm.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = c.ink)
                 Text(
                     listOfNotNull(firm.category.name, firm.address?.takeIf { it.isNotBlank() }).joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Muted,
+                    color = c.muted,
                 )
             }
             // Owners can open their own pending/suspended firms; say so clearly.
@@ -179,19 +176,19 @@ private fun FirmDetailContent(firm: FirmDto, onBack: () -> Unit) {
         }
 
         // Hours + phone + address
-        SandCard {
+        SurfaceCard {
             InfoLine("🕐", firm.workingHours)
-            HorizontalDivider(color = Sand.copy(alpha = 0.6f), modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(color = c.line, modifier = Modifier.padding(vertical = 8.dp))
             // \u2066…\u2069 keeps the number left-to-right inside Arabic text.
             InfoLine("📱", firm.phone?.let { "\u2066$it\u2069" })
-            HorizontalDivider(color = Sand.copy(alpha = 0.6f), modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(color = c.line, modifier = Modifier.padding(vertical = 8.dp))
             InfoLine("📍", firm.address)
         }
 
         firm.description?.takeIf { it.isNotBlank() }?.let { description ->
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.about_firm), style = MaterialTheme.typography.titleSmall, color = Forest)
-                SandCard { Text(description, style = MaterialTheme.typography.bodyMedium, color = Forest.copy(alpha = 0.85f)) }
+                Text(stringResource(R.string.about_firm), style = MaterialTheme.typography.titleSmall, color = c.ink)
+                SurfaceCard { Text(description, style = MaterialTheme.typography.bodyMedium, color = c.ink) }
             }
         }
     }
@@ -199,18 +196,19 @@ private fun FirmDetailContent(firm: FirmDto, onBack: () -> Unit) {
 
 @Composable
 private fun ActionTile(icon: ImageVector, label: String, enabled: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val c = Aghour.colors
     Column(
         modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(Color.White)
-            .border(1.dp, Sand, RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .background(c.surface)
+            .border(1.dp, c.line, RoundedCornerShape(12.dp))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(icon, contentDescription = null, tint = if (enabled) Gold else Sand, modifier = Modifier.size(22.dp))
+        Icon(icon, contentDescription = null, tint = if (enabled) c.goldInk else c.line, modifier = Modifier.size(22.dp))
         Spacer(Modifier.height(4.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = if (enabled) Forest else Muted)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = if (enabled) c.ink else c.muted)
     }
 }
 
@@ -219,6 +217,6 @@ private fun InfoLine(emoji: String, value: String?) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(emoji)
         Spacer(Modifier.width(10.dp))
-        Text(value?.takeIf { it.isNotBlank() } ?: "—", style = MaterialTheme.typography.bodyMedium, color = Forest)
+        Text(value?.takeIf { it.isNotBlank() } ?: "—", style = MaterialTheme.typography.bodyMedium, color = Aghour.colors.ink)
     }
 }

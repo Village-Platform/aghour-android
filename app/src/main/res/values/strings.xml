@@ -95,7 +95,6 @@
     <string name="first_name">الاسم الأول</string>
     <string name="last_name">اسم العائلة</string>
     <string name="create_account">إنشاء الحساب</string>
-    <string name="hey_name">يا %1$s</string>
     <string name="hey_guest">يا أهلاً بك</string>
     <string name="explore_hint">أطباء، مطاعم، خدمات…</string>
     <string name="all">الكل</string>
@@ -125,7 +124,6 @@
     <string name="transfer_reference">رقم العملية بعد التحويل</string>
     <string name="transfer_reference_hint">الصق رقم المرجع هنا</string>
     <string name="payer_phone">رقم المحوِّل (اختياري)</string>
-    <string name="confirm_payment">تأكيد الدفع</string>
     <string name="error_reference_required">اكتب رقم العملية.</string>
     <string name="payment_sent_title">تم إرسال طلبك</string>
     <string name="payment_sent_body">سنراجع التحويل ونفعّل اشتراكك، وسيصلك إشعار عند الموافقة.</string>
@@ -149,4 +147,16 @@
     <string name="no_account_q">ليس لديك حساب؟</string>
     <string name="create_account_link">أنشئ حساباً</string>
     <string name="have_account_q">لديك حساب بالفعل؟</string>
+
+    <!-- v4: light / dark design -->
+    <string name="unread_count">غير مقروء %1$d</string>
+    <string name="settings">الإعدادات</string>
+    <string name="appearance">المظهر</string>
+    <string name="appearance_menu">المظهر (فاتح / داكن)</string>
+    <string name="theme_light">☀ فاتح</string>
+    <string name="theme_dark">☾ داكن</string>
+    <string name="theme_system">حسب الجهاز</string>
+    <string name="theme_system_hint">«حسب الجهاز» يتبع إعداد الوضع الليلي في أندرويد</string>
+    <string name="send_for_review">إرسال للمراجعة</string>
+    <string name="pay_activation_note">يتم التفعيل بعد تأكيد الإدارة وصول المبلغ</string>
 </resources>

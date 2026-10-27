@@ -35,41 +35,43 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.aghour.app.R
 import com.aghour.app.data.remote.ArticleDto
 import com.aghour.app.data.remote.FirmDto
-import com.aghour.app.ui.theme.Cream
-import com.aghour.app.ui.theme.Forest
-import com.aghour.app.ui.theme.Muted
-import com.aghour.app.ui.theme.Sand
+import com.aghour.app.ui.theme.Aghour
 
-/** Firm row (Explore / Home): forest mark tile, name, "category · address", hours, quick call. */
+/**
+ * Firm row (Explore / Home): category tile, name, "category · address", hours, quick call.
+ * [symbol] is the category emoji when the caller knows it; otherwise the logo mark is shown.
+ */
 @Composable
-fun FirmRow(firm: FirmDto, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun FirmRow(firm: FirmDto, onClick: () -> Unit, modifier: Modifier = Modifier, symbol: String? = null) {
     val context = LocalContext.current
+    val c = Aghour.colors
     Row(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
-            .border(1.dp, Sand, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(14.dp))
+            .background(c.surface)
+            .border(1.dp, c.line, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MarkTile(size = 46.dp)
+        if (symbol != null) SymbolTile(symbol, size = 46.dp) else MarkTile(size = 46.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(firm.name, style = MaterialTheme.typography.titleSmall, color = Forest, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(firm.name, style = MaterialTheme.typography.titleSmall, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
                 listOfNotNull(firm.category.name, firm.address?.takeIf { it.isNotBlank() }).joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall,
-                color = Muted,
+                color = c.muted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             firm.workingHours?.takeIf { it.isNotBlank() }?.let {
-                Text("🕐 $it", style = MaterialTheme.typography.labelSmall, color = Forest.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("🕐 $it", style = MaterialTheme.typography.labelSmall, color = c.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
         firm.phone?.takeIf { it.isNotBlank() }?.let { phone ->
@@ -78,11 +80,11 @@ fun FirmRow(firm: FirmDto, onClick: () -> Unit, modifier: Modifier = Modifier) {
                 Modifier
                     .size(38.dp)
                     .clip(CircleShape)
-                    .background(Forest.copy(alpha = 0.08f))
+                    .background(c.surface2)
                     .clickable { context.openDialer(phone) },
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Filled.Call, contentDescription = stringResource(R.string.call), tint = Forest, modifier = Modifier.size(18.dp))
+                Icon(Icons.Filled.Call, contentDescription = stringResource(R.string.call), tint = c.goldInk, modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -91,37 +93,39 @@ fun FirmRow(firm: FirmDto, onClick: () -> Unit, modifier: Modifier = Modifier) {
 /** News row: mark tile, title, kind badge and relative time. */
 @Composable
 fun NewsRow(article: ArticleDto, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val c = Aghour.colors
     Row(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
-            .border(1.dp, Sand, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(14.dp))
+            .background(c.surface)
+            .border(1.dp, c.line, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MarkTile(size = 52.dp)
+        MarkTile(size = 50.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(article.title, style = MaterialTheme.typography.titleSmall, color = Forest, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(article.title, style = MaterialTheme.typography.titleSmall, color = c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Badge(kindLabel(article.kind), kindTone(article.kind))
                 Spacer(Modifier.width(6.dp))
-                Text(relativeTime(article.publishedAt), style = MaterialTheme.typography.labelSmall, color = Muted)
+                Text(relativeTime(article.publishedAt), style = MaterialTheme.typography.labelSmall, color = c.muted)
             }
         }
     }
 }
 
-/** Big card for the newest item: village photo, forest gradient, badge and title. */
+/** Big card for the newest item: village photo, dark gradient, gold badge and title. */
 @Composable
 fun FeaturedNewsCard(article: ArticleDto, badge: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val c = Aghour.colors
     Box(
         modifier
             .fillMaxWidth()
             .height(150.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
     ) {
         Image(
@@ -130,12 +134,19 @@ fun FeaturedNewsCard(article: ArticleDto, badge: String, onClick: () -> Unit, mo
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
         )
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Forest.copy(alpha = 0.95f)))))
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f)))))
         Column(Modifier.align(Alignment.BottomStart).padding(14.dp)) {
-            Badge("📌 $badge", BadgeTone.Gold, Modifier.background(Cream, RoundedCornerShape(50)))
+            // Solid gold over the photo: the soft badge tint is unreadable on a dark image.
+            Text(
+                "📌 $badge",
+                modifier = Modifier.background(c.gold, RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 1.dp),
+                color = c.onGold,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
             Spacer(Modifier.height(6.dp))
-            Text(article.title, color = Cream, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(relativeTime(article.publishedAt), color = Cream.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+            Text(article.title, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(relativeTime(article.publishedAt), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
         }
     }
 }

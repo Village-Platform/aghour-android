@@ -60,15 +60,18 @@ Every screen = a `ViewModel` (state as `StateFlow`) + a `@Composable` that draws
 
 ## Design
 
-The UI follows the screen designs in `ajhour_screens.html`, which is kept outside this repo
-(`~/Downloads/Village Platform/ajhour_screens.html`):
+The UI follows the screen designs artifact "أجهور الكبرى — تصميم الشاشات" (light / dark):
 
-- Palette: forest `#0B3727`, gold `#C28D40`, cream `#FAF5EC`, sand `#E6DCC6` (`ui/theme/Theme.kt`).
+- Design tokens in `ui/theme/Theme.kt` (`Aghour.colors`), one palette per theme:
+  light = white page, black text, grey fields, gold `#C28D40` actions;
+  dark = forest page `#08281C`, cream text `#F4ECD9`, gold `#D9A458` actions.
+- Theme: Light / Dark / "حسب الجهاز" (follows Android dark mode, the default), chosen in Settings
+  or with the ☀/☾ switch on Login/Register. Saved on the device in `SettingsStore` (survives logout).
 - Font: Cairo, bundled as one variable font (`res/font/cairo.ttf`, SIL Open Font License in `licenses/`).
 - Welcome screen text and "ابدأ الآن" button use Tajawal (`res/font/tajawal_*.ttf`, SIL Open Font License).
-- Dark screens (Home, Profile, Login, details) use `SheetLayout`: forest or photo header, then a cream
-  sheet with rounded top corners. Light screens (Explore, News, Plans, Pay) use `ScreenTitle`.
-  The status-bar icon color follows the screen.
+- Detail screens (firm, article) use `SheetLayout`: photo header, then a sheet with rounded top
+  corners. Other screens are plain pages with `ScreenTitle` or their own header (Home, Profile, Login).
+  The status-bar icon color follows the screen and the theme.
 - Logos and icons are generated from the high-resolution original `../village-platform/public/brand/logo.png`
   (1254 px): faint edge noise removed, the symbol separated from the name, and the green parts recolored
   to cream for dark backgrounds — `logo_cream` / `logo_green` (640 px), `mark_cream` / `mark_green` (512 px).
@@ -96,14 +99,16 @@ The UI follows the screen designs in `ajhour_screens.html`, which is kept outsid
 |--------|--------------|
 | Welcome | First launch: start, or go straight to login |
 | Login / Register | Phone + password; checks the phone (11 digits, 01…), password length and match |
-| Home | Greeting, search, categories, cover banner (→ plans), featured firms, latest news, pull-to-refresh |
+| Home | Greeting, notifications bell with unread count, search, categories, cover banner (→ plans), featured firms, latest news, pull-to-refresh |
 | Explore | Search while typing + category chips, results count, paging |
 | Firm | Photo header, share, call / location / WhatsApp tiles, hours, phone, address, about |
 | News | Kind chips (all, news, announcements, articles), featured first item, paging |
 | Plans | Plans from the API, middle one highlighted; guests are asked to log in first |
 | Pay | InstaPay / Vodafone Cash account with copy button, transfer reference → sends the request |
 | Profile | Subscription progress (days left) or "subscribe now", menu, logout with confirmation |
-| Payments / Notifications / My firms / Change password | From the profile menu |
+| Notifications | All / unread chips, unread rows tinted gold, mark one or all as read |
+| Settings | Appearance: light / dark / follow the phone |
+| Payments / My firms / Change password | From the profile menu |
 
 ## Next steps
 
@@ -111,4 +116,5 @@ The UI follows the screen designs in `ajhour_screens.html`, which is kept outsid
 2. Push notifications with FCM (the in-app notifications screen already works).
 3. Real photos for firms, categories and news (after the backend adds image uploads).
 4. Ratings and reviews (shown in the designs; needs a backend model first).
-5. Enable R8 for release, app signing, dark theme.
+5. Enable R8 for release, app signing.
+6. Notification preferences (the designs' Settings toggles) — needs a server-side preferences endpoint first.

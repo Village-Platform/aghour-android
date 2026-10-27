@@ -28,7 +28,7 @@ import com.aghour.app.ui.components.MessageBox
 import com.aghour.app.ui.components.ScreenTitle
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.appContainer
-import com.aghour.app.ui.theme.Cream
+import com.aghour.app.ui.theme.Aghour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -62,7 +62,7 @@ fun MyFirmsScreen(onBack: () -> Unit, onFirmClick: (FirmDto) -> Unit) {
     val vm: MyFirmsViewModel = viewModel { MyFirmsViewModel(container.owner) }
     val state by vm.state.collectAsStateWithLifecycle()
 
-    Column(Modifier.fillMaxSize().background(Cream)) {
+    Column(Modifier.fillMaxSize().background(Aghour.colors.page)) {
         ScreenTitle(stringResource(R.string.my_firms), onBack = onBack)
         when {
             state.loading -> SkeletonRows(3, Modifier.padding(16.dp))

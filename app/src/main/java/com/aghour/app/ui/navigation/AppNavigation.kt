@@ -69,10 +69,8 @@ import com.aghour.app.ui.owner.NotificationsScreen
 import com.aghour.app.ui.owner.PaymentsScreen
 import com.aghour.app.ui.owner.PayScreen
 import com.aghour.app.ui.owner.PlansScreen
-import com.aghour.app.ui.theme.Cream
-import com.aghour.app.ui.theme.Forest
-import com.aghour.app.ui.theme.Gold
-import com.aghour.app.ui.theme.Sand
+import com.aghour.app.ui.settings.SettingsScreen
+import com.aghour.app.ui.theme.Aghour
 import com.aghour.app.ui.welcome.WelcomeScreen
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -96,6 +94,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object NotificationsRoute
 @Serializable data object ChangePasswordRoute
 @Serializable data object MyFirmsRoute
+@Serializable data object SettingsRoute
 
 private data class Tab(val route: Any, val labelRes: Int, val icon: ImageVector, val matches: (NavDestination) -> Boolean)
 
@@ -155,14 +154,16 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
     val backStack by nav.currentBackStackEntryAsState()
     val destination = backStack?.destination
     val currentTab = destination?.let { d -> tabs.firstOrNull { it.matches(d) } }
+    val c = Aghour.colors
 
     Scaffold(
-        containerColor = Cream,
+        containerColor = c.page,
+        contentColor = c.ink,
         bottomBar = {
             if (currentTab != null) {
                 Column {
-                    HorizontalDivider(color = Sand)
-                    NavigationBar(containerColor = Color.White, tonalElevation = 0.dp) {
+                    HorizontalDivider(color = c.line)
+                    NavigationBar(containerColor = c.surface, tonalElevation = 0.dp) {
                         tabs.forEach { tab ->
                             NavigationBarItem(
                                 selected = tab == currentTab,
@@ -170,11 +171,11 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                                 icon = { Icon(tab.icon, contentDescription = null) },
                                 label = { Text(stringResource(tab.labelRes), fontWeight = FontWeight.SemiBold) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    indicatorColor = Gold.copy(alpha = 0.15f),
-                                    selectedIconColor = Forest,
-                                    selectedTextColor = Gold,
-                                    unselectedIconColor = Forest.copy(alpha = 0.4f),
-                                    unselectedTextColor = Forest.copy(alpha = 0.4f),
+                                    indicatorColor = Color.Transparent,
+                                    selectedIconColor = c.goldInk,
+                                    selectedTextColor = c.goldInk,
+                                    unselectedIconColor = c.muted,
+                                    unselectedTextColor = c.muted,
                                 ),
                             )
                         }
@@ -223,6 +224,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onArticleClick = { nav.go(ArticleRoute(it.id)) },
                     onSeeAllNews = { nav.navigateToTab(NewsRoute) },
                     onAddFirm = { nav.go(PlansRoute) },
+                    onNotifications = { nav.go(NotificationsRoute) },
                 )
             }
             composable<ExploreRoute> { ExploreScreen(onFirmClick = { nav.go(FirmRoute(it.id)) }) }
@@ -236,6 +238,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onNotifications = { nav.go(NotificationsRoute) },
                     onChangePassword = { nav.go(ChangePasswordRoute) },
                     onMyFirms = { nav.go(MyFirmsRoute) },
+                    onSettings = { nav.go(SettingsRoute) },
                 )
             }
 
@@ -266,6 +269,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
             composable<NotificationsRoute> { NotificationsScreen(onBack = { nav.back() }) }
             composable<ChangePasswordRoute> { ChangePasswordScreen(onBack = { nav.back() }) }
             composable<MyFirmsRoute> { MyFirmsScreen(onBack = { nav.back() }, onFirmClick = { nav.go(FirmRoute(it.id)) }) }
+            composable<SettingsRoute> { SettingsScreen(onBack = { nav.back() }) }
         }
     }
 }
