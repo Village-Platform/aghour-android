@@ -258,28 +258,34 @@ fun SectionHeader(title: String, action: String? = null, onAction: (() -> Unit)?
     }
 }
 
-/** Filter chips row: selected = gold, others = soft grey (surface2). */
+/** Filter chips row: selected = gold, others = soft grey (surface2); [icons] adds an icon per option. */
 @Composable
 fun <T> FilterChipsRow(
     options: List<Pair<T, String>>,
     selected: T,
     onSelect: (T) -> Unit,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp),
+    icons: Map<T, ImageVector> = emptyMap(),
 ) {
     val c = Aghour.colors
     LazyRow(contentPadding = contentPadding, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(options, key = { it.first.toString() }) { (value, label) ->
             val isSelected = value == selected
-            Text(
-                label,
-                modifier = Modifier
+            val fg = if (isSelected) c.onGold else c.muted
+            Row(
+                Modifier
                     .clip(RoundedCornerShape(50))
                     .background(if (isSelected) c.gold else c.surface2)
                     .clickable { onSelect(value) }
                     .padding(horizontal = 14.dp, vertical = 7.dp),
-                color = if (isSelected) c.onGold else c.muted,
-                style = MaterialTheme.typography.labelMedium,
-            )
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                icons[value]?.let {
+                    Icon(it, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                }
+                Text(label, color = fg, style = MaterialTheme.typography.labelMedium)
+            }
         }
     }
 }

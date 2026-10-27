@@ -5,7 +5,7 @@
     <color name="brand_green_dark">#FF031F17</color>
     <color name="brand_gold">#FFC28D40</color>
     <color name="brand_cream">#FFFAF5EC</color>
-    <color name="ic_launcher_background">#FF0B3727</color>
+    <color name="ic_launcher_background">#FFFFFFFF</color>
     <!-- Window backgrounds = the "page" design token in each theme -->
     <color name="page_light">#FFFFFFFF</color>
     <color name="page_dark">#FF0D1117</color>

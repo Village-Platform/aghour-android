@@ -39,7 +39,7 @@ class HomeViewModel(private val catalog: CatalogRepository, private val owner: O
     fun load(refresh: Boolean = false) {
         _state.update { it.copy(loading = !refresh && it.categories.isEmpty(), refreshing = refresh, error = null) }
         viewModelScope.launch {
-            val categories = async { catalog.categories() }
+            val categories = async { catalog.categories(refresh) }
             val firms = async { catalog.firms(query = null, categoryId = null, page = 1, perPage = 4) }
             val news = async { catalog.articles(page = 1, perPage = 3) }
 

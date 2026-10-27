@@ -87,9 +87,9 @@ fun categoryIcon(icon: String?): ImageVector = when (icon?.lowercase()) {
     else -> Icons.Outlined.Category
 }
 
-/** The firm's category icon, looked up in an already-loaded category list (null = unknown, show the logo). */
-fun firmIcon(firm: FirmDto, categories: List<CategoryDto>): ImageVector? =
-    categories.firstOrNull { it.id == firm.category.id }?.let { categoryIcon(it) }
+/** The firm's category icon: from the firm's own category if the API sent it, else from the loaded list. */
+fun firmIcon(firm: FirmDto, categories: List<CategoryDto>): ImageVector =
+    categoryIcon(firm.category.icon ?: categories.firstOrNull { it.id == firm.category.id }?.icon)
 
 /** Icon for a notification row, from the server's `kind` (unknown kinds get a bell). */
 fun notificationIcon(kind: String): ImageVector = when {

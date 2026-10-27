@@ -45,11 +45,11 @@ import com.aghour.app.data.remote.FirmDto
 import com.aghour.app.ui.theme.Aghour
 
 /**
- * Firm row (Explore / Home): category tile, name, "category · address", hours, quick call.
- * [icon] is the category icon when the caller knows it; otherwise the logo mark is shown.
+ * Firm row (Explore / Home / My firms): category icon tile, name, "category · address", hours, quick call.
+ * [icon] is the category icon (see firmIcon).
  */
 @Composable
-fun FirmRow(firm: FirmDto, onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVector? = null) {
+fun FirmRow(firm: FirmDto, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val c = Aghour.colors
     Row(
@@ -62,7 +62,7 @@ fun FirmRow(firm: FirmDto, onClick: () -> Unit, modifier: Modifier = Modifier, i
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (icon != null) IconTile(icon, size = 46.dp) else MarkTile(size = 46.dp)
+        IconTile(icon, size = 46.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(firm.name, style = MaterialTheme.typography.titleSmall, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)

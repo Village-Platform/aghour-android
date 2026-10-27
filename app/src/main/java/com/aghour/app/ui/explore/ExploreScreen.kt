@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -51,6 +53,7 @@ import com.aghour.app.ui.components.MutedText
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.StatusBarIcons
 import com.aghour.app.ui.components.appContainer
+import com.aghour.app.ui.components.categoryIcon
 import com.aghour.app.ui.components.firmIcon
 import com.aghour.app.ui.theme.Aghour
 
@@ -106,6 +109,7 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
                 options = listOf<Pair<Long?, String>>(null to allLabel) + state.categories.map { it.id to it.name },
                 selected = state.categoryId,
                 onSelect = vm::selectCategory,
+                icons = mapOf<Long?, ImageVector>(null to Icons.Outlined.Apps) + state.categories.associate { it.id to categoryIcon(it) },
             )
             if (!state.loading && state.error == null) {
                 MutedText(stringResource(R.string.results_count, state.total), Modifier.padding(start = 18.dp, top = 8.dp))

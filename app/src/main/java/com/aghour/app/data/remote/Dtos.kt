@@ -46,7 +46,12 @@ data class CategoryDto(
 )
 
 @Serializable
-data class CategoryRefDto(val id: Long, val name: String)
+data class CategoryRefDto(
+    val id: Long,
+    val name: String,
+    /** Same key as CategoryDto.icon; optional so the app works before/after the API includes it. */
+    val icon: String? = null,
+)
 
 @Serializable
 data class FirmDto(

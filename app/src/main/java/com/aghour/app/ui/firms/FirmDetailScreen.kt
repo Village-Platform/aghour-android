@@ -50,10 +50,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aghour.app.R
 import com.aghour.app.data.remote.ApiResult
+import com.aghour.app.data.remote.CategoryDto
 import com.aghour.app.data.remote.FirmDto
 import com.aghour.app.data.repository.CatalogRepository
 import com.aghour.app.ui.components.Badge
 import com.aghour.app.ui.components.BadgeTone
+import com.aghour.app.ui.components.IconTile
 import com.aghour.app.ui.components.MessageBox
 import com.aghour.app.ui.components.OverlayIconButton
 import com.aghour.app.ui.components.ScreenTitle
@@ -61,6 +63,7 @@ import com.aghour.app.ui.components.SheetLayout
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.SurfaceCard
 import com.aghour.app.ui.components.appContainer
+import com.aghour.app.ui.components.firmIcon
 import com.aghour.app.ui.components.openDialer
 import com.aghour.app.ui.components.openMap
 import com.aghour.app.ui.components.openWhatsApp
@@ -71,7 +74,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class FirmDetailUiState(val loading: Boolean = true, val firm: FirmDto? = null, val error: String? = null)
+data class FirmDetailUiState(
+    val loading: Boolean = true,
+    val firm: FirmDto? = null,
+    val categories: List<CategoryDto> = emptyList(),
+    val error: String? = null,
+)
 
 class FirmDetailViewModel(private val catalog: CatalogRepository, private val firmId: Long) : ViewModel() {
     private val _state = MutableStateFlow(FirmDetailUiState())
@@ -84,8 +92,9 @@ class FirmDetailViewModel(private val catalog: CatalogRepository, private val fi
     fun load() {
         _state.value = FirmDetailUiState(loading = true)
         viewModelScope.launch {
+            val categories = (catalog.categories() as? ApiResult.Success)?.data.orEmpty() // only for the icon
             _state.value = when (val result = catalog.firm(firmId)) {
-                is ApiResult.Success -> FirmDetailUiState(loading = false, firm = result.data)
+                is ApiResult.Success -> FirmDetailUiState(loading = false, firm = result.data, categories = categories)
                 is ApiResult.Failure -> FirmDetailUiState(loading = false, error = result.message)
             }
         }
@@ -100,7 +109,7 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit) {
     val firm = state.firm
 
     if (firm != null) {
-        FirmDetailContent(firm, onBack)
+        FirmDetailContent(firm, firmIcon(firm, state.categories), onBack)
     } else {
         Column(Modifier.fillMaxSize().background(Aghour.colors.page)) {
             ScreenTitle(title = "", onBack = onBack)
@@ -111,7 +120,7 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit) {
 
 /** Design: village photo on top, a sheet with name, three action tiles and the details. */
 @Composable
-private fun FirmDetailContent(firm: FirmDto, onBack: () -> Unit) {
+private fun FirmDetailContent(firm: FirmDto, categoryIcon: ImageVector, onBack: () -> Unit) {
     val context = LocalContext.current
     val c = Aghour.colors
     val shareMessage = stringResource(R.string.share_firm_text, firm.name, firm.category.name, firm.phone ?: "")
@@ -141,8 +150,10 @@ private fun FirmDetailContent(firm: FirmDto, onBack: () -> Unit) {
             }
         },
     ) {
-        // Name + category
+        // Category icon + name + category
         Row(verticalAlignment = Alignment.CenterVertically) {
+            IconTile(categoryIcon, size = 52.dp)
+            Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(firm.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = c.ink)
                 Text(
