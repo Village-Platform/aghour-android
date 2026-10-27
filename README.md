@@ -83,7 +83,8 @@ The UI follows the screen designs artifact "أجهور الكبرى — تصمي
 - Categories always show their Material icon (Home tiles, Explore chips and rows, My firms, firm page):
   `categoryIcon()` maps the category's API `icon` key (set by the admin; seed keys such as `doctor`,
   `pharmacy`, `mosque`, or Material names such as `local_hospital`). Empty or unknown keys show the app
-  logo mark. Categories are cached in memory by `CatalogRepository`.
+  logo mark. Each known category has its own colour (light and dark shade): the icon is drawn in it on a
+  light tint of the same colour. Categories are cached in memory by `CatalogRepository`.
 - Splash: the system splash shows the logo mark on the page colour (white / `#0D1117`), then
   `LaunchScreen` keeps the mark in place and fades in the name + "تطبيق القرية" (~1.2 s), then
   Welcome (first launch) or Home. Assets `splash_mark` / `splash_name` in `drawable-nodpi` (light)

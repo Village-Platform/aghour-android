@@ -55,6 +55,7 @@ import com.aghour.app.data.remote.FirmDto
 import com.aghour.app.data.repository.CatalogRepository
 import com.aghour.app.ui.components.Badge
 import com.aghour.app.ui.components.BadgeTone
+import com.aghour.app.ui.components.CategoryIcon
 import com.aghour.app.ui.components.IconTile
 import com.aghour.app.ui.components.MessageBox
 import com.aghour.app.ui.components.OverlayIconButton
@@ -122,7 +123,7 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit) {
 
 /** Design: village photo on top, a sheet with name, three action tiles and the details. */
 @Composable
-private fun FirmDetailContent(firm: FirmDto, categoryIcon: ImageVector?, onBack: () -> Unit) {
+private fun FirmDetailContent(firm: FirmDto, categoryIcon: CategoryIcon?, onBack: () -> Unit) {
     val context = LocalContext.current
     val c = Aghour.colors
     val shareMessage = stringResource(R.string.share_firm_text, firm.name, firm.category.name, firm.phone ?: "")

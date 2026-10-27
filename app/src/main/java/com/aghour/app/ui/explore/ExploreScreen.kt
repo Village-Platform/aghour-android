@@ -109,7 +109,8 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
                 options = listOf<Pair<Long?, String>>(null to allLabel) + state.categories.map { it.id to it.name },
                 selected = state.categoryId,
                 onSelect = vm::selectCategory,
-                icons = mapOf<Long?, ImageVector?>(null to Icons.Outlined.Apps) + state.categories.associate { it.id to categoryIcon(it) },
+                icons = mapOf<Long?, ImageVector?>(null to Icons.Outlined.Apps) + state.categories.associate { it.id to categoryIcon(it)?.vector },
+                iconTints = state.categories.mapNotNull { category -> categoryIcon(category)?.let { category.id to it.color } }.toMap(),
             )
             if (!state.loading && state.error == null) {
                 MutedText(stringResource(R.string.results_count, state.total), Modifier.padding(start = 18.dp, top = 8.dp))

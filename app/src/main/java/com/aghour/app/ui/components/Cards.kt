@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -55,7 +54,7 @@ import com.aghour.app.ui.theme.Aghour
  * [icon] is the category icon (see firmIcon); null shows the app logo.
  */
 @Composable
-fun FirmRow(firm: FirmDto, icon: ImageVector?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun FirmRow(firm: FirmDto, icon: CategoryIcon?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val c = Aghour.colors
     Row(

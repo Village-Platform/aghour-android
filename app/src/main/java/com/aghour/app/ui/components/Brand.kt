@@ -195,16 +195,21 @@ fun MarkTile(size: Dp = 44.dp, corner: Dp = 12.dp) {
     }
 }
 
-/** Tinted rounded square with a category icon; the app logo mark when the category has none. */
+/**
+ * Rounded square with a category icon in the category's own colour on a light tint of it;
+ * the app logo mark on the neutral tint when the category has no icon.
+ */
 @Composable
-fun IconTile(icon: ImageVector?, size: Dp = 48.dp) {
+fun IconTile(icon: CategoryIcon?, size: Dp = 48.dp) {
     val c = Aghour.colors
+    val tint = icon?.color
+    val background = tint?.copy(alpha = if (c.isDark) 0.18f else 0.12f) ?: c.brand.copy(alpha = 0.10f)
     Box(
-        Modifier.size(size).clip(RoundedCornerShape(size * 0.32f)).background(c.brand.copy(alpha = 0.10f)),
+        Modifier.size(size).clip(RoundedCornerShape(size * 0.32f)).background(background),
         contentAlignment = Alignment.Center,
     ) {
-        if (icon != null) {
-            Icon(icon, contentDescription = null, tint = c.brand, modifier = Modifier.size(size * 0.5f))
+        if (icon != null && tint != null) {
+            Icon(icon.vector, contentDescription = null, tint = tint, modifier = Modifier.size(size * 0.5f))
         } else {
             BrandMark(Modifier.size(size * 0.66f))
         }
@@ -264,7 +269,8 @@ fun SectionHeader(title: String, action: String? = null, onAction: (() -> Unit)?
 
 /**
  * Filter chips row: selected = gold, others = soft grey (surface2). [icons] adds an icon per option;
- * an option mapped to null shows the app logo mark (category without an icon).
+ * an option mapped to null shows the app logo mark (category without an icon). [iconTints] colours
+ * an icon while its chip is not selected (category colours); a selected chip's icon is black on gold.
  */
 @Composable
 fun <T> FilterChipsRow(
@@ -273,6 +279,7 @@ fun <T> FilterChipsRow(
     onSelect: (T) -> Unit,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp),
     icons: Map<T, ImageVector?> = emptyMap(),
+    iconTints: Map<out T, Color> = emptyMap(),
 ) {
     val c = Aghour.colors
     LazyRow(contentPadding = contentPadding, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -289,7 +296,8 @@ fun <T> FilterChipsRow(
             ) {
                 if (value in icons) {
                     val icon = icons[value]
-                    if (icon != null) Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
+                    val tint = if (isSelected) fg else iconTints[value] ?: fg
+                    if (icon != null) Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(16.dp))
                     else BrandMark(Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                 }

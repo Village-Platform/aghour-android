@@ -17,11 +17,14 @@ import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.SportsSoccer
 import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.aghour.app.R
 import com.aghour.app.data.remote.CategoryDto
 import com.aghour.app.data.remote.FirmDto
+import com.aghour.app.ui.theme.Aghour
 import java.time.Duration
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -73,25 +76,37 @@ fun greeting(): String = if (LocalTime.now().hour < 12) "صباح الخير" el
  * Accepts the short keys used by the seeds (doctor, pharmacy…) and the Material names
  * (local_hospital, local_pharmacy…). Empty or unknown keys return null: callers show the app logo.
  */
-fun categoryIcon(category: CategoryDto): ImageVector? = categoryIcon(category.icon)
+fun categoryIcon(category: CategoryDto): CategoryIcon? = categoryIcon(category.icon)
 
-fun categoryIcon(icon: String?): ImageVector? = when (icon?.trim()?.lowercase()?.replace('-', '_')?.replace(' ', '_')) {
-    "doctor", "doctors", "clinic", "local_hospital" -> Icons.Outlined.LocalHospital
-    "pharmacy", "local_pharmacy" -> Icons.Outlined.LocalPharmacy
-    "restaurant", "food" -> Icons.Outlined.Restaurant
-    "shop", "store", "market", "storefront" -> Icons.Outlined.Storefront
-    "craft", "crafts", "worker", "handyman" -> Icons.Outlined.Handyman
-    "school", "education" -> Icons.Outlined.School
-    "bakery", "bakery_dining" -> Icons.Outlined.BakeryDining
-    "car", "transport", "directions_car" -> Icons.Outlined.DirectionsCar
-    "mosque" -> Icons.Outlined.Mosque
-    "sports", "gym", "sports_soccer" -> Icons.Outlined.SportsSoccer
-    "services", "government", "account_balance" -> Icons.Outlined.AccountBalance
+fun categoryIcon(icon: String?): CategoryIcon? = when (icon?.trim()?.lowercase()?.replace('-', '_')?.replace(' ', '_')) {
+    "doctor", "doctors", "clinic", "local_hospital" -> CategoryIcon(Icons.Outlined.LocalHospital, 0xFFD1242F, 0xFFFF7B72) // red
+    "pharmacy", "local_pharmacy" -> CategoryIcon(Icons.Outlined.LocalPharmacy, 0xFF1A7F37, 0xFF3FB950) // green
+    "restaurant", "food" -> CategoryIcon(Icons.Outlined.Restaurant, 0xFFD15704, 0xFFFFA657) // orange
+    "shop", "store", "market", "storefront" -> CategoryIcon(Icons.Outlined.Storefront, 0xFF8250DF, 0xFFD2A8FF) // purple
+    "craft", "crafts", "worker", "handyman" -> CategoryIcon(Icons.Outlined.Handyman, 0xFF8A5A2B, 0xFFD9A066) // brown
+    "school", "education" -> CategoryIcon(Icons.Outlined.School, 0xFF0969DA, 0xFF58A6FF) // blue
+    "bakery", "bakery_dining" -> CategoryIcon(Icons.Outlined.BakeryDining, 0xFFB08800, 0xFFE3B341) // amber
+    "car", "transport", "directions_car" -> CategoryIcon(Icons.Outlined.DirectionsCar, 0xFF1B7C83, 0xFF39C5CF) // teal
+    "mosque" -> CategoryIcon(Icons.Outlined.Mosque, 0xFF0B6E4F, 0xFF56D364) // forest green
+    "sports", "gym", "sports_soccer" -> CategoryIcon(Icons.Outlined.SportsSoccer, 0xFFBF3989, 0xFFF778BA) // pink
+    "services", "government", "account_balance" -> CategoryIcon(Icons.Outlined.AccountBalance, 0xFF4F5BD5, 0xFF8C95FF) // indigo
     else -> null
 }
 
+/**
+ * A category's icon and its own colour (one shade per theme, readable on white and on #0D1117).
+ * Drawn by IconTile as the coloured icon on a light tint of the same colour.
+ */
+class CategoryIcon(val vector: ImageVector, light: Long, dark: Long) {
+    private val lightColor = Color(light)
+    private val darkColor = Color(dark)
+
+    val color: Color
+        @Composable @ReadOnlyComposable get() = if (Aghour.colors.isDark) darkColor else lightColor
+}
+
 /** The firm's category icon: from the firm's own category if the API sent it, else from the loaded list. */
-fun firmIcon(firm: FirmDto, categories: List<CategoryDto>): ImageVector? =
+fun firmIcon(firm: FirmDto, categories: List<CategoryDto>): CategoryIcon? =
     categoryIcon(firm.category.icon ?: categories.firstOrNull { it.id == firm.category.id }?.icon)
 
 /** Icon for a notification row, from the server's `kind` (unknown kinds get a bell). */
