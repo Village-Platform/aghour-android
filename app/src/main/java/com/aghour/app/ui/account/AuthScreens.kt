@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,8 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.DarkMode
-import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +22,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -36,16 +32,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aghour.app.R
-import com.aghour.app.data.settings.ThemeMode
 import com.aghour.app.ui.components.BrandLogo
 import com.aghour.app.ui.components.ErrorBanner
 import com.aghour.app.ui.components.FormField
 import com.aghour.app.ui.components.GoldButton
-import com.aghour.app.ui.components.Segmented
 import com.aghour.app.ui.components.StatusBarIcons
 import com.aghour.app.ui.components.appContainer
 import com.aghour.app.ui.theme.Aghour
-import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(onBack: () -> Unit, onDone: () -> Unit, onGoToRegister: () -> Unit) {
@@ -145,7 +138,7 @@ fun RegisterScreen(onBack: () -> Unit, onDone: () -> Unit, onGoToLogin: () -> Un
     }
 }
 
-/** Plain page: back + light/dark toggle, optional logo, title and the form (login/register designs). */
+/** Plain page: back button, optional logo, title and the form (login/register designs). */
 @Composable
 private fun AuthLayout(
     title: String,
@@ -154,8 +147,6 @@ private fun AuthLayout(
     showLogo: Boolean,
     form: @Composable () -> Unit,
 ) {
-    val container = appContainer()
-    val scope = rememberCoroutineScope()
     val c = Aghour.colors
     StatusBarIcons()
     Column(
@@ -167,18 +158,8 @@ private fun AuthLayout(
             .statusBarsPadding()
             .padding(bottom = 24.dp),
     ) {
-        Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = c.ink)
-            }
-            Spacer(Modifier.weight(1f))
-            // Quick switch; "follow the phone" lives in Settings.
-            Segmented(
-                options = listOf(false to "", true to ""),
-                icons = mapOf(false to Icons.Outlined.LightMode, true to Icons.Outlined.DarkMode),
-                selected = c.isDark,
-                onSelect = { dark -> scope.launch { container.settings.setThemeMode(if (dark) ThemeMode.Dark else ThemeMode.Light) } },
-            )
+        IconButton(onClick = onBack, modifier = Modifier.padding(start = 4.dp, top = 4.dp)) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = c.ink)
         }
         Column(Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (showLogo) {

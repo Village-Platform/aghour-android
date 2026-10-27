@@ -71,18 +71,19 @@ val LightPalette = AghourColors(
     isDark = false,
 )
 
+/** GitHub Dark greys (canvas #0D1117, subtle #161B22, border #30363D…) with the brand gold for actions. */
 val DarkPalette = AghourColors(
-    page = Color(0xFF08281C),
-    surface = Color(0xFF0D3425),
-    surface2 = Color(0xFF124030),
-    ink = Cream,
-    muted = Color(0xFF9DB5A8),
-    line = Color(0xFF1D4D3A),
+    page = Color(0xFF0D1117),
+    surface = Color(0xFF161B22),
+    surface2 = Color(0xFF21262D),
+    ink = Color(0xFFE6EDF3),
+    muted = Color(0xFF8B949E),
+    line = Color(0xFF30363D),
     gold = Color(0xFFD9A458),
     goldInk = Color(0xFFE8C07E),
-    brand = Cream,
-    ok = Color(0xFF5FCF93),
-    bad = Color(0xFFFF8D7A),
+    brand = Color(0xFFE6EDF3),
+    ok = Color(0xFF3FB950),
+    bad = Color(0xFFF85149),
     isDark = true,
 )
 

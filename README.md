@@ -64,9 +64,9 @@ The UI follows the screen designs artifact "أجهور الكبرى — تصمي
 
 - Design tokens in `ui/theme/Theme.kt` (`Aghour.colors`), one palette per theme:
   light = white page, black text, grey fields, gold `#C28D40` actions;
-  dark = forest page `#08281C`, cream text `#F4ECD9`, gold `#D9A458` actions.
-- Theme: Light / Dark / "حسب الجهاز" (follows Android dark mode, the default), chosen in Settings
-  or with the ☀/☾ switch on Login/Register. Saved on the device in `SettingsStore` (survives logout).
+  dark = GitHub Dark greys (page `#0D1117`, cards `#161B22`, borders `#30363D`, text `#E6EDF3`), gold `#D9A458` actions.
+- Theme: follows the phone's dark mode by default ("حسب الجهاز"); Light or Dark can be forced in
+  Settings (Profile → المظهر). Saved on the device in `SettingsStore` (survives logout).
 - Font: Cairo, bundled as one variable font (`res/font/cairo.ttf`, SIL Open Font License in `licenses/`).
 - Welcome screen text and "ابدأ الآن" button use Tajawal (`res/font/tajawal_*.ttf`, SIL Open Font License).
 - Detail screens (firm, article) use `SheetLayout`: photo header, then a sheet with rounded top

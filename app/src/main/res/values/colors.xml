@@ -8,5 +8,5 @@
     <color name="ic_launcher_background">#FF0B3727</color>
     <!-- Window backgrounds = the "page" design token in each theme -->
     <color name="page_light">#FFFFFFFF</color>
-    <color name="page_dark">#FF08281C</color>
+    <color name="page_dark">#FF0D1117</color>
 </resources>
