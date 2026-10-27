@@ -15,13 +15,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -36,10 +30,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -65,6 +59,7 @@ import com.aghour.app.ui.news.ArticleScreen
 import com.aghour.app.ui.news.NewsScreen
 import com.aghour.app.ui.owner.ChangePasswordScreen
 import com.aghour.app.ui.owner.MyFirmsScreen
+import com.aghour.app.ui.owner.NotificationTarget
 import com.aghour.app.ui.owner.NotificationsScreen
 import com.aghour.app.ui.owner.PaymentsScreen
 import com.aghour.app.ui.owner.PayScreen
@@ -96,13 +91,14 @@ import kotlinx.serialization.Serializable
 @Serializable data object MyFirmsRoute
 @Serializable data object SettingsRoute
 
-private data class Tab(val route: Any, val labelRes: Int, val icon: ImageVector, val matches: (NavDestination) -> Boolean)
+/** Tabs use emoji icons, as in the designs; only the label colour marks the selected tab. */
+private data class Tab(val route: Any, val labelRes: Int, val emoji: String, val matches: (NavDestination) -> Boolean)
 
 private val tabs = listOf(
-    Tab(HomeRoute, R.string.tab_home, Icons.Filled.Home) { it.hasRoute<HomeRoute>() },
-    Tab(ExploreRoute, R.string.tab_explore, Icons.Filled.Search) { it.hasRoute<ExploreRoute>() },
-    Tab(NewsRoute, R.string.tab_news, Icons.AutoMirrored.Filled.List) { it.hasRoute<NewsRoute>() },
-    Tab(AccountRoute, R.string.tab_account, Icons.Filled.Person) { it.hasRoute<AccountRoute>() },
+    Tab(HomeRoute, R.string.tab_home, "🏠") { it.hasRoute<HomeRoute>() },
+    Tab(ExploreRoute, R.string.tab_explore, "🔍") { it.hasRoute<ExploreRoute>() },
+    Tab(NewsRoute, R.string.tab_news, "📰") { it.hasRoute<NewsRoute>() },
+    Tab(AccountRoute, R.string.tab_account, "👤") { it.hasRoute<AccountRoute>() },
 )
 
 @Composable
@@ -168,7 +164,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                             NavigationBarItem(
                                 selected = tab == currentTab,
                                 onClick = { nav.navigateToTab(tab.route) },
-                                icon = { Icon(tab.icon, contentDescription = null) },
+                                icon = { Text(tab.emoji, fontSize = 20.sp) },
                                 label = { Text(stringResource(tab.labelRes), fontWeight = FontWeight.SemiBold) },
                                 colors = NavigationBarItemDefaults.colors(
                                     indicatorColor = Color.Transparent,
@@ -266,7 +262,19 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                 )
             }
             composable<PaymentsRoute> { PaymentsScreen(onBack = { nav.back() }) }
-            composable<NotificationsRoute> { NotificationsScreen(onBack = { nav.back() }) }
+            composable<NotificationsRoute> {
+                NotificationsScreen(
+                    onBack = { nav.back() },
+                    onOpen = { target ->
+                        when (target) {
+                            NotificationTarget.Payments -> nav.go(PaymentsRoute)
+                            NotificationTarget.Plans -> nav.go(PlansRoute)
+                            NotificationTarget.MyFirms -> nav.go(MyFirmsRoute)
+                            NotificationTarget.News -> nav.navigateToTab(NewsRoute)
+                        }
+                    },
+                )
+            }
             composable<ChangePasswordRoute> { ChangePasswordScreen(onBack = { nav.back() }) }
             composable<MyFirmsRoute> { MyFirmsScreen(onBack = { nav.back() }, onFirmClick = { nav.go(FirmRoute(it.id)) }) }
             composable<SettingsRoute> { SettingsScreen(onBack = { nav.back() }) }

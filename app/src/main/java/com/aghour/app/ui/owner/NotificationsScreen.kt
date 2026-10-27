@@ -95,8 +95,24 @@ class NotificationsViewModel(private val owner: OwnerRepository) : ViewModel() {
     }
 }
 
+/** Where a notification row's gold "←" link leads, guessed from the server's `kind`. */
+enum class NotificationTarget(val labelRes: Int) {
+    Payments(R.string.notif_open_subscription),
+    Plans(R.string.notif_open_plans),
+    MyFirms(R.string.notif_open_firm),
+    News(R.string.notif_open_news),
+}
+
+fun notificationTarget(kind: String): NotificationTarget? = when {
+    "expir" in kind || "renew" in kind -> NotificationTarget.Plans
+    "payment" in kind || "subscription" in kind -> NotificationTarget.Payments
+    "firm" in kind -> NotificationTarget.MyFirms
+    "article" in kind || "news" in kind -> NotificationTarget.News
+    else -> null
+}
+
 @Composable
-fun NotificationsScreen(onBack: () -> Unit) {
+fun NotificationsScreen(onBack: () -> Unit, onOpen: (NotificationTarget) -> Unit) {
     val container = appContainer()
     val vm: NotificationsViewModel = viewModel { NotificationsViewModel(container.owner) }
     val state by vm.state.collectAsStateWithLifecycle()
@@ -124,7 +140,13 @@ fun NotificationsScreen(onBack: () -> Unit) {
             state.error != null -> MessageBox(state.error!!, onRetry = vm::load)
             state.visible.isEmpty() -> MessageBox(stringResource(R.string.no_notifications))
             else -> LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(state.visible, key = { it.id }) { n -> NotificationRow(n, onClick = { if (!n.read) vm.markRead(n.id) }) }
+                items(state.visible, key = { it.id }) { n ->
+                    val target = notificationTarget(n.kind)
+                    NotificationRow(n, target, onClick = {
+                        if (!n.read) vm.markRead(n.id)
+                        target?.let(onOpen)
+                    })
+                }
             }
         }
     }
@@ -132,7 +154,7 @@ fun NotificationsScreen(onBack: () -> Unit) {
 
 /** Unread rows are tinted gold with a dot, read rows are plain cards. */
 @Composable
-private fun NotificationRow(n: NotificationDto, onClick: () -> Unit) {
+private fun NotificationRow(n: NotificationDto, target: NotificationTarget?, onClick: () -> Unit) {
     val c = Aghour.colors
     val shape = RoundedCornerShape(14.dp)
     Row(
@@ -154,7 +176,13 @@ private fun NotificationRow(n: NotificationDto, onClick: () -> Unit) {
                 if (!n.read) Box(Modifier.size(8.dp).background(c.gold, CircleShape))
             }
             Text(n.body, style = MaterialTheme.typography.bodySmall, color = c.muted)
-            Text(relativeTime(n.createdAt), style = MaterialTheme.typography.labelSmall, color = c.muted)
+            Row(Modifier.fillMaxWidth().padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (target != null) {
+                    Text(stringResource(target.labelRes), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = c.goldInk)
+                }
+                Spacer(Modifier.weight(1f))
+                Text(relativeTime(n.createdAt), style = MaterialTheme.typography.labelSmall, color = c.muted)
+            }
         }
     }
 }

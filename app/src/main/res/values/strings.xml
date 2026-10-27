@@ -159,4 +159,8 @@
     <string name="theme_system_hint">«حسب الجهاز» يتبع إعداد الوضع الليلي في أندرويد</string>
     <string name="send_for_review">إرسال للمراجعة</string>
     <string name="pay_activation_note">يتم التفعيل بعد تأكيد الإدارة وصول المبلغ</string>
+    <string name="notif_open_subscription">← تفاصيل الاشتراك</string>
+    <string name="notif_open_plans">← الباقات</string>
+    <string name="notif_open_firm">← صفحة المنشأة</string>
+    <string name="notif_open_news">← الخبر</string>
 </resources>
