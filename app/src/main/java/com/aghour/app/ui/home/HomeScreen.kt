@@ -142,7 +142,7 @@ fun HomeScreen(
                             Text(
                                 category.name,
                                 style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
+                                fontWeight = FontWeight.Bold,
                                 color = c.ink,
                                 textAlign = TextAlign.Center,
                                 maxLines = 1,

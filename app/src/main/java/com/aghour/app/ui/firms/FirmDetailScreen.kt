@@ -63,7 +63,9 @@ import com.aghour.app.ui.components.SheetLayout
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.SurfaceCard
 import com.aghour.app.ui.components.appContainer
+import com.aghour.app.ui.components.categoryLine
 import com.aghour.app.ui.components.firmIcon
+import com.aghour.app.ui.components.asHeading
 import com.aghour.app.ui.components.openDialer
 import com.aghour.app.ui.components.openMap
 import com.aghour.app.ui.components.openWhatsApp
@@ -155,9 +157,9 @@ private fun FirmDetailContent(firm: FirmDto, categoryIcon: ImageVector, onBack: 
             IconTile(categoryIcon, size = 52.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(firm.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = c.ink)
+                Text(firm.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = c.ink, modifier = Modifier.asHeading())
                 Text(
-                    listOfNotNull(firm.category.name, firm.address?.takeIf { it.isNotBlank() }).joinToString(" · "),
+                    categoryLine(firm.category.name, firm.address),
                     style = MaterialTheme.typography.bodySmall,
                     color = c.muted,
                 )
@@ -201,7 +203,7 @@ private fun FirmDetailContent(firm: FirmDto, categoryIcon: ImageVector, onBack: 
 
         firm.description?.takeIf { it.isNotBlank() }?.let { description ->
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.about_firm), style = MaterialTheme.typography.titleSmall, color = c.ink)
+                Text(stringResource(R.string.about_firm), style = MaterialTheme.typography.titleSmall, color = c.ink, modifier = Modifier.asHeading())
                 SurfaceCard { Text(description, style = MaterialTheme.typography.bodyMedium, color = c.ink) }
             }
         }

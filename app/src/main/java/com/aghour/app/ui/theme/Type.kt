@@ -33,6 +33,7 @@ private val base = Typography()
 private fun TextStyle.cairo(weight: FontWeight? = null) =
     copy(fontFamily = Cairo, fontWeight = weight ?: fontWeight)
 
+/** Titles and headlines are always bold: firm, category, plan and news titles use them. */
 val AppTypography = Typography(
     displayLarge = base.displayLarge.cairo(FontWeight.Bold),
     displayMedium = base.displayMedium.cairo(FontWeight.Bold),
@@ -42,7 +43,7 @@ val AppTypography = Typography(
     headlineSmall = base.headlineSmall.cairo(FontWeight.Bold),
     titleLarge = base.titleLarge.cairo(FontWeight.Bold),
     titleMedium = base.titleMedium.cairo(FontWeight.Bold),
-    titleSmall = base.titleSmall.cairo(FontWeight.SemiBold),
+    titleSmall = base.titleSmall.cairo(FontWeight.Bold),
     bodyLarge = base.bodyLarge.cairo().copy(lineHeight = 28.sp),
     bodyMedium = base.bodyMedium.cairo().copy(lineHeight = 22.sp),
     bodySmall = base.bodySmall.cairo(),

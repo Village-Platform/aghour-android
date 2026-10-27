@@ -147,7 +147,7 @@ fun ScreenTitle(
             }
         }
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = c.ink)
+            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = c.ink, modifier = Modifier.asHeading())
             if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = c.muted)
         }
         Row(verticalAlignment = Alignment.CenterVertically, content = actions)
@@ -246,7 +246,7 @@ fun Badge(text: String, tone: BadgeTone = BadgeTone.Green, modifier: Modifier = 
 fun SectionHeader(title: String, action: String? = null, onAction: (() -> Unit)? = null) {
     val c = Aghour.colors
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = MaterialTheme.typography.titleMedium, color = c.ink, modifier = Modifier.weight(1f))
+        Text(title, style = MaterialTheme.typography.titleMedium, color = c.ink, modifier = Modifier.weight(1f).asHeading())
         if (action != null && onAction != null) {
             Text(
                 action,
@@ -284,7 +284,7 @@ fun <T> FilterChipsRow(
                     Icon(it, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                 }
-                Text(label, color = fg, style = MaterialTheme.typography.labelMedium)
+                Text(label, color = fg, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             }
         }
     }

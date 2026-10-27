@@ -35,8 +35,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aghour.app.R
@@ -65,9 +71,9 @@ fun FirmRow(firm: FirmDto, icon: ImageVector, onClick: () -> Unit, modifier: Mod
         IconTile(icon, size = 46.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(firm.name, style = MaterialTheme.typography.titleSmall, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(firm.name, style = MaterialTheme.typography.titleSmall, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.asHeading())
             Text(
-                listOfNotNull(firm.category.name, firm.address?.takeIf { it.isNotBlank() }).joinToString(" · "),
+                categoryLine(firm.category.name, firm.address),
                 style = MaterialTheme.typography.bodySmall,
                 color = c.muted,
                 maxLines = 1,
@@ -97,6 +103,19 @@ fun FirmRow(firm: FirmDto, icon: ImageVector, onClick: () -> Unit, modifier: Mod
     }
 }
 
+/** Marks a title for TalkBack, so screen-reader users can jump between headings. */
+fun Modifier.asHeading(): Modifier = semantics { heading() }
+
+/** "category · address" with the category name bold and in the text colour (the address stays muted). */
+@Composable
+fun categoryLine(category: String, address: String?): AnnotatedString {
+    val c = Aghour.colors
+    return buildAnnotatedString {
+        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = c.ink)) { append(category) }
+        address?.takeIf { it.isNotBlank() }?.let { append(" · ").append(it) }
+    }
+}
+
 /** News row: mark tile, title, kind badge and relative time. */
 @Composable
 fun NewsRow(article: ArticleDto, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -114,7 +133,7 @@ fun NewsRow(article: ArticleDto, onClick: () -> Unit, modifier: Modifier = Modif
         MarkTile(size = 50.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(article.title, style = MaterialTheme.typography.titleSmall, color = c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(article.title, style = MaterialTheme.typography.titleSmall, color = c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.asHeading())
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Badge(kindLabel(article.kind), kindTone(article.kind))
                 Spacer(Modifier.width(6.dp))

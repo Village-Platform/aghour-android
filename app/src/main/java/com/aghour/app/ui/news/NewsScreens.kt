@@ -56,6 +56,7 @@ import com.aghour.app.ui.components.SheetLayout
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.appContainer
 import com.aghour.app.ui.components.formatDate
+import com.aghour.app.ui.components.asHeading
 import com.aghour.app.ui.components.kindLabel
 import com.aghour.app.ui.components.kindTone
 import com.aghour.app.ui.components.shareText
@@ -168,7 +169,7 @@ fun ArticleScreen(articleId: Long, onBack: () -> Unit) {
             Spacer(Modifier.width(8.dp))
             Text(formatDate(article.publishedAt), style = MaterialTheme.typography.labelSmall, color = c.muted)
         }
-        Text(article.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = c.ink)
+        Text(article.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = c.ink, modifier = Modifier.asHeading())
         Text(article.author.name, style = MaterialTheme.typography.labelMedium, color = c.goldInk)
         Text(article.body, style = MaterialTheme.typography.bodyLarge, color = c.ink)
     }
