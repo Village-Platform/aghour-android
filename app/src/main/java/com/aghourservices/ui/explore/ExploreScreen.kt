@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -114,7 +115,7 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
                 imageUrls = state.categories.mapNotNull { category -> categoryIconUrl(category.iconUrl)?.let { category.id to it } }.toMap(),
             )
             if (!state.loading && state.error == null) {
-                MutedText(stringResource(R.string.results_count, state.total), Modifier.padding(start = 18.dp, top = 8.dp))
+                MutedText(pluralStringResource(R.plurals.results_count, state.total, state.total), Modifier.padding(start = 18.dp, top = 8.dp))
             }
         }
 

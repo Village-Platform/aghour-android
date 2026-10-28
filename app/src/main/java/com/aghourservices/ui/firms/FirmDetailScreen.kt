@@ -167,8 +167,8 @@ private fun FirmDetailContent(firm: FirmDto, categoryIconUrl: String?, onBack: (
             }
             // Owners can open their own pending/suspended firms; say so clearly.
             when (firm.status) {
-                "pending" -> Badge("قيد المراجعة", BadgeTone.Gold)
-                "suspended" -> Badge("موقوف", BadgeTone.Red)
+                "pending" -> Badge(stringResource(R.string.state_pending), BadgeTone.Gold)
+                "suspended" -> Badge(stringResource(R.string.firm_suspended), BadgeTone.Red)
             }
         }
 

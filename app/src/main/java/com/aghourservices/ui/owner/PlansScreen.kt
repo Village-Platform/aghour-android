@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -101,8 +102,8 @@ private fun PlanCard(plan: SubscriptionPlanDto, highlighted: Boolean, onSubscrib
     val c = Aghour.colors
     val features = buildList {
         add(stringResource(R.string.plan_visibility))
-        add(stringResource(R.string.plan_duration, plan.durationDays))
-        add(stringResource(R.string.plan_max_firms, plan.maxFirms))
+        add(pluralStringResource(R.plurals.plan_duration, plan.durationDays, plan.durationDays))
+        add(pluralStringResource(R.plurals.plan_max_firms, plan.maxFirms, plan.maxFirms))
         plan.description?.lines()?.filter { it.isNotBlank() }?.let { addAll(it) }
     }
     val shape = RoundedCornerShape(16.dp)
@@ -126,7 +127,7 @@ private fun PlanCard(plan: SubscriptionPlanDto, highlighted: Boolean, onSubscrib
         Row(verticalAlignment = Alignment.Bottom) {
             Text(egp(plan.priceCents), color = c.ink, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
             Text(
-                " / ${stringResource(R.string.plan_duration, plan.durationDays)}",
+                " / ${pluralStringResource(R.plurals.plan_duration, plan.durationDays, plan.durationDays)}",
                 color = c.muted,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(bottom = 4.dp),

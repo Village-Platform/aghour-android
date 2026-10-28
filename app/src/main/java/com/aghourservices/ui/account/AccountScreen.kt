@@ -48,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -225,8 +226,8 @@ private fun SubscriptionCard(state: ProfileUiState, onPlans: () -> Unit) {
                 modifier = Modifier.weight(1f),
             )
             when {
-                state.current != null -> Badge("موثّق", icon = Icons.Outlined.Verified)
-                state.pending != null -> Badge("قيد المراجعة", BadgeTone.Gold)
+                state.current != null -> Badge(stringResource(R.string.verified), icon = Icons.Outlined.Verified)
+                state.pending != null -> Badge(stringResource(R.string.state_pending), BadgeTone.Gold)
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -236,8 +237,8 @@ private fun SubscriptionCard(state: ProfileUiState, onPlans: () -> Unit) {
             val left = (current.daysLeft ?: 0).coerceIn(0, total)
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(c.gold.copy(alpha = 0.10f)).padding(12.dp)) {
                 Row {
-                    Text("باقة ${current.plan.name}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = c.ink, modifier = Modifier.weight(1f))
-                    Text(stringResource(R.string.days_left, left), style = MaterialTheme.typography.labelMedium, color = c.ink)
+                    Text(stringResource(R.string.plan_named, current.plan.name), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = c.ink, modifier = Modifier.weight(1f))
+                    Text(pluralStringResource(R.plurals.days_left, left, left), style = MaterialTheme.typography.labelMedium, color = c.ink)
                 }
                 Spacer(Modifier.height(8.dp))
                 LinearProgressIndicator(

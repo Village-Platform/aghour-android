@@ -86,7 +86,7 @@ fun RegisterScreen(onBack: () -> Unit, onDone: () -> Unit, onGoToLogin: () -> Un
                 label = stringResource(R.string.first_name),
                 value = state.firstName,
                 onChange = { v -> vm.update { copy(firstName = v) } },
-                placeholder = "أحمد",
+                placeholder = stringResource(R.string.first_name_example),
                 error = state.nameError,
                 modifier = Modifier.weight(1f),
             )
@@ -94,7 +94,7 @@ fun RegisterScreen(onBack: () -> Unit, onDone: () -> Unit, onGoToLogin: () -> Un
                 label = stringResource(R.string.last_name),
                 value = state.lastName,
                 onChange = { v -> vm.update { copy(lastName = v) } },
-                placeholder = "محمد",
+                placeholder = stringResource(R.string.last_name_example),
                 modifier = Modifier.weight(1f),
             )
         }

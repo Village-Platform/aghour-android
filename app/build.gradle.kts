@@ -48,6 +48,8 @@ android {
 dependencies {
     implementation(libs.androidx.core)
     implementation(libs.androidx.activity.compose)
+    // Per-app language (AppCompatDelegate.setApplicationLocales) on Android 12 and older.
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

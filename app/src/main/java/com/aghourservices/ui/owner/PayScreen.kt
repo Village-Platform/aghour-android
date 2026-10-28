@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -152,7 +153,7 @@ fun PayScreen(planId: Long, onBack: () -> Unit, onDone: () -> Unit) {
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(stringResource(R.string.plan_label), color = c.goldInk, style = MaterialTheme.typography.labelSmall)
-                        Text("${plan.name} · ${plan.durationDays} يوم", color = c.ink, style = MaterialTheme.typography.titleSmall)
+                        Text("${plan.name} · ${pluralStringResource(R.plurals.day_count, plan.durationDays, plan.durationDays)}", color = c.ink, style = MaterialTheme.typography.titleSmall)
                     }
                     Text(egp(plan.priceCents), color = c.ink, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 }

@@ -1,11 +1,12 @@
 package com.aghourservices.data.remote
 
 import com.aghourservices.data.session.SessionStore
+import com.aghourservices.data.settings.AppLanguage
 import okhttp3.Interceptor
 import okhttp3.Response
 
 /**
- * Adds the bearer token and asks the API for Arabic messages.
+ * Adds the bearer token and asks the API for messages in the app language (ar / en).
  * If the server rejects our token (401), the local session is cleared.
  */
 class AuthInterceptor(
@@ -17,7 +18,7 @@ class AuthInterceptor(
         val token = session.token.value
         val request = chain.request().newBuilder()
             .header("Accept", "application/json")
-            .header("Accept-Language", "ar")
+            .header("Accept-Language", AppLanguage.current().tag)
             .apply { if (token != null) header("Authorization", "Bearer $token") }
             .build()
 

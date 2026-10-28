@@ -91,7 +91,7 @@ fun PaymentsScreen(onBack: () -> Unit) {
                         MutedText(
                             listOfNotNull(
                                 formatDate(s.createdAt).takeIf { it.isNotEmpty() },
-                                s.endsAt?.let { "حتى ${formatDate(it)}" },
+                                s.endsAt?.let { stringResource(R.string.until_date, formatDate(it)) },
                             ).joinToString(" · "),
                         )
                         s.rejectionReason?.let { Text(it, color = c.bad, style = MaterialTheme.typography.bodySmall) }

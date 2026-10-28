@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English. Arabic (values/strings.xml) is the default; every string there needs a line here. -->
+<resources>
+    <string name="app_name">Aghour Al Kubra</string>
+    <string name="tagline">All your village services in one place</string>
+
+    <string name="tab_home">Home</string>
+    <string name="tab_news">News</string>
+    <string name="tab_account">Account</string>
+
+    <string name="section_categories">Categories</string>
+    <string name="section_latest_news">Latest news</string>
+    <string name="see_all">See all</string>
+
+    <string name="search_firms">Search by business name</string>
+    <string name="no_firms">No businesses in this category yet.</string>
+    <string name="no_news">No news yet.</string>
+    <string name="no_categories">No categories yet.</string>
+
+    <string name="retry">Try again</string>
+    <string name="back">Back</string>
+    <string name="loading">Loading…</string>
+
+    <string name="call">Call</string>
+    <string name="whatsapp">WhatsApp</string>
+    <string name="open_map">Map</string>
+    <string name="address">Address</string>
+    <string name="working_hours">Working hours</string>
+    <string name="phone">Phone</string>
+    <string name="about">About the business</string>
+
+    <string name="login">Sign in</string>
+    <string name="register">Create account</string>
+    <string name="logout">Sign out</string>
+    <string name="name">Name</string>
+    <string name="phone_number">Phone number</string>
+    <string name="email_optional">Email (optional)</string>
+    <string name="password">Password</string>
+    <string name="password_confirmation">Confirm password</string>
+    <string name="no_account">No account? Create one</string>
+    <string name="have_account">Have an account? Sign in</string>
+    <string name="account_guest_title">Welcome to Aghour Al Kubra</string>
+    <string name="account_guest_body">Sign in to manage your business, follow your subscription and get notifications.</string>
+    <string name="role_user">User</string>
+    <string name="role_firm_admin">Business owner</string>
+    <string name="role_super_admin">System admin</string>
+
+    <string name="kind_news">News</string>
+    <string name="kind_article">Article</string>
+    <string name="kind_announcement">Announcement</string>
+
+    <!-- UI/UX v2 -->
+    <string name="greeting_guest">Welcome</string>
+    <string name="greeting_user">Hello, %1$s</string>
+    <string name="home_subtitle">Find any service in the village and contact it directly</string>
+    <string name="search_hint">Search for a doctor, pharmacy, restaurant…</string>
+    <string name="search_title">Search</string>
+    <string name="search_start">Type a business name to search all categories.</string>
+    <string name="search_no_results">No results for \"%1$s\".</string>
+    <string name="firms_count">%1$d businesses</string>
+    <string name="share">Share</string>
+    <string name="contact_info">Contact details</string>
+    <string name="share_firm_text">%1$s — %2$s
+%3$s
+From the Aghour Al Kubra app</string>
+    <string name="show_password">Show</string>
+    <string name="hide_password">Hide</string>
+    <string name="welcome_back">Welcome back</string>
+    <string name="login_subtitle">Sign in with your phone number</string>
+    <string name="register_subtitle">Create your account in a minute</string>
+    <string name="error_name_required">Enter your name.</string>
+    <string name="error_phone_invalid">The phone number must be 11 digits and start with 01.</string>
+    <string name="error_password_short">The password must be at least 8 characters.</string>
+    <string name="error_password_mismatch">The passwords do not match.</string>
+    <string name="logout_confirm_title">Sign out?</string>
+    <string name="logout_confirm_body">You can sign in again at any time.</string>
+    <string name="cancel">Cancel</string>
+    <string name="about_app">About the app</string>
+    <string name="about_app_body">The Aghour Al Kubra village app — all your village services in one place.
+Version %1$s</string>
+    <string name="ok">OK</string>
+    <string name="benefit_firms">Add your business so the village can reach you</string>
+    <string name="benefit_notifications">Follow your subscription notifications and village news</string>
+    <string name="benefit_free">Browsing is free and needs no account</string>
+    <string name="my_account">Account details</string>
+
+    <!-- v3: screens from ajhour_screens design -->
+    <string name="tab_explore">Explore</string>
+    <string name="welcome_title">Welcome to the Aghour Al Kubra app</string>
+    <string name="start_now">Get started</string>
+    <string name="have_account_login">I have an account, sign in</string>
+    <string name="login_title">Welcome back</string>
+    <string name="login_hint">Sign in to your account</string>
+    <string name="register_title">Create account</string>
+    <string name="register_hint">Join the people of Aghour Al Kubra</string>
+    <string name="first_name">First name</string>
+    <string name="last_name">Last name</string>
+    <string name="create_account">Create account</string>
+    <string name="hey_guest">Welcome</string>
+    <string name="explore_hint">Doctors, restaurants, services…</string>
+    <string name="all">All</string>
+    <string name="featured_firms">Featured businesses</string>
+    <string name="location">Location</string>
+    <string name="about_firm">About the business</string>
+    <string name="news_title">News and announcements</string>
+    <string name="filter_news">News</string>
+    <string name="filter_announcements">Announcements</string>
+    <string name="filter_articles">Articles</string>
+    <string name="latest">Latest</string>
+    <string name="add_your_firm">Add your business</string>
+    <string name="plans_title">Choose your plan</string>
+    <string name="plans_subtitle">Activate your business and add its details</string>
+    <string name="most_popular">Most popular</string>
+    <string name="subscribe">Subscribe</string>
+    <string name="plan_visibility">Your business is visible to the whole village</string>
+    <string name="pay_title">Complete payment</string>
+    <string name="plan_label">Plan</string>
+    <string name="transfer_to">Transfer to: %1$s</string>
+    <string name="amount">Amount: %1$s</string>
+    <string name="copy">Copy</string>
+    <string name="copied">Copied</string>
+    <string name="transfer_reference">Transaction number after the transfer</string>
+    <string name="transfer_reference_hint">Paste the reference number here</string>
+    <string name="payer_phone">Sender\'s number (optional)</string>
+    <string name="error_reference_required">Enter the transaction number.</string>
+    <string name="payment_sent_title">Your request was sent</string>
+    <string name="payment_sent_body">We will check the transfer and activate your subscription. You will get a notification when it is approved.</string>
+    <string name="my_firms">My business</string>
+    <string name="subscription_and_plans">Subscription and plans</string>
+    <string name="payments_history">Payment history</string>
+    <string name="notifications">Notifications</string>
+    <string name="change_password">Change password</string>
+    <string name="no_subscription">No active subscription</string>
+    <string name="subscribe_now">Subscribe now</string>
+    <string name="no_payments">No payments yet.</string>
+    <string name="no_notifications">No notifications.</string>
+    <string name="mark_all_read">Mark all as read</string>
+    <string name="new_password">New password</string>
+    <string name="save">Save</string>
+    <string name="password_changed">Password changed.</string>
+    <string name="reference">Reference: %1$s</string>
+    <string name="guest_profile_title">Sign in</string>
+    <string name="guest_profile_body">To add your business, subscribe to a plan and follow your notifications.</string>
+    <string name="no_account_q">No account?</string>
+    <string name="create_account_link">Create one</string>
+    <string name="have_account_q">Already have an account?</string>
+
+    <!-- v4: light / dark design -->
+    <string name="unread_count">%1$d unread</string>
+    <string name="settings">Settings</string>
+    <string name="appearance">Appearance</string>
+    <string name="appearance_menu">Language and appearance</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
+    <string name="theme_system_hint">\"System\" follows Android\'s dark mode setting</string>
+    <string name="send_for_review">Send for review</string>
+    <string name="pay_activation_note">Activated once the admin confirms the payment arrived</string>
+    <string name="notif_open_subscription">Subscription details</string>
+    <string name="notif_open_plans">Plans</string>
+    <string name="notif_open_firm">Business page</string>
+    <string name="notif_open_news">News item</string>
+
+    <!-- v5: Arabic / English -->
+    <string name="language">Language</string>
+    <string name="time_now">Just now</string>
+    <string name="egp_amount">EGP %1$s</string>
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_evening">Good evening</string>
+    <string name="state_current">Active</string>
+    <string name="state_scheduled">Scheduled</string>
+    <string name="state_pending">Under review</string>
+    <string name="state_rejected">Rejected</string>
+    <string name="state_expired">Expired</string>
+    <string name="payment_instapay">InstaPay</string>
+    <string name="payment_vodafone_cash">Vodafone Cash</string>
+    <string name="first_name_example">Ahmed</string>
+    <string name="last_name_example">Mohamed</string>
+    <string name="verified">Verified</string>
+    <string name="plan_named">%1$s plan</string>
+    <string name="firm_active">Active</string>
+    <string name="firm_suspended">Suspended</string>
+    <string name="until_date">Until %1$s</string>
+
+    <plurals name="minutes_ago">
+        <item quantity="one">%d minute ago</item>
+        <item quantity="other">%d minutes ago</item>
+    </plurals>
+    <plurals name="hours_ago">
+        <item quantity="one">%d hour ago</item>
+        <item quantity="other">%d hours ago</item>
+    </plurals>
+    <plurals name="days_ago">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+    <plurals name="weeks_ago">
+        <item quantity="one">%d week ago</item>
+        <item quantity="other">%d weeks ago</item>
+    </plurals>
+    <plurals name="days_left">
+        <item quantity="one">%d day left</item>
+        <item quantity="other">%d days left</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="plan_duration">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="plan_max_firms">
+        <item quantity="one">%d business</item>
+        <item quantity="other">Up to %d businesses</item>
+    </plurals>
+    <plurals name="results_count">
+        <item quantity="one">%d result</item>
+        <item quantity="other">%d results</item>
+    </plurals>
+</resources>

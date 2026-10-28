@@ -81,9 +81,9 @@ fun MyFirmsScreen(onBack: () -> Unit, onFirmClick: (FirmDto) -> Unit) {
                 items(state.firms, key = { it.id }) { firm ->
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         when (firm.status) {
-                            "pending" -> Badge("قيد المراجعة", BadgeTone.Gold)
-                            "suspended" -> Badge("موقوف", BadgeTone.Red)
-                            else -> Badge("نشط")
+                            "pending" -> Badge(stringResource(R.string.state_pending), BadgeTone.Gold)
+                            "suspended" -> Badge(stringResource(R.string.firm_suspended), BadgeTone.Red)
+                            else -> Badge(stringResource(R.string.firm_active))
                         }
                         FirmRow(firm, firmIconUrl(firm, state.categories), onClick = { onFirmClick(firm) })
                     }

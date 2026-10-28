@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Dark platform parent so "System" dark mode never flashes a light window.
-         Theme.Aghour and Theme.Aghour.Splash are declared once, in values/themes.xml. -->
-    <style name="Theme.Aghour.Base" parent="android:Theme.Material.NoActionBar" />
-</resources>

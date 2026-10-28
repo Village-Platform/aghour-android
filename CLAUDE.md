@@ -57,15 +57,15 @@ State is mutated only via `_state.update { it.copy(...) }`.
 
 Every repository call wraps Retrofit in `safeApiCall(json) { ... }` and returns `ApiResult<T>`
 (`Success` / `Failure(message, code, httpStatus)`). Never let a raw Retrofit call or an exception
-escape a repository. `ApiResult.Failure.message` is already a user-ready Arabic sentence (from the
+escape a repository. `ApiResult.Failure.message` is already a user-ready sentence in the app language (from the
 server's `{ error: { message, details } }` envelope, or a local fallback) — show it as-is.
 
 DTOs live in `data/remote/Dtos.kt`: `@Serializable`, `@SerialName` for snake_case fields, wrapped
 in the `ListResponse<T>` / `ItemResponse<T>` / `DataList<T>` envelopes. `Json` is configured with
 `ignoreUnknownKeys`, so new server fields never break the client.
 
-`AuthInterceptor` attaches the bearer token and `Accept-Language: ar`, and clears the session on
-401. Token + user + welcome flag persist in DataStore via `SessionStore`.
+`AuthInterceptor` attaches the bearer token and `Accept-Language` (`ar` / `en`, from `AppLanguage`),
+and clears the session on 401. Token + user + welcome flag persist in DataStore via `SessionStore`.
 
 ## Navigation
 
@@ -82,11 +82,17 @@ ViewModel.
 
 ## UI conventions
 
-- **RTL always.** `AghourTheme` forces `LayoutDirection.Rtl` regardless of phone language. Use
-  `start`/`end` (never `left`/`right`) and `Icons.AutoMirrored.*` for directional icons.
-- **Arabic text goes in `res/values/strings.xml`** and is read with `stringResource`. The only
-  literals in Kotlin are the formatting/mapping helpers in `ui/components/Common.kt`
-  (relative time, category / notification icons, status labels) and the fallbacks in `ApiResult.kt`.
+- **Arabic and English; direction follows the language.** Arabic is right-to-left, English
+  left-to-right. The choice lives in Android (per-app language), read and set through
+  `data/settings/AppLanguage.kt` — not in DataStore. `MainActivity` is an `AppCompatActivity` so the
+  choice applies on Android 12 and older too. Use `start`/`end` (never `left`/`right`) and
+  `Icons.AutoMirrored.*` for directional icons.
+- **Text goes in `res/values/strings.xml` (Arabic, the default) and `res/values-en/strings.xml`** —
+  add every string to both — and is read with `stringResource` / `pluralStringResource`. Counts are
+  `<plurals>`: Arabic needs all six forms (zero, one, two, few, many, other). Dates, numbers and
+  money go through `formatDate` / `relativeTime` / `egp` in `ui/components/Common.kt`, which format
+  for the current language. The only text literals in Kotlin are the two fallbacks in `ApiResult.kt`
+  (repositories have no `Context`).
 - **Colors** come from the design tokens: `val c = Aghour.colors`, then `c.page`, `c.surface`,
   `c.surface2`, `c.ink`, `c.muted`, `c.line`, `c.gold`, `c.goldInk`, `c.brand`, `c.ok`, `c.bad`
   (`ui/theme/Theme.kt`). Light and dark palettes exist; the user picks Light / Dark / System in

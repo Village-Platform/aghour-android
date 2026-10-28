@@ -17,9 +17,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.aghourservices.data.settings.ThemeMode
@@ -125,8 +123,9 @@ private val AppShapes = Shapes(
 )
 
 /**
- * Arabic-first app: the layout is always right-to-left, whatever the phone language is.
  * [mode] is the user's choice from Settings; System follows Android's dark mode.
+ * Layout direction is not set here: it comes from the app language (Arabic right-to-left,
+ * English left-to-right), so `start`/`end` and AutoMirrored icons flip on their own.
  */
 @Composable
 fun AghourTheme(mode: ThemeMode = ThemeMode.System, content: @Composable () -> Unit) {
@@ -149,7 +148,6 @@ fun AghourTheme(mode: ThemeMode = ThemeMode.System, content: @Composable () -> U
     }
 
     CompositionLocalProvider(
-        LocalLayoutDirection provides LayoutDirection.Rtl,
         LocalAghourColors provides colors,
         // Text without an explicit colour must not fall back to black on the dark page.
         LocalContentColor provides colors.ink,

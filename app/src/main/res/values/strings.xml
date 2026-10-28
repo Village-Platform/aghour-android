@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<!-- Arabic is the default (values/). English lives in values-en/strings.xml: add every new string to both. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="ar">
     <string name="app_name">أجهور الكبرى</string>
     <string name="tagline">كل خدمات قريتك في مكان واحد</string>
 
@@ -55,7 +56,7 @@
     <string name="search_hint">ابحث عن طبيب، صيدلية، مطعم…</string>
     <string name="search_title">البحث</string>
     <string name="search_start">اكتب اسم المنشأة للبحث في كل الأقسام.</string>
-    <string name="search_no_results">لا توجد نتائج لـ "%1$s".</string>
+    <string name="search_no_results">لا توجد نتائج لـ \"%1$s\".</string>
     <string name="firms_count">%1$d منشأة</string>
     <string name="share">مشاركة</string>
     <string name="contact_info">بيانات التواصل</string>
@@ -99,7 +100,6 @@
     <string name="explore_hint">أطباء، مطاعم، خدمات…</string>
     <string name="all">الكل</string>
     <string name="featured_firms">أنشطة مميزة</string>
-    <string name="results_count">%1$d نتيجة</string>
     <string name="location">الموقع</string>
     <string name="about_firm">عن النشاط</string>
     <string name="news_title">الأخبار والإعلانات</string>
@@ -112,8 +112,6 @@
     <string name="plans_subtitle">فعّل نشاطك وأضف بياناتك</string>
     <string name="most_popular">الأكثر طلباً</string>
     <string name="subscribe">اشترك</string>
-    <string name="plan_duration">مدة %1$d يوم</string>
-    <string name="plan_max_firms">حتى %1$d نشاط</string>
     <string name="plan_visibility">ظهور نشاطك لكل أهالي القرية</string>
     <string name="pay_title">إتمام الدفع</string>
     <string name="plan_label">الباقة</string>
@@ -132,7 +130,6 @@
     <string name="payments_history">سجل المدفوعات</string>
     <string name="notifications">الإشعارات</string>
     <string name="change_password">تغيير كلمة المرور</string>
-    <string name="days_left">باقي %1$d يوماً</string>
     <string name="no_subscription">لا يوجد اشتراك فعّال</string>
     <string name="subscribe_now">اشترك الآن</string>
     <string name="no_payments">لا توجد مدفوعات بعد.</string>
@@ -152,7 +149,7 @@
     <string name="unread_count">غير مقروء %1$d</string>
     <string name="settings">الإعدادات</string>
     <string name="appearance">المظهر</string>
-    <string name="appearance_menu">المظهر (فاتح / داكن)</string>
+    <string name="appearance_menu">اللغة والمظهر</string>
     <string name="theme_light">فاتح</string>
     <string name="theme_dark">داكن</string>
     <string name="theme_system">حسب الجهاز</string>
@@ -163,4 +160,102 @@
     <string name="notif_open_plans">الباقات</string>
     <string name="notif_open_firm">صفحة المنشأة</string>
     <string name="notif_open_news">الخبر</string>
+
+    <!-- v5: Arabic / English -->
+    <string name="language">اللغة</string>
+    <!-- Each language named in itself, so it can be found whatever the current language is. -->
+    <string name="language_arabic" translatable="false">العربية</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="time_now">الآن</string>
+    <string name="egp_amount">%1$s ج.م</string>
+    <string name="greeting_morning">صباح الخير</string>
+    <string name="greeting_evening">مساء الخير</string>
+    <string name="state_current">ساري</string>
+    <string name="state_scheduled">مجدول</string>
+    <string name="state_pending">قيد المراجعة</string>
+    <string name="state_rejected">مرفوض</string>
+    <string name="state_expired">منتهي</string>
+    <string name="payment_instapay">إنستاباي</string>
+    <string name="payment_vodafone_cash">فودافون كاش</string>
+    <string name="first_name_example">أحمد</string>
+    <string name="last_name_example">محمد</string>
+    <string name="verified">موثّق</string>
+    <string name="plan_named">باقة %1$s</string>
+    <string name="firm_active">نشط</string>
+    <string name="firm_suspended">موقوف</string>
+    <string name="until_date">حتى %1$s</string>
+
+    <!-- Arabic has six plural forms: zero (0), one (1), two (2), few (3–10), many (11–99), other (100+). -->
+    <plurals name="minutes_ago">
+        <item quantity="zero">منذ %d دقيقة</item>
+        <item quantity="one">منذ دقيقة</item>
+        <item quantity="two">منذ دقيقتين</item>
+        <item quantity="few">منذ %d دقائق</item>
+        <item quantity="many">منذ %d دقيقة</item>
+        <item quantity="other">منذ %d دقيقة</item>
+    </plurals>
+    <plurals name="hours_ago">
+        <item quantity="zero">منذ %d ساعة</item>
+        <item quantity="one">منذ ساعة</item>
+        <item quantity="two">منذ ساعتين</item>
+        <item quantity="few">منذ %d ساعات</item>
+        <item quantity="many">منذ %d ساعة</item>
+        <item quantity="other">منذ %d ساعة</item>
+    </plurals>
+    <plurals name="days_ago">
+        <item quantity="zero">منذ %d يوم</item>
+        <item quantity="one">منذ يوم</item>
+        <item quantity="two">منذ يومين</item>
+        <item quantity="few">منذ %d أيام</item>
+        <item quantity="many">منذ %d يومًا</item>
+        <item quantity="other">منذ %d يوم</item>
+    </plurals>
+    <plurals name="weeks_ago">
+        <item quantity="zero">منذ %d أسبوع</item>
+        <item quantity="one">منذ أسبوع</item>
+        <item quantity="two">منذ أسبوعين</item>
+        <item quantity="few">منذ %d أسابيع</item>
+        <item quantity="many">منذ %d أسبوعًا</item>
+        <item quantity="other">منذ %d أسبوع</item>
+    </plurals>
+    <plurals name="days_left">
+        <item quantity="zero">باقي %d يوم</item>
+        <item quantity="one">باقي يوم واحد</item>
+        <item quantity="two">باقي يومان</item>
+        <item quantity="few">باقي %d أيام</item>
+        <item quantity="many">باقي %d يومًا</item>
+        <item quantity="other">باقي %d يوم</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="zero">%d يوم</item>
+        <item quantity="one">يوم واحد</item>
+        <item quantity="two">يومان</item>
+        <item quantity="few">%d أيام</item>
+        <item quantity="many">%d يومًا</item>
+        <item quantity="other">%d يوم</item>
+    </plurals>
+    <plurals name="plan_duration">
+        <item quantity="zero">مدة %d يوم</item>
+        <item quantity="one">مدة يوم واحد</item>
+        <item quantity="two">مدة يومين</item>
+        <item quantity="few">مدة %d أيام</item>
+        <item quantity="many">مدة %d يومًا</item>
+        <item quantity="other">مدة %d يوم</item>
+    </plurals>
+    <plurals name="plan_max_firms">
+        <item quantity="zero">حتى %d نشاط</item>
+        <item quantity="one">نشاط واحد</item>
+        <item quantity="two">حتى نشاطين</item>
+        <item quantity="few">حتى %d أنشطة</item>
+        <item quantity="many">حتى %d نشاطًا</item>
+        <item quantity="other">حتى %d نشاط</item>
+    </plurals>
+    <plurals name="results_count">
+        <item quantity="zero">لا توجد نتائج</item>
+        <item quantity="one">نتيجة واحدة</item>
+        <item quantity="two">نتيجتان</item>
+        <item quantity="few">%d نتائج</item>
+        <item quantity="many">%d نتيجة</item>
+        <item quantity="other">%d نتيجة</item>
+    </plurals>
 </resources>

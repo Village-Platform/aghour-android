@@ -7,7 +7,7 @@ Native Android app for the village services platform. It talks to the Rails API 
 
 | Part | Choice |
 |------|--------|
-| Language / UI | Kotlin 2.4.21, Jetpack Compose (Material 3), right-to-left Arabic |
+| Language / UI | Kotlin 2.4.21, Jetpack Compose (Material 3), Arabic (right-to-left) and English |
 | Build | Android Gradle Plugin 9.4.1 (built-in Kotlin), Gradle 9.8.2, JDK 17+ |
 | SDK | minSdk 26, targetSdk 36 (Google Play requirement), compileSdk 37 |
 | Networking | Retrofit 3 + OkHttp + kotlinx.serialization |
@@ -38,7 +38,7 @@ app/src/main/java/com/aghourservices/
 ├── AghourApp.kt / MainActivity.kt   app start, splash (kept until the welcome flag is read)
 ├── di/AppContainer.kt               API client, session, repositories, Explore category filter
 ├── data/
-│   ├── remote/      AghourApi (endpoints), Dtos, ApiResult (Arabic error messages), AuthInterceptor
+│   ├── remote/      AghourApi (endpoints), Dtos, ApiResult (localized error messages), AuthInterceptor
 │   ├── session/     SessionStore (token, user, welcome flag in DataStore)
 │   └── repository/  CatalogRepository (categories, firms, news), AuthRepository (login, register,
 │                    me, password), OwnerRepository (plans, payment, subscriptions, my firms, notifications)

@@ -7,58 +7,73 @@ import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.aghourservices.BuildConfig
 import com.aghourservices.R
 import com.aghourservices.data.remote.CategoryDto
 import com.aghourservices.data.remote.FirmDto
+import java.text.NumberFormat
 import java.time.Duration
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DecimalStyle
+import java.time.format.FormatStyle
+import java.util.Locale
 import okhttp3.HttpUrl.Companion.toHttpUrl
-
-private val DateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
 
 private fun parse(iso: String?): OffsetDateTime? = iso?.let { runCatching { OffsetDateTime.parse(it) }.getOrNull() }
 
-/** Rails sends ISO-8601 with offset, e.g. 2026-10-24T19:00:00.000+03:00 */
-fun formatDate(iso: String?): String = parse(iso)?.format(DateFormat) ?: ""
+/** The language the screen is drawn in (follows the in-app language choice). */
+@Composable
+@ReadOnlyComposable
+private fun uiLocale(): Locale = LocalConfiguration.current.locales[0]
 
-/** "منذ ساعتين", "منذ يوم", "منذ ٣ أيام"… falls back to the date after a month. */
+/**
+ * Rails sends ISO-8601 with offset, e.g. 2026-10-24T19:00:00.000+03:00.
+ * Shown as "28 أكتوبر 2026" / "Oct 28, 2026", with the language's own digits.
+ */
+@Composable
+fun formatDate(iso: String?): String {
+    val locale = uiLocale()
+    val time = parse(iso) ?: return ""
+    return time.format(
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale).withDecimalStyle(DecimalStyle.of(locale)),
+    )
+}
+
+/** "منذ ساعتين" / "2 hours ago"… falls back to the date after a month. Plural forms come from resources. */
+@Composable
 fun relativeTime(iso: String?): String {
     val time = parse(iso) ?: return ""
     val minutes = Duration.between(time, OffsetDateTime.now()).toMinutes()
     return when {
         minutes < 0 -> formatDate(iso)
-        minutes < 1 -> "الآن"
-        minutes < 60 -> if (minutes == 1L) "منذ دقيقة" else "منذ $minutes دقيقة"
-        minutes < 60 * 24 -> when (val h = minutes / 60) {
-            1L -> "منذ ساعة"
-            2L -> "منذ ساعتين"
-            in 3..10 -> "منذ $h ساعات"
-            else -> "منذ $h ساعة"
-        }
-        else -> when (val d = minutes / (60 * 24)) {
-            1L -> "منذ يوم"
-            2L -> "منذ يومين"
-            in 3..6 -> "منذ $d أيام"
-            in 7..13 -> "منذ أسبوع"
-            in 14..29 -> "منذ ${d / 7} أسابيع"
+        minutes < 1 -> stringResource(R.string.time_now)
+        minutes < 60 -> minutes.toInt().let { pluralStringResource(R.plurals.minutes_ago, it, it) }
+        minutes < 60 * 24 -> (minutes / 60).toInt().let { pluralStringResource(R.plurals.hours_ago, it, it) }
+        else -> when (val d = (minutes / (60 * 24)).toInt()) {
+            in 1..6 -> pluralStringResource(R.plurals.days_ago, d, d)
+            in 7..29 -> (d / 7).let { pluralStringResource(R.plurals.weeks_ago, it, it) }
             else -> formatDate(iso)
         }
     }
 }
 
-/** 24900 piasters -> "249 ج.م" */
+/** 24900 piasters -> "٢٤٩ ج.م" / "EGP 249" */
+@Composable
 fun egp(cents: Int): String {
-    val pounds = cents / 100.0
-    val text = if (pounds % 1.0 == 0.0) pounds.toLong().toString() else "%.2f".format(pounds)
-    return "$text ج.م"
+    val amount = NumberFormat.getNumberInstance(uiLocale()).apply { maximumFractionDigits = 2 }.format(cents / 100.0)
+    return stringResource(R.string.egp_amount, amount)
 }
 
-fun greeting(): String = if (LocalTime.now().hour < 12) "صباح الخير" else "مساء الخير"
+@Composable
+fun greeting(): String =
+    stringResource(if (LocalTime.now().hour < 12) R.string.greeting_morning else R.string.greeting_evening)
 
 /**
  * Absolute URL of a category image. The API sends `icon_url` relative to its host
@@ -102,16 +117,18 @@ fun roleLabel(role: String): String = when (role) {
 }
 
 /** Subscription state -> label + badge tone (states come from the API: pending/rejected/scheduled/current/expired). */
+@Composable
 fun subscriptionState(state: String): Pair<String, BadgeTone> = when (state) {
-    "current" -> "ساري" to BadgeTone.Green
-    "scheduled" -> "مجدول" to BadgeTone.Gold
-    "pending" -> "قيد المراجعة" to BadgeTone.Gold
-    "rejected" -> "مرفوض" to BadgeTone.Red
-    else -> "منتهي" to BadgeTone.Gray
+    "current" -> stringResource(R.string.state_current) to BadgeTone.Green
+    "scheduled" -> stringResource(R.string.state_scheduled) to BadgeTone.Gold
+    "pending" -> stringResource(R.string.state_pending) to BadgeTone.Gold
+    "rejected" -> stringResource(R.string.state_rejected) to BadgeTone.Red
+    else -> stringResource(R.string.state_expired) to BadgeTone.Gray
 }
 
+@Composable
 fun paymentMethodLabel(key: String): String = when (key) {
-    "instapay" -> "إنستاباي"
-    "vodafone_cash" -> "فودافون كاش"
+    "instapay" -> stringResource(R.string.payment_instapay)
+    "vodafone_cash" -> stringResource(R.string.payment_vodafone_cash)
     else -> key
 }

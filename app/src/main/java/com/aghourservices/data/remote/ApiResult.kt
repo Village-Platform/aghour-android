@@ -1,5 +1,7 @@
 package com.aghourservices.data.remote
 
+import com.aghourservices.data.settings.AppLanguage
+import com.aghourservices.data.settings.Language
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -13,12 +15,21 @@ sealed interface ApiResult<out T> {
     data class Failure(val message: String, val code: String? = null, val httpStatus: Int? = null) : ApiResult<Nothing>
 }
 
-private const val NETWORK_ERROR = "تعذّر الاتصال بالخادم. تأكد من الإنترنت وحاول مرة أخرى."
-private const val UNEXPECTED_ERROR = "حدث خطأ غير متوقع. حاول مرة أخرى."
+// Repositories have no Context, so the two local fallbacks pick their language here.
+private val NETWORK_ERROR: String
+    get() = when (AppLanguage.current()) {
+        Language.Arabic -> "تعذّر الاتصال بالخادم. تأكد من الإنترنت وحاول مرة أخرى."
+        Language.English -> "Could not reach the server. Check your internet connection and try again."
+    }
+private val UNEXPECTED_ERROR: String
+    get() = when (AppLanguage.current()) {
+        Language.Arabic -> "حدث خطأ غير متوقع. حاول مرة أخرى."
+        Language.English -> "Something went wrong. Please try again."
+    }
 
 /**
- * Runs an API call and turns every failure into a readable Arabic message.
- * The server already sends Arabic messages in { "error": { "message", "details" } }.
+ * Runs an API call and turns every failure into a readable message in the app language.
+ * The server already localizes { "error": { "message", "details" } } from Accept-Language.
  */
 suspend fun <T> safeApiCall(json: Json, block: suspend () -> T): ApiResult<T> =
     try {
@@ -36,7 +47,7 @@ private fun parseHttpError(json: Json, e: HttpException): ApiResult.Failure {
     val body = raw?.let { runCatching { json.decodeFromString<ErrorEnvelope>(it).error }.getOrNull() }
         ?: return ApiResult.Failure(UNEXPECTED_ERROR, httpStatus = e.code())
 
-    // Validation errors: show the first field message (already a full Arabic sentence from Rails).
+    // Validation errors: show the first field message (already a full sentence from Rails).
     val firstDetail = body.details?.values
         ?.flatMap { value -> if (value is JsonArray) value.toList() else listOf(value) }
         ?.firstNotNullOfOrNull { (it as? JsonPrimitive)?.content }
