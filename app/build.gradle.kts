@@ -8,11 +8,11 @@ val apiUrlDebug = providers.gradleProperty("AGHOUR_API_URL_DEBUG").getOrElse("ht
 val apiUrlRelease = providers.gradleProperty("AGHOUR_API_URL_RELEASE").getOrElse("https://api.example.com/api/v1/")
 
 android {
-    namespace = "com.aghour.app"
+    namespace = "com.aghourservices"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.aghour.app"
+        applicationId = "com.aghourservices"
         minSdk = 26
         targetSdk = 36 // Google Play requires API 36+ for new apps (since Aug 31, 2026)
         versionCode = 1
