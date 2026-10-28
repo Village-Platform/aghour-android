@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Aghour" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/page_light</item>
+    <!-- Only the platform parent differs by mode: light here, dark in values-night/themes.xml.
+         Every other item is declared once below and reads @color/page, which flips by qualifier. -->
+    <style name="Theme.Aghour.Base" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Aghour" parent="Theme.Aghour.Base">
+        <item name="android:windowBackground">@color/page</item>
     </style>
 
     <!-- Splash: the logo mark on the page colour (white / GitHub-dark). Mark has no icon background:
          288dp canvas, content inside the central 192dp circle (drawable[-night]-nodpi/splash_mark). -->
     <style name="Theme.Aghour.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/page_light</item>
+        <item name="windowSplashScreenBackground">@color/page</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_mark</item>
         <item name="postSplashScreenTheme">@style/Theme.Aghour</item>
     </style>

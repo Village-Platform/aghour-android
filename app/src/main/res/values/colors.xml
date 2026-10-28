@@ -6,7 +6,7 @@
     <color name="brand_gold">#FFC28D40</color>
     <color name="brand_cream">#FFFAF5EC</color>
     <color name="ic_launcher_background">#FFFFFFFF</color>
-    <!-- Window backgrounds = the "page" design token in each theme -->
-    <color name="page_light">#FFFFFFFF</color>
-    <color name="page_dark">#FF0D1117</color>
+    <!-- Window background = the "page" design token (LightPalette.page in ui/theme/Theme.kt).
+         values-night/colors.xml redefines it, so the themes reference one name for both modes. -->
+    <color name="page">#FFFFFFFF</color>
 </resources>
