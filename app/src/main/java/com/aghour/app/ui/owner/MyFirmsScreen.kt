@@ -19,7 +19,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aghour.app.R
 import com.aghour.app.data.remote.ApiResult
+import com.aghour.app.data.remote.CategoryDto
 import com.aghour.app.data.remote.FirmDto
+import com.aghour.app.data.repository.CatalogRepository
 import com.aghour.app.data.repository.OwnerRepository
 import com.aghour.app.ui.components.Badge
 import com.aghour.app.ui.components.BadgeTone
@@ -28,15 +30,21 @@ import com.aghour.app.ui.components.MessageBox
 import com.aghour.app.ui.components.ScreenTitle
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.appContainer
-import com.aghour.app.ui.theme.Cream
+import com.aghour.app.ui.components.firmIconUrl
+import com.aghour.app.ui.theme.Aghour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class MyFirmsUiState(val loading: Boolean = true, val firms: List<FirmDto> = emptyList(), val error: String? = null)
+data class MyFirmsUiState(
+    val loading: Boolean = true,
+    val firms: List<FirmDto> = emptyList(),
+    val categories: List<CategoryDto> = emptyList(),
+    val error: String? = null,
+)
 
-class MyFirmsViewModel(private val owner: OwnerRepository) : ViewModel() {
+class MyFirmsViewModel(private val owner: OwnerRepository, private val catalog: CatalogRepository) : ViewModel() {
     private val _state = MutableStateFlow(MyFirmsUiState())
     val state: StateFlow<MyFirmsUiState> = _state.asStateFlow()
 
@@ -47,8 +55,9 @@ class MyFirmsViewModel(private val owner: OwnerRepository) : ViewModel() {
     fun load() {
         _state.value = MyFirmsUiState(loading = true)
         viewModelScope.launch {
+            val categories = (catalog.categories() as? ApiResult.Success)?.data.orEmpty() // only for icons
             _state.value = when (val r = owner.myFirms()) {
-                is ApiResult.Success -> MyFirmsUiState(loading = false, firms = r.data)
+                is ApiResult.Success -> MyFirmsUiState(loading = false, firms = r.data, categories = categories)
                 is ApiResult.Failure -> MyFirmsUiState(loading = false, error = r.message)
             }
         }
@@ -59,10 +68,10 @@ class MyFirmsViewModel(private val owner: OwnerRepository) : ViewModel() {
 @Composable
 fun MyFirmsScreen(onBack: () -> Unit, onFirmClick: (FirmDto) -> Unit) {
     val container = appContainer()
-    val vm: MyFirmsViewModel = viewModel { MyFirmsViewModel(container.owner) }
+    val vm: MyFirmsViewModel = viewModel { MyFirmsViewModel(container.owner, container.catalog) }
     val state by vm.state.collectAsStateWithLifecycle()
 
-    Column(Modifier.fillMaxSize().background(Cream)) {
+    Column(Modifier.fillMaxSize().background(Aghour.colors.page)) {
         ScreenTitle(stringResource(R.string.my_firms), onBack = onBack)
         when {
             state.loading -> SkeletonRows(3, Modifier.padding(16.dp))
@@ -76,7 +85,7 @@ fun MyFirmsScreen(onBack: () -> Unit, onFirmClick: (FirmDto) -> Unit) {
                             "suspended" -> Badge("موقوف", BadgeTone.Red)
                             else -> Badge("نشط")
                         }
-                        FirmRow(firm, onClick = { onFirmClick(firm) })
+                        FirmRow(firm, firmIconUrl(firm, state.categories), onClick = { onFirmClick(firm) })
                     }
                 }
             }

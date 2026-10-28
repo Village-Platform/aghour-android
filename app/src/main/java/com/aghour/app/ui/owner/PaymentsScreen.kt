@@ -29,7 +29,7 @@ import com.aghour.app.data.repository.OwnerRepository
 import com.aghour.app.ui.components.Badge
 import com.aghour.app.ui.components.MessageBox
 import com.aghour.app.ui.components.MutedText
-import com.aghour.app.ui.components.SandCard
+import com.aghour.app.ui.components.SurfaceCard
 import com.aghour.app.ui.components.ScreenTitle
 import com.aghour.app.ui.components.SkeletonRows
 import com.aghour.app.ui.components.appContainer
@@ -37,9 +37,7 @@ import com.aghour.app.ui.components.egp
 import com.aghour.app.ui.components.formatDate
 import com.aghour.app.ui.components.paymentMethodLabel
 import com.aghour.app.ui.components.subscriptionState
-import com.aghour.app.ui.theme.Cream
-import com.aghour.app.ui.theme.Danger
-import com.aghour.app.ui.theme.Forest
+import com.aghour.app.ui.theme.Aghour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -72,8 +70,9 @@ fun PaymentsScreen(onBack: () -> Unit) {
     val container = appContainer()
     val vm: PaymentsViewModel = viewModel { PaymentsViewModel(container.owner) }
     val state by vm.state.collectAsStateWithLifecycle()
+    val c = Aghour.colors
 
-    Column(Modifier.fillMaxSize().background(Cream)) {
+    Column(Modifier.fillMaxSize().background(c.page)) {
         ScreenTitle(stringResource(R.string.payments_history), onBack = onBack)
         when {
             state.loading -> SkeletonRows(4, Modifier.padding(16.dp))
@@ -82,12 +81,12 @@ fun PaymentsScreen(onBack: () -> Unit) {
             else -> LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(state.items, key = { it.id }) { s ->
                     val (label, tone) = subscriptionState(s.state)
-                    SandCard {
+                    SurfaceCard {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(s.plan.name, style = MaterialTheme.typography.titleSmall, color = Forest, modifier = Modifier.weight(1f))
+                            Text(s.plan.name, style = MaterialTheme.typography.titleSmall, color = c.ink, modifier = Modifier.weight(1f))
                             Badge(label, tone)
                         }
-                        Text(egp(s.amountCents), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = Forest)
+                        Text(egp(s.amountCents), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = c.ink)
                         MutedText("${paymentMethodLabel(s.paymentMethod)} · ${stringResource(R.string.reference, "⁦${s.transactionReference}⁩")}")
                         MutedText(
                             listOfNotNull(
@@ -95,7 +94,7 @@ fun PaymentsScreen(onBack: () -> Unit) {
                                 s.endsAt?.let { "حتى ${formatDate(it)}" },
                             ).joinToString(" · "),
                         )
-                        s.rejectionReason?.let { Text(it, color = Danger, style = MaterialTheme.typography.bodySmall) }
+                        s.rejectionReason?.let { Text(it, color = c.bad, style = MaterialTheme.typography.bodySmall) }
                     }
                 }
             }

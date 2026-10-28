@@ -1,16 +1,17 @@
 package com.aghour.app.ui.account
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -23,7 +24,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -32,14 +32,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aghour.app.R
+import com.aghour.app.ui.components.BrandLogo
 import com.aghour.app.ui.components.ErrorBanner
 import com.aghour.app.ui.components.FormField
 import com.aghour.app.ui.components.GoldButton
-import com.aghour.app.ui.components.SheetLayout
+import com.aghour.app.ui.components.StatusBarIcons
 import com.aghour.app.ui.components.appContainer
-import com.aghour.app.ui.theme.Cream
-import com.aghour.app.ui.theme.Forest
-import com.aghour.app.ui.theme.Gold
+import com.aghour.app.ui.theme.Aghour
 
 @Composable
 fun LoginScreen(onBack: () -> Unit, onDone: () -> Unit, onGoToRegister: () -> Unit) {
@@ -139,7 +138,7 @@ fun RegisterScreen(onBack: () -> Unit, onDone: () -> Unit, onGoToLogin: () -> Un
     }
 }
 
-/** Forest top with the cream logo, cream sheet with the form (login/register designs). */
+/** Plain page: back button, optional logo, title and the form (login/register designs). */
 @Composable
 private fun AuthLayout(
     title: String,
@@ -148,36 +147,38 @@ private fun AuthLayout(
     showLogo: Boolean,
     form: @Composable () -> Unit,
 ) {
-    SheetLayout(
-        modifier = Modifier.imePadding(),
-        sheetPadding = PaddingValues(24.dp),
-        header = {
-            Column(
-                Modifier.fillMaxWidth().statusBarsPadding().padding(bottom = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = Cream)
-                    }
-                }
-                if (showLogo) {
-                    Image(painterResource(R.drawable.logo_cream), contentDescription = null, modifier = Modifier.height(110.dp))
-                    Spacer(Modifier.height(8.dp))
-                }
-                Text(title, color = Cream, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                Text(subtitle, color = Gold, style = MaterialTheme.typography.bodySmall)
-            }
-        },
+    val c = Aghour.colors
+    StatusBarIcons()
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(c.page)
+            .imePadding()
+            .verticalScroll(rememberScrollState())
+            .statusBarsPadding()
+            .padding(bottom = 24.dp),
     ) {
-        form()
+        IconButton(onClick = onBack, modifier = Modifier.padding(start = 4.dp, top = 4.dp)) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = c.ink)
+        }
+        Column(Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (showLogo) {
+                BrandLogo(Modifier.height(112.dp).align(Alignment.CenterHorizontally).padding(vertical = 4.dp))
+            }
+            Column {
+                Text(title, color = c.ink, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                Text(subtitle, color = c.muted, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+            }
+            form()
+        }
     }
 }
 
 @Composable
 private fun SwitchLink(question: String, action: String, onClick: () -> Unit) {
+    val c = Aghour.colors
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-        Text(question, color = Forest.copy(alpha = 0.6f), style = MaterialTheme.typography.bodySmall)
-        TextButton(onClick = onClick) { Text(action, color = Forest, fontWeight = FontWeight.Bold) }
+        Text(question, color = c.muted, style = MaterialTheme.typography.bodySmall)
+        TextButton(onClick = onClick) { Text(action, color = c.ink, fontWeight = FontWeight.Bold) }
     }
 }

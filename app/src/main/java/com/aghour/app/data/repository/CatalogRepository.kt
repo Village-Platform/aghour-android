@@ -12,8 +12,17 @@ import kotlinx.serialization.json.Json
 /** Public browsing data: categories, firms and news. */
 class CatalogRepository(private val api: AghourApi, private val json: Json) {
 
-    suspend fun categories(): ApiResult<List<CategoryDto>> =
-        safeApiCall(json) { api.categories().data }
+    @Volatile private var cachedCategories: List<CategoryDto>? = null
+
+    /**
+     * Categories (with their icon keys) are needed by almost every screen to draw icons, and they
+     * rarely change, so they are kept in memory for the app's lifetime. [refresh] re-fetches them.
+     */
+    suspend fun categories(refresh: Boolean = false): ApiResult<List<CategoryDto>> {
+        cachedCategories?.takeIf { !refresh }?.let { return ApiResult.Success(it) }
+        return safeApiCall(json) { api.categories().data }
+            .also { if (it is ApiResult.Success) cachedCategories = it.data }
+    }
 
     suspend fun categoryFirms(categoryId: Long, query: String?, page: Int): ApiResult<ListResponse<FirmDto>> =
         safeApiCall(json) { api.categoryFirms(categoryId, query?.takeIf { it.isNotBlank() }, page) }

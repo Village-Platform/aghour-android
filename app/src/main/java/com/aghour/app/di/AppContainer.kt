@@ -9,6 +9,7 @@ import com.aghour.app.data.repository.CatalogRepository
 import com.aghour.app.data.repository.OwnerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.aghour.app.data.session.SessionStore
+import com.aghour.app.data.settings.SettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,6 +37,7 @@ class AppContainer(context: Context) {
     }
 
     val session = SessionStore(context, json, appScope)
+    val settings = SettingsStore(context, appScope)
 
     private val okHttp = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
