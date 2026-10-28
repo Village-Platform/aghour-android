@@ -34,7 +34,7 @@ Debug builds allow plain HTTP (local Rails). Release builds are HTTPS-only.
 ## Structure
 
 ```
-app/src/main/java/com/aghour/app/
+app/src/main/java/com/aghourservices/
 ├── AghourApp.kt / MainActivity.kt   app start, splash (kept until the welcome flag is read)
 ├── di/AppContainer.kt               API client, session, repositories, Explore category filter
 ├── data/
