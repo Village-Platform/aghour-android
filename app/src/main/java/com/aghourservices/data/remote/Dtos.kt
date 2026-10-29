@@ -75,7 +75,14 @@ data class FirmDto(
     @SerialName("working_hours") val workingHours: String? = null,
     val status: String,
     val category: CategoryRefDto,
+    /** Optional so the app works with older API responses; null hides the owner controls. */
+    @SerialName("owner_id") val ownerId: Long? = null,
+    /** What the signed-in user may do, from the server's FirmPolicy. null on older API versions. */
+    val can: FirmCanDto? = null,
 )
+
+@Serializable
+data class FirmCanDto(val update: Boolean = false, val destroy: Boolean = false, val moderate: Boolean = false)
 
 @Serializable
 data class AuthorDto(val id: Long, val name: String)
@@ -104,6 +111,9 @@ data class UserDto(
  * or refuse each request, so a stale role just ends in an error message.
  */
 val UserDto?.isSuperAdmin: Boolean get() = this?.role == "super_admin"
+
+/** Mirrors User#can_manage_firms? on the server: firm admins and the super admin may add firms. */
+val UserDto?.canManageFirms: Boolean get() = this?.role == "firm_admin" || this?.role == "super_admin"
 
 @Serializable
 data class AuthPayload(val token: String, val user: UserDto)

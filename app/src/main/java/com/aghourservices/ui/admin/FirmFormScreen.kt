@@ -26,6 +26,7 @@ import com.aghourservices.data.repository.CatalogRepository
 import com.aghourservices.data.repository.FirmInput
 import com.aghourservices.ui.components.FilterChipsRow
 import com.aghourservices.ui.components.FormField
+import com.aghourservices.ui.components.MutedText
 import com.aghourservices.ui.components.Segmented
 import com.aghourservices.ui.components.appContainer
 import com.aghourservices.ui.components.categoryIconUrl
@@ -60,13 +61,16 @@ data class FirmFormUiState(
     val error: String? = null,
     /** Set once saved; the screen then closes. */
     val savedId: Long? = null,
+    /** The owner's edit sent an approved firm back for review (the server set it to pending). */
+    val sentForReview: Boolean = false,
 )
 
-/** Create ([firmId] null) or edit a firm. */
+/** Create ([firmId] null) or edit a firm. [canSetStatus]: super admin only; owners never send a status. */
 class FirmFormViewModel(
     private val catalog: CatalogRepository,
     private val admin: AdminRepository,
     private val firmId: Long?,
+    private val canSetStatus: Boolean,
 ) : ViewModel() {
     private val _state = MutableStateFlow(FirmFormUiState())
     val state: StateFlow<FirmFormUiState> = _state.asStateFlow()
@@ -120,13 +124,19 @@ class FirmFormViewModel(
             latitude = latitude,
             longitude = longitude,
             workingHours = s.workingHours,
-            status = s.status,
+            status = s.status.takeIf { canSetStatus },
         )
         _state.update { it.copy(submitting = true) }
         viewModelScope.launch {
             val result = if (firmId == null) admin.createFirm(input) else admin.updateFirm(firmId, input)
             when (result) {
-                is ApiResult.Success -> _state.update { it.copy(submitting = false, savedId = result.data.id) }
+                is ApiResult.Success -> _state.update {
+                    it.copy(
+                        submitting = false,
+                        savedId = result.data.id,
+                        sentForReview = s.status == "active" && result.data.status == "pending",
+                    )
+                }
                 is ApiResult.Failure -> _state.update { it.copy(submitting = false, error = result.message) }
             }
         }
@@ -147,16 +157,17 @@ private fun FirmFormUiState.filledFrom(firm: FirmDto) = copy(
 )
 
 @Composable
-fun FirmFormScreen(firmId: Long?, onBack: () -> Unit, onSaved: (Long) -> Unit) {
+fun FirmFormScreen(firmId: Long?, canSetStatus: Boolean, onBack: () -> Unit, onSaved: (Long) -> Unit) {
     val container = appContainer()
-    val vm: FirmFormViewModel = viewModel { FirmFormViewModel(container.catalog, container.admin, firmId) }
+    val vm: FirmFormViewModel = viewModel { FirmFormViewModel(container.catalog, container.admin, firmId, canSetStatus) }
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val saved = stringResource(R.string.firm_saved)
+    val sentForReview = stringResource(R.string.firm_sent_for_review)
 
     LaunchedEffect(state.savedId) {
         state.savedId?.let {
-            Toast.makeText(context, saved, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, if (state.sentForReview) sentForReview else saved, Toast.LENGTH_LONG).show()
             onSaved(it)
         }
     }
@@ -188,13 +199,21 @@ fun FirmFormScreen(firmId: Long?, onBack: () -> Unit, onSaved: (Long) -> Unit) {
         )
         FieldError(state.categoryError)
 
-        FieldLabel(stringResource(R.string.firm_status))
-        Row {
-            Segmented(
-                options = FirmStatuses.map { it to firmStatusLabel(it) },
-                selected = state.status,
-                onSelect = { s -> vm.update { copy(status = s) } },
-            )
+        if (canSetStatus) {
+            FieldLabel(stringResource(R.string.firm_status))
+            Row {
+                Segmented(
+                    options = FirmStatuses.map { it to firmStatusLabel(it) },
+                    selected = state.status,
+                    onSelect = { s -> vm.update { copy(status = s) } },
+                )
+            }
+        } else if (firmId == null) {
+            // Owners: a new firm waits for the super admin's approval.
+            MutedText(stringResource(R.string.firm_review_note))
+        } else if (state.status == "active") {
+            // Owners: the server sends an edited approved firm back for review (Firms::Update).
+            MutedText(stringResource(R.string.firm_edit_review_note))
         }
 
         FormField(
