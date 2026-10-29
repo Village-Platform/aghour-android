@@ -9,6 +9,8 @@ import com.aghourservices.data.repository.AdminRepository
 import com.aghourservices.data.repository.AuthRepository
 import com.aghourservices.data.repository.CatalogRepository
 import com.aghourservices.data.repository.OwnerRepository
+import com.aghourservices.data.analytics.AnalyticsService
+import com.aghourservices.data.analytics.FirebaseAnalyticsService
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.aghourservices.data.session.SessionStore
 import com.aghourservices.data.settings.SettingsStore
@@ -40,6 +42,7 @@ class AppContainer(context: Context) {
 
     val session = SessionStore(context, json, appScope)
     val settings = SettingsStore(context, appScope)
+    val analytics: AnalyticsService = FirebaseAnalyticsService(context)
 
     private val okHttp = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)

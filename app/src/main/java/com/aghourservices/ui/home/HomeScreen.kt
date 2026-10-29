@@ -33,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,6 +88,10 @@ fun HomeScreen(
     val user by container.auth.currentUser.collectAsStateWithLifecycle()
     val c = Aghour.colors
     StatusBarIcons()
+
+    LaunchedEffect(Unit) {
+        container.analytics.logScreenView("Home")
+    }
 
     // Refresh the bell each time Home comes back (e.g. after reading notifications).
     LifecycleResumeEffect(user?.id) {

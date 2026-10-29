@@ -72,6 +72,10 @@ fun NewsScreen(onArticleClick: (ArticleDto) -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
+    LaunchedEffect(Unit) {
+        container.analytics.logScreenView("News")
+    }
+
     val reachedEnd by remember {
         derivedStateOf {
             val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
@@ -135,6 +139,10 @@ fun ArticleScreen(articleId: Long, onBack: () -> Unit, onEdit: (() -> Unit)? = n
     val context = LocalContext.current
     val article = state.article
     val c = Aghour.colors
+
+    LaunchedEffect(articleId) {
+        container.analytics.logScreenView("ArticleDetail")
+    }
 
     if (article == null) {
         Column(Modifier.fillMaxSize().background(c.page)) {

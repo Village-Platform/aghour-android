@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 val apiUrlDebug = providers.gradleProperty("AGHOUR_API_URL_DEBUG").getOrElse("http://10.0.2.2:3000/api/v1/")
@@ -61,6 +62,7 @@ dependencies {
     // Category / menu icons (Mosque, LocalPharmacy, Storefront…). Large: R8 strips unused icons in release.
     implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.firebase.analytics)
     debugImplementation(libs.compose.ui.tooling)
 
     implementation(libs.kotlinx.serialization.json)

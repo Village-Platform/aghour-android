@@ -68,6 +68,10 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
     val c = Aghour.colors
     StatusBarIcons()
 
+    LaunchedEffect(Unit) {
+        container.analytics.logScreenView("Explore")
+    }
+
     val reachedEnd by remember {
         derivedStateOf {
             val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0

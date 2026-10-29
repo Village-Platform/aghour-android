@@ -179,6 +179,10 @@ fun FirmDetailScreen(
     val context = LocalContext.current
     val deletedMessage = stringResource(R.string.firm_deleted)
 
+    LaunchedEffect(firmId) {
+        container.analytics.logScreenView("FirmDetail")
+    }
+
     LaunchedEffect(state.deleted) {
         if (state.deleted) {
             Toast.makeText(context, deletedMessage, Toast.LENGTH_SHORT).show()
@@ -215,6 +219,7 @@ private fun FirmDetailContent(
     adminControls: @Composable ColumnScope.() -> Unit = {},
 ) {
     val context = LocalContext.current
+    val analytics = appContainer().analytics
     val c = Aghour.colors
     val isDark = c.isDark
 
@@ -263,7 +268,10 @@ private fun FirmDetailContent(
                 enabled = phone != null,
                 modifier = Modifier.weight(1f),
             ) {
-                phone?.let { context.openDialer(it) }
+                phone?.let {
+                    analytics.logEvent("firm_call_clicked", mapOf("firm_id" to firm.id))
+                    context.openDialer(it)
+                }
             }
             ActionTile(
                 icon = painterResource(R.drawable.ic_whatsapp),
@@ -272,7 +280,10 @@ private fun FirmDetailContent(
                 enabled = whatsappNumber != null,
                 modifier = Modifier.weight(1f),
             ) {
-                whatsappNumber?.let { context.openWhatsApp(it) }
+                whatsappNumber?.let {
+                    analytics.logEvent("firm_whatsapp_clicked", mapOf("firm_id" to firm.id))
+                    context.openWhatsApp(it)
+                }
             }
             ActionTile(
                 icon = rememberVectorPainter(Icons.Filled.LocationOn),
@@ -282,6 +293,7 @@ private fun FirmDetailContent(
                 modifier = Modifier.weight(1f),
             ) {
                 if (firm.latitude != null && firm.longitude != null) {
+                    analytics.logEvent("firm_map_clicked", mapOf("firm_id" to firm.id))
                     context.openMap(firm.latitude, firm.longitude, firm.name)
                 }
             }
