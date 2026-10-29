@@ -62,7 +62,13 @@ import com.aghourservices.data.remote.isSuperAdmin
 import com.aghourservices.ui.account.AccountScreen
 import com.aghourservices.ui.account.LoginScreen
 import com.aghourservices.ui.account.RegisterScreen
+import com.aghourservices.ui.account.AdminMenu
+import com.aghourservices.ui.admin.ArticleFormScreen
+import com.aghourservices.ui.admin.CategoriesAdminScreen
+import com.aghourservices.ui.admin.CategoryFormScreen
 import com.aghourservices.ui.admin.FirmFormScreen
+import com.aghourservices.ui.admin.PlanFormScreen
+import com.aghourservices.ui.admin.PlansAdminScreen
 import com.aghourservices.ui.components.appContainer
 import com.aghourservices.ui.components.MessageBox
 import com.aghourservices.ui.components.ScreenTitle
@@ -110,6 +116,14 @@ import kotlinx.serialization.Serializable
 // Super admin
 @Serializable data object NewFirmRoute
 @Serializable data class EditFirmRoute(val firmId: Long)
+@Serializable data object NewArticleRoute
+@Serializable data class EditArticleRoute(val articleId: Long)
+@Serializable data object AdminCategoriesRoute
+@Serializable data object NewCategoryRoute
+@Serializable data class EditCategoryRoute(val categoryId: Long)
+@Serializable data object AdminPlansRoute
+@Serializable data object NewPlanRoute
+@Serializable data class EditPlanRoute(val planId: Long)
 
 /** Filled icon on the selected tab, outlined on the others; the gold label also marks the selection. */
 private data class Tab(
@@ -282,7 +296,16 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onChangePassword = { nav.go(ChangePasswordRoute) },
                     onMyFirms = { nav.go(MyFirmsRoute) },
                     onSettings = { nav.go(SettingsRoute) },
-                    onAddFirm = if (isAdmin) ({ nav.go(NewFirmRoute) }) else null,
+                    admin = if (isAdmin) {
+                        AdminMenu(
+                            onAddFirm = { nav.go(NewFirmRoute) },
+                            onAddArticle = { nav.go(NewArticleRoute) },
+                            onCategories = { nav.go(AdminCategoriesRoute) },
+                            onPlans = { nav.go(AdminPlansRoute) },
+                        )
+                    } else {
+                        null
+                    },
                 )
             }
 
@@ -296,7 +319,12 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                 )
             }
             composable<ArticleRoute> { entry ->
-                ArticleScreen(articleId = entry.toRoute<ArticleRoute>().articleId, onBack = { nav.back() })
+                val articleId = entry.toRoute<ArticleRoute>().articleId
+                ArticleScreen(
+                    articleId = articleId,
+                    onBack = { nav.back() },
+                    onEdit = if (isAdmin) ({ nav.go(EditArticleRoute(articleId)) }) else null,
+                )
             }
 
             // ---- Firm owners ----
@@ -355,6 +383,45 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
             composable<EditFirmRoute> { entry ->
                 FirmFormScreen(firmId = entry.toRoute<EditFirmRoute>().firmId, onBack = { nav.back() }, onSaved = { nav.back() })
             }
+            composable<NewArticleRoute> {
+                ArticleFormScreen(
+                    articleId = null,
+                    onBack = { nav.back() },
+                    onSaved = { id -> nav.go(ArticleRoute(id)) { popUpTo<NewArticleRoute> { inclusive = true } } },
+                    onDeleted = { nav.back() },
+                )
+            }
+            composable<EditArticleRoute> { entry ->
+                ArticleFormScreen(
+                    articleId = entry.toRoute<EditArticleRoute>().articleId,
+                    onBack = { nav.back() },
+                    onSaved = { nav.back() },
+                    // The article page under the form is gone too.
+                    onDeleted = { nav.backPast<ArticleRoute>() },
+                )
+            }
+            composable<AdminCategoriesRoute> {
+                CategoriesAdminScreen(
+                    onBack = { nav.back() },
+                    onAdd = { nav.go(NewCategoryRoute) },
+                    onEdit = { nav.go(EditCategoryRoute(it)) },
+                )
+            }
+            composable<NewCategoryRoute> { CategoryFormScreen(categoryId = null, onBack = { nav.back() }, onDone = { nav.back() }) }
+            composable<EditCategoryRoute> { entry ->
+                CategoryFormScreen(categoryId = entry.toRoute<EditCategoryRoute>().categoryId, onBack = { nav.back() }, onDone = { nav.back() })
+            }
+            composable<AdminPlansRoute> {
+                PlansAdminScreen(
+                    onBack = { nav.back() },
+                    onAdd = { nav.go(NewPlanRoute) },
+                    onEdit = { nav.go(EditPlanRoute(it)) },
+                )
+            }
+            composable<NewPlanRoute> { PlanFormScreen(planId = null, onBack = { nav.back() }, onDone = { nav.back() }) }
+            composable<EditPlanRoute> { entry ->
+                PlanFormScreen(planId = entry.toRoute<EditPlanRoute>().planId, onBack = { nav.back() }, onDone = { nav.back() })
+            }
         }
     }
 }
@@ -393,6 +460,12 @@ fun NavHostController.go(route: Any, builder: NavOptionsBuilder.() -> Unit = {})
 /** Back that never empties the stack. */
 fun NavHostController.back() {
     if (isIdle() && previousBackStackEntry != null) popBackStack()
+}
+
+/** Pops back past the nearest [T] (e.g. a deleted item's page under its form); plain back if [T] is not there. */
+inline fun <reified T : Any> NavHostController.backPast() {
+    if (currentBackStackEntry?.lifecycle?.currentState != Lifecycle.State.RESUMED) return
+    if (!popBackStack<T>(inclusive = true)) back()
 }
 
 /** Bottom-bar behaviour: one copy per tab, state restored when switching back, Back returns to Home. */

@@ -1,18 +1,9 @@
 package com.aghourservices.ui.admin
 
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,17 +24,11 @@ import com.aghourservices.data.remote.FirmDto
 import com.aghourservices.data.repository.AdminRepository
 import com.aghourservices.data.repository.CatalogRepository
 import com.aghourservices.data.repository.FirmInput
-import com.aghourservices.ui.components.ErrorBanner
 import com.aghourservices.ui.components.FilterChipsRow
 import com.aghourservices.ui.components.FormField
-import com.aghourservices.ui.components.GoldButton
-import com.aghourservices.ui.components.MessageBox
-import com.aghourservices.ui.components.ScreenTitle
 import com.aghourservices.ui.components.Segmented
-import com.aghourservices.ui.components.SkeletonRows
 import com.aghourservices.ui.components.appContainer
 import com.aghourservices.ui.components.categoryIconUrl
-import com.aghourservices.ui.theme.Aghour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -175,7 +160,6 @@ fun FirmFormScreen(firmId: Long?, onBack: () -> Unit, onSaved: (Long) -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val saved = stringResource(R.string.firm_saved)
-    val c = Aghour.colors
 
     LaunchedEffect(state.savedId) {
         state.savedId?.let {
@@ -184,95 +168,91 @@ fun FirmFormScreen(firmId: Long?, onBack: () -> Unit, onSaved: (Long) -> Unit) {
         }
     }
 
-    Column(Modifier.fillMaxSize().background(c.page).imePadding()) {
-        ScreenTitle(stringResource(if (firmId == null) R.string.add_firm else R.string.edit_firm), onBack = onBack)
-        when {
-            state.loading -> SkeletonRows(4, Modifier.padding(16.dp))
-            state.loadError != null -> MessageBox(state.loadError ?: "", onRetry = vm::load)
-            else -> Column(
-                Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                FormField(
-                    label = stringResource(R.string.firm_name),
-                    value = state.name,
-                    onChange = { v -> vm.update { copy(name = v) } },
-                    error = state.nameError,
-                )
+    AdminFormScaffold(
+        title = stringResource(if (firmId == null) R.string.add_firm else R.string.edit_firm),
+        onBack = onBack,
+        loading = state.loading,
+        loadError = state.loadError,
+        onRetry = vm::load,
+        error = state.error,
+        submitting = state.submitting,
+        onSave = vm::submit,
+    ) {
+        FormField(
+            label = stringResource(R.string.firm_name),
+            value = state.name,
+            onChange = { v -> vm.update { copy(name = v) } },
+            error = state.nameError,
+        )
 
-                Text(stringResource(R.string.firm_category), style = MaterialTheme.typography.labelMedium, color = c.muted)
-                FilterChipsRow(
-                    options = state.categories.map { it.id to it.name },
-                    selected = state.categoryId,
-                    onSelect = { id -> vm.update { copy(categoryId = id) } },
-                    contentPadding = PaddingValues(0.dp),
-                    imageUrls = state.categories.mapNotNull { cat -> categoryIconUrl(cat.iconUrl)?.let { cat.id to it } }.toMap(),
-                )
-                state.categoryError?.let { Text(stringResource(it), color = c.bad, style = MaterialTheme.typography.bodySmall) }
+        FieldLabel(stringResource(R.string.firm_category))
+        FilterChipsRow(
+            options = state.categories.map { it.id to it.name },
+            selected = state.categoryId,
+            onSelect = { id -> vm.update { copy(categoryId = id) } },
+            contentPadding = PaddingValues(0.dp),
+            imageUrls = state.categories.mapNotNull { cat -> categoryIconUrl(cat.iconUrl)?.let { cat.id to it } }.toMap(),
+        )
+        FieldError(state.categoryError)
 
-                Text(stringResource(R.string.firm_status), style = MaterialTheme.typography.labelMedium, color = c.muted)
-                Row {
-                    Segmented(
-                        options = FirmStatuses.map { it to firmStatusLabel(it) },
-                        selected = state.status,
-                        onSelect = { s -> vm.update { copy(status = s) } },
-                    )
-                }
-
-                FormField(
-                    label = stringResource(R.string.phone),
-                    value = state.phone,
-                    onChange = { v -> vm.update { copy(phone = v) } },
-                    keyboardType = KeyboardType.Phone,
-                    ltr = true,
-                )
-                FormField(
-                    label = stringResource(R.string.whatsapp),
-                    value = state.whatsapp,
-                    onChange = { v -> vm.update { copy(whatsapp = v) } },
-                    keyboardType = KeyboardType.Phone,
-                    ltr = true,
-                )
-                FormField(
-                    label = stringResource(R.string.address),
-                    value = state.address,
-                    onChange = { v -> vm.update { copy(address = v) } },
-                )
-                FormField(
-                    label = stringResource(R.string.working_hours),
-                    value = state.workingHours,
-                    onChange = { v -> vm.update { copy(workingHours = v) } },
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FormField(
-                        label = stringResource(R.string.latitude),
-                        value = state.latitude,
-                        onChange = { v -> vm.update { copy(latitude = v) } },
-                        modifier = Modifier.weight(1f),
-                        keyboardType = KeyboardType.Decimal,
-                        ltr = true,
-                    )
-                    FormField(
-                        label = stringResource(R.string.longitude),
-                        value = state.longitude,
-                        onChange = { v -> vm.update { copy(longitude = v) } },
-                        modifier = Modifier.weight(1f),
-                        keyboardType = KeyboardType.Decimal,
-                        ltr = true,
-                    )
-                }
-                state.coordinatesError?.let { Text(stringResource(it), color = c.bad, style = MaterialTheme.typography.bodySmall) }
-                FormField(
-                    label = stringResource(R.string.description),
-                    value = state.description,
-                    onChange = { v -> vm.update { copy(description = v) } },
-                    imeAction = ImeAction.Default,
-                    multiline = true,
-                )
-
-                ErrorBanner(state.error)
-                GoldButton(stringResource(R.string.save), vm::submit, loading = state.submitting)
-            }
+        FieldLabel(stringResource(R.string.firm_status))
+        Row {
+            Segmented(
+                options = FirmStatuses.map { it to firmStatusLabel(it) },
+                selected = state.status,
+                onSelect = { s -> vm.update { copy(status = s) } },
+            )
         }
+
+        FormField(
+            label = stringResource(R.string.phone),
+            value = state.phone,
+            onChange = { v -> vm.update { copy(phone = v) } },
+            keyboardType = KeyboardType.Phone,
+            ltr = true,
+        )
+        FormField(
+            label = stringResource(R.string.whatsapp),
+            value = state.whatsapp,
+            onChange = { v -> vm.update { copy(whatsapp = v) } },
+            keyboardType = KeyboardType.Phone,
+            ltr = true,
+        )
+        FormField(
+            label = stringResource(R.string.address),
+            value = state.address,
+            onChange = { v -> vm.update { copy(address = v) } },
+        )
+        FormField(
+            label = stringResource(R.string.working_hours),
+            value = state.workingHours,
+            onChange = { v -> vm.update { copy(workingHours = v) } },
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            FormField(
+                label = stringResource(R.string.latitude),
+                value = state.latitude,
+                onChange = { v -> vm.update { copy(latitude = v) } },
+                modifier = Modifier.weight(1f),
+                keyboardType = KeyboardType.Decimal,
+                ltr = true,
+            )
+            FormField(
+                label = stringResource(R.string.longitude),
+                value = state.longitude,
+                onChange = { v -> vm.update { copy(longitude = v) } },
+                modifier = Modifier.weight(1f),
+                keyboardType = KeyboardType.Decimal,
+                ltr = true,
+            )
+        }
+        FieldError(state.coordinatesError)
+        FormField(
+            label = stringResource(R.string.description),
+            value = state.description,
+            onChange = { v -> vm.update { copy(description = v) } },
+            imeAction = ImeAction.Default,
+            multiline = true,
+        )
     }
 }

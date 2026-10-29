@@ -42,7 +42,7 @@ app/src/main/java/com/aghourservices/
 │   ├── session/     SessionStore (token, user, welcome flag in DataStore)
 │   └── repository/  CatalogRepository (categories, firms, news), AuthRepository (login, register,
 │                    me, password), OwnerRepository (plans, payment, subscriptions, my firms, notifications),
-│                    AdminRepository (super admin writes; firmsVersion tells firm screens to reload)
+│                    AdminRepository (super admin writes; `changes` tells screens to reload)
 └── ui/
     ├── theme/       palette from the designs (forest, gold, cream, sand), Cairo font, right-to-left
     ├── components/  SheetLayout, ScreenTitle, chips, badges, buttons, form fields, cards, skeletons, intents
@@ -55,7 +55,7 @@ app/src/main/java/com/aghourservices/
     ├── account/     profile (subscription progress, menu), login, register
     ├── owner/       plans, payment (InstaPay / Vodafone Cash), payments history, notifications,
     │                my firms, change password
-    └── admin/       super admin forms (firm create / edit)
+    └── admin/       super admin: form scaffold, lists, firm / article / category / plan forms
 ```
 
 Every screen = a `ViewModel` (state as `StateFlow`) + a `@Composable` that draws that state.
@@ -124,6 +124,8 @@ The UI follows the screen designs artifact "أجهور الكبرى — تصمي
 | Settings | Appearance: light / dark / follow the phone |
 | Payments / My firms / Change password | From the profile menu |
 | Firm form (super admin) | Create from the profile's admin menu, edit from the firm page; the firm page also has approve / suspend and delete with confirmation |
+| Article form (super admin) | Create from the admin menu, edit from the article page; kind, published / draft, delete |
+| Categories / Plans (super admin) | Lists from the admin menu (inactive items marked), + to add, tap to edit or delete. A category image is picked with the system photo picker and scaled to ≤ 256px PNG before upload |
 
 Admin controls appear only when the stored user is a super admin. `AppNavigation` decides and passes
 `null` callbacks to everyone else, the same way it handles feature flags; the server's policies still

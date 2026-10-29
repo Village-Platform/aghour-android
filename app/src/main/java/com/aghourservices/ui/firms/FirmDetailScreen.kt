@@ -27,14 +27,10 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,6 +62,8 @@ import com.aghourservices.data.repository.AdminRepository
 import com.aghourservices.data.repository.CatalogRepository
 import com.aghourservices.ui.components.Badge
 import com.aghourservices.ui.components.BadgeTone
+import com.aghourservices.ui.components.ConfirmDeleteDialog
+import com.aghourservices.ui.components.DangerButton
 import com.aghourservices.ui.components.ErrorBanner
 import com.aghourservices.ui.components.GhostButton
 import com.aghourservices.ui.components.IconTile
@@ -114,7 +112,7 @@ class FirmDetailViewModel(
         load()
         // Edited elsewhere (the form) -> show the new data. Not while deleting: the firm is gone.
         viewModelScope.launch {
-            admin.firmsVersion.drop(1).collect { if (!_state.value.busy && !_state.value.deleted) load() }
+            admin.changes.drop(1).collect { if (!_state.value.busy && !_state.value.deleted) load() }
         }
     }
 
@@ -215,139 +213,21 @@ private fun AdminFirmControls(
             } else {
                 GhostButton(stringResource(R.string.approve), { if (!busy) onSetStatus("active") }, Modifier.weight(1f))
             }
-            Button(
-                onClick = { if (!busy) confirmDelete = true },
-                modifier = Modifier.weight(1f).height(44.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = c.bad.copy(alpha = 0.10f), contentColor = c.bad),
-            ) { Text(stringResource(R.string.delete), style = MaterialTheme.typography.labelLarge) }
+            DangerButton(stringResource(R.string.delete), { if (!busy) confirmDelete = true }, Modifier.weight(1f))
         }
         ErrorBanner(error)
     }
 
     if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text(stringResource(R.string.delete_firm_title)) },
-            text = { Text(stringResource(R.string.delete_firm_body, firm.name)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmDelete = false
-                    onDelete()
-                }) { Text(stringResource(R.string.delete), color = c.bad) }
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.delete_firm_title),
+            body = stringResource(R.string.delete_firm_body, firm.name),
+            onConfirm = {
+                confirmDelete = false
+                onDelete()
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel), color = c.ink) } },
+            onDismiss = { confirmDelete = false },
         )
-    }
-}
-
-/** Design: village photo on top, a sheet with name, three action tiles and the details. */
-@Composable
-private fun FirmDetailContent(
-    firm: FirmDto,
-    categoryIconUrl: String?,
-    onBack: () -> Unit,
-    footer: @Composable () -> Unit = {},
-) {
-    val context = LocalContext.current
-    val c = Aghour.colors
-    val shareMessage = stringResource(R.string.share_firm_text, firm.name, firm.category.name, firm.phone ?: "")
-
-    SheetLayout(
-        sheetPadding = PaddingValues(20.dp),
-        header = {
-            Box(Modifier.fillMaxWidth().height(190.dp)) {
-                Image(
-                    painter = painterResource(R.drawable.brand_scene),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.30f)))
-                Row(
-                    Modifier.fillMaxWidth().statusBarsPadding().padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    OverlayIconButton(onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Color.White)
-                    }
-                    OverlayIconButton({ context.shareText(shareMessage) }) {
-                        Icon(Icons.Filled.Share, stringResource(R.string.share), tint = Color.White)
-                    }
-                }
-            }
-        },
-    ) {
-        // Category icon + name + category
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconTile(categoryIconUrl, size = 52.dp)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(firm.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = c.ink, modifier = Modifier.asHeading())
-                Text(
-                    categoryLine(firm.category.name, firm.address),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = c.muted,
-                )
-            }
-            // Owners can open their own pending/suspended firms; say so clearly.
-            when (firm.status) {
-                "pending" -> Badge("قيد المراجعة", BadgeTone.Gold)
-                "suspended" -> Badge("موقوف", BadgeTone.Red)
-            }
-        }
-
-        // Call / location / WhatsApp tiles
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            ActionTile(
-                rememberVectorPainter(Icons.Filled.Call),
-                stringResource(R.string.call),
-                if (c.isDark) CallDark else CallLight,
-                firm.phone != null,
-                Modifier.weight(1f),
-            ) {
-                firm.phone?.let { context.openDialer(it) }
-            }
-            ActionTile(
-                rememberVectorPainter(Icons.Filled.LocationOn),
-                stringResource(R.string.location),
-                if (c.isDark) MapDark else MapLight,
-                firm.latitude != null && firm.longitude != null,
-                Modifier.weight(1f),
-            ) {
-                val lat = firm.latitude
-                val lng = firm.longitude
-                if (lat != null && lng != null) context.openMap(lat, lng, firm.name)
-            }
-            ActionTile(
-                painterResource(R.drawable.ic_whatsapp),
-                stringResource(R.string.whatsapp),
-                WhatsAppGreen,
-                firm.whatsapp != null,
-                Modifier.weight(1f),
-            ) {
-                firm.whatsapp?.let { context.openWhatsApp(it) }
-            }
-        }
-
-        // Hours + phone + address
-        SurfaceCard {
-            InfoLine(Icons.Outlined.Schedule, firm.workingHours)
-            HorizontalDivider(color = c.line, modifier = Modifier.padding(vertical = 8.dp))
-            // \u2066…\u2069 keeps the number left-to-right inside Arabic text.
-            InfoLine(Icons.Outlined.PhoneAndroid, firm.phone?.let { "\u2066$it\u2069" })
-            HorizontalDivider(color = c.line, modifier = Modifier.padding(vertical = 8.dp))
-            InfoLine(Icons.Outlined.Place, firm.address)
-        }
-
-        firm.description?.takeIf { it.isNotBlank() }?.let { description ->
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.about_firm), style = MaterialTheme.typography.titleSmall, color = c.ink, modifier = Modifier.asHeading())
-                SurfaceCard { Text(description, style = MaterialTheme.typography.bodyMedium, color = c.ink) }
-            }
-        }
-
-        footer()
     }
 }
 

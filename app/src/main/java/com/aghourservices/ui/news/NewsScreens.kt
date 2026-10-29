@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aghourservices.R
 import com.aghourservices.data.remote.ArticleDto
 import com.aghourservices.ui.components.Badge
+import com.aghourservices.ui.components.BadgeTone
 import com.aghourservices.ui.components.FeaturedNewsCard
 import com.aghourservices.ui.components.FilterChipsRow
 import com.aghourservices.ui.components.MessageBox
@@ -55,8 +57,8 @@ import com.aghourservices.ui.components.ScreenTitle
 import com.aghourservices.ui.components.SheetLayout
 import com.aghourservices.ui.components.SkeletonRows
 import com.aghourservices.ui.components.appContainer
-import com.aghourservices.ui.components.formatDate
 import com.aghourservices.ui.components.asHeading
+import com.aghourservices.ui.components.formatDate
 import com.aghourservices.ui.components.kindLabel
 import com.aghourservices.ui.components.kindTone
 import com.aghourservices.ui.components.shareText
@@ -66,7 +68,7 @@ import com.aghourservices.ui.theme.Aghour
 @Composable
 fun NewsScreen(onArticleClick: (ArticleDto) -> Unit) {
     val container = appContainer()
-    val vm: NewsViewModel = viewModel { NewsViewModel(container.catalog) }
+    val vm: NewsViewModel = viewModel { NewsViewModel(container.catalog, container.admin.changes) }
     val state by vm.state.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
@@ -124,10 +126,11 @@ fun NewsScreen(onArticleClick: (ArticleDto) -> Unit) {
     }
 }
 
+/** [onEdit] is null for everyone but the super admin (decided in AppNavigation). */
 @Composable
-fun ArticleScreen(articleId: Long, onBack: () -> Unit) {
+fun ArticleScreen(articleId: Long, onBack: () -> Unit, onEdit: (() -> Unit)? = null) {
     val container = appContainer()
-    val vm: ArticleViewModel = viewModel { ArticleViewModel(container.catalog, articleId) }
+    val vm: ArticleViewModel = viewModel { ArticleViewModel(container.catalog, articleId, container.admin.changes) }
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val article = state.article
@@ -157,8 +160,13 @@ fun ArticleScreen(articleId: Long, onBack: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     OverlayIconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Color.White) }
-                    OverlayIconButton({ context.shareText("${article.title}\n\n${article.body}") }) {
-                        Icon(Icons.Filled.Share, stringResource(R.string.share), tint = Color.White)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (onEdit != null) {
+                            OverlayIconButton(onEdit) { Icon(Icons.Filled.Edit, stringResource(R.string.edit), tint = Color.White) }
+                        }
+                        OverlayIconButton({ context.shareText("${article.title}\n\n${article.body}") }) {
+                            Icon(Icons.Filled.Share, stringResource(R.string.share), tint = Color.White)
+                        }
                     }
                 }
             }
@@ -167,6 +175,11 @@ fun ArticleScreen(articleId: Long, onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Badge(kindLabel(article.kind), kindTone(article.kind))
             Spacer(Modifier.width(8.dp))
+            // Drafts reach only the super admin.
+            if (article.publishedAt == null) {
+                Badge(stringResource(R.string.draft), BadgeTone.Gray)
+                Spacer(Modifier.width(8.dp))
+            }
             Text(formatDate(article.publishedAt), style = MaterialTheme.typography.labelSmall, color = c.muted)
         }
         Text(article.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = c.ink, modifier = Modifier.asHeading())

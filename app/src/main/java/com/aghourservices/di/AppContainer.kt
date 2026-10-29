@@ -62,7 +62,7 @@ class AppContainer(context: Context) {
     val catalog = CatalogRepository(api, json)
     val auth = AuthRepository(api, session, json)
     val owner = OwnerRepository(api, json)
-    val admin = AdminRepository(api, json)
+    val admin = AdminRepository(api, json, catalog)
     val features = FeatureFlags(context, api, json, appScope)
 
     /** Category chosen on Home; the Explore tab reads it (tabs keep their own state otherwise). */

@@ -49,6 +49,8 @@ data class CategoryDto(
     /** Category image (relative to the API host, see categoryIconUrl); null = show the app logo. */
     @SerialName("icon_url") val iconUrl: String? = null,
     val position: Int = 0,
+    /** Only a super admin receives inactive categories. */
+    val active: Boolean = true,
 )
 
 @Serializable
@@ -115,6 +117,8 @@ data class SubscriptionPlanDto(
     @SerialName("duration_days") val durationDays: Int,
     @SerialName("max_firms") val maxFirms: Int,
     val position: Int = 0,
+    /** Only a super admin receives inactive plans. */
+    val active: Boolean = true,
 )
 
 @Serializable

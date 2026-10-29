@@ -41,8 +41,8 @@ data class ExploreUiState(
 class ExploreViewModel(
     private val catalog: CatalogRepository,
     private val selectedCategory: MutableStateFlow<Long?>,
-    /** AdminRepository.firmsVersion: a super admin added, edited or deleted a firm. */
-    private val firmsChanged: StateFlow<Int>,
+    /** AdminRepository.changes: a super admin changed a firm or a category. */
+    private val adminChanges: StateFlow<Int>,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExploreUiState(categoryId = selectedCategory.value))
@@ -51,9 +51,7 @@ class ExploreViewModel(
     private var job: Job? = null
 
     init {
-        viewModelScope.launch {
-            (catalog.categories() as? ApiResult.Success)?.let { r -> _state.update { it.copy(categories = r.data) } }
-        }
+        viewModelScope.launch { loadCategories() }
         // Category picked on Home (or by a chip here)
         viewModelScope.launch {
             selectedCategory.collect { id ->
@@ -66,8 +64,15 @@ class ExploreViewModel(
             queries.drop(1).debounce(400).distinctUntilChanged().collect { reload() }
         }
         viewModelScope.launch {
-            firmsChanged.drop(1).collect { refresh() }
+            adminChanges.drop(1).collect {
+                loadCategories()
+                refresh()
+            }
         }
+    }
+
+    private suspend fun loadCategories() {
+        (catalog.categories() as? ApiResult.Success)?.let { r -> _state.update { it.copy(categories = r.data) } }
     }
 
     fun onQueryChange(query: String) {

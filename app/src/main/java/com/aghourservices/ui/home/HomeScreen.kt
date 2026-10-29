@@ -82,7 +82,7 @@ fun HomeScreen(
     onNotifications: () -> Unit,
 ) {
     val container = appContainer()
-    val vm: HomeViewModel = viewModel { HomeViewModel(container.catalog, container.owner) }
+    val vm: HomeViewModel = viewModel { HomeViewModel(container.catalog, container.owner, container.admin.changes) }
     val state by vm.state.collectAsStateWithLifecycle()
     val user by container.auth.currentUser.collectAsStateWithLifecycle()
     val c = Aghour.colors

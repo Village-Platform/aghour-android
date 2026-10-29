@@ -61,7 +61,7 @@ import com.aghourservices.ui.theme.Aghour
 @Composable
 fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
     val container = appContainer()
-    val vm: ExploreViewModel = viewModel { ExploreViewModel(container.catalog, container.exploreCategory, container.admin.firmsVersion) }
+    val vm: ExploreViewModel = viewModel { ExploreViewModel(container.catalog, container.exploreCategory, container.admin.changes) }
     val state by vm.state.collectAsStateWithLifecycle()
     val focus = LocalFocusManager.current
     val listState = rememberLazyListState()

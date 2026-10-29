@@ -12,6 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -26,13 +27,19 @@ data class HomeUiState(
     val error: String? = null,
 )
 
-class HomeViewModel(private val catalog: CatalogRepository, private val owner: OwnerRepository) : ViewModel() {
+class HomeViewModel(
+    private val catalog: CatalogRepository,
+    private val owner: OwnerRepository,
+    adminChanges: StateFlow<Int>,
+) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeUiState())
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
 
     init {
         load()
+        // A super admin changed a category, firm or article shown here.
+        viewModelScope.launch { adminChanges.drop(1).collect { refresh() } }
     }
 
     /** First load shows skeletons; pull-to-refresh keeps the current content visible. */

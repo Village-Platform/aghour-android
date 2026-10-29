@@ -20,12 +20,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddBusiness
+import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.PostAdd
+import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material.icons.outlined.Verified
 import androidx.compose.material3.AlertDialog
@@ -123,7 +126,7 @@ fun AccountScreen(
     onMyFirms: () -> Unit,
     onSettings: () -> Unit,
     /** Super admin only (null for everyone else): the admin menu. */
-    onAddFirm: (() -> Unit)? = null,
+    admin: AdminMenu? = null,
 ) {
     val container = appContainer()
     val user by container.auth.currentUser.collectAsStateWithLifecycle()
@@ -145,11 +148,7 @@ fun AccountScreen(
             ProfileHeader(current)
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 if (onPlans != null) SubscriptionCard(state, onPlans)
-                if (onAddFirm != null) {
-                    SurfaceCard(padding = 0.dp) {
-                        MenuRow(Icons.Outlined.AddBusiness, stringResource(R.string.add_firm), null, onAddFirm)
-                    }
-                }
+                if (admin != null) AdminMenuCard(admin)
                 SurfaceCard(padding = 0.dp) {
                     if (state.firms.isNotEmpty()) {
                         MenuRow(Icons.Outlined.Storefront, stringResource(R.string.my_firms), "${state.firms.size}", onMyFirms)
@@ -294,6 +293,30 @@ private fun MenuRow(icon: ImageVector, title: String, trailing: String?, onClick
 
 @Composable
 private fun MenuDivider() = HorizontalDivider(color = Aghour.colors.line)
+
+/** Entry points of the super admin screens. Firms and articles are edited from their own pages. */
+data class AdminMenu(
+    val onAddFirm: () -> Unit,
+    val onAddArticle: () -> Unit,
+    val onCategories: () -> Unit,
+    val onPlans: () -> Unit,
+)
+
+@Composable
+private fun AdminMenuCard(admin: AdminMenu) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.admin_section), style = MaterialTheme.typography.titleSmall, color = Aghour.colors.ink)
+        SurfaceCard(padding = 0.dp) {
+            MenuRow(Icons.Outlined.AddBusiness, stringResource(R.string.add_firm), null, admin.onAddFirm)
+            MenuDivider()
+            MenuRow(Icons.Outlined.PostAdd, stringResource(R.string.add_article), null, admin.onAddArticle)
+            MenuDivider()
+            MenuRow(Icons.Outlined.Category, stringResource(R.string.manage_categories), null, admin.onCategories)
+            MenuDivider()
+            MenuRow(Icons.Outlined.Sell, stringResource(R.string.manage_plans), null, admin.onPlans)
+        }
+    }
+}
 
 @Composable
 private fun GuestProfile(onLogin: () -> Unit, onRegister: () -> Unit, onSettings: () -> Unit, onAbout: () -> Unit) {

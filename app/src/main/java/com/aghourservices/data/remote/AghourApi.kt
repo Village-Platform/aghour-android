@@ -1,12 +1,17 @@
 package com.aghourservices.data.remote
 
 import kotlinx.serialization.json.JsonObject
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.Part
+import retrofit2.http.PartMap
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -103,4 +108,47 @@ interface AghourApi {
     /** 204 No Content. A Response<Unit> does not throw on 4xx; check isSuccessful. */
     @DELETE("firms/{id}")
     suspend fun deleteFirm(@Path("id") id: Long): Response<Unit>
+
+    @GET("categories/{id}")
+    suspend fun category(@Path("id") id: Long): ItemResponse<CategoryDto>
+
+    /** Multipart because of the optional icon image (category[icon_image]). */
+    @Multipart
+    @POST("categories")
+    suspend fun createCategory(
+        @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>,
+        @Part icon: MultipartBody.Part?,
+    ): ItemResponse<CategoryDto>
+
+    @Multipart
+    @PATCH("categories/{id}")
+    suspend fun updateCategory(
+        @Path("id") id: Long,
+        @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>,
+        @Part icon: MultipartBody.Part?,
+    ): ItemResponse<CategoryDto>
+
+    @DELETE("categories/{id}")
+    suspend fun deleteCategory(@Path("id") id: Long): Response<Unit>
+
+    @POST("articles")
+    suspend fun createArticle(@Body body: JsonObject): ItemResponse<ArticleDto>
+
+    @PATCH("articles/{id}")
+    suspend fun updateArticle(@Path("id") id: Long, @Body body: JsonObject): ItemResponse<ArticleDto>
+
+    @DELETE("articles/{id}")
+    suspend fun deleteArticle(@Path("id") id: Long): Response<Unit>
+
+    @GET("subscription_plans/{id}")
+    suspend fun plan(@Path("id") id: Long): ItemResponse<SubscriptionPlanDto>
+
+    @POST("subscription_plans")
+    suspend fun createPlan(@Body body: JsonObject): ItemResponse<SubscriptionPlanDto>
+
+    @PATCH("subscription_plans/{id}")
+    suspend fun updatePlan(@Path("id") id: Long, @Body body: JsonObject): ItemResponse<SubscriptionPlanDto>
+
+    @DELETE("subscription_plans/{id}")
+    suspend fun deletePlan(@Path("id") id: Long): Response<Unit>
 }
