@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AddBusiness
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
@@ -121,6 +122,8 @@ fun AccountScreen(
     onChangePassword: () -> Unit,
     onMyFirms: () -> Unit,
     onSettings: () -> Unit,
+    /** Super admin only (null for everyone else): the admin menu. */
+    onAddFirm: (() -> Unit)? = null,
 ) {
     val container = appContainer()
     val user by container.auth.currentUser.collectAsStateWithLifecycle()
@@ -142,6 +145,11 @@ fun AccountScreen(
             ProfileHeader(current)
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 if (onPlans != null) SubscriptionCard(state, onPlans)
+                if (onAddFirm != null) {
+                    SurfaceCard(padding = 0.dp) {
+                        MenuRow(Icons.Outlined.AddBusiness, stringResource(R.string.add_firm), null, onAddFirm)
+                    }
+                }
                 SurfaceCard(padding = 0.dp) {
                     if (state.firms.isNotEmpty()) {
                         MenuRow(Icons.Outlined.Storefront, stringResource(R.string.my_firms), "${state.firms.size}", onMyFirms)

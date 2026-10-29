@@ -1,6 +1,9 @@
 package com.aghourservices.data.remote
 
+import kotlinx.serialization.json.JsonObject
+import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -87,4 +90,17 @@ interface AghourApi {
 
     @PATCH("notifications/read_all")
     suspend fun markAllNotificationsRead(): retrofit2.Response<Unit>
+
+    // ---- Super admin ----
+    // Bodies are JsonObject so a cleared field is sent as null (the app's Json drops null properties).
+
+    @POST("firms")
+    suspend fun createFirm(@Body body: JsonObject): ItemResponse<FirmDto>
+
+    @PATCH("firms/{id}")
+    suspend fun updateFirm(@Path("id") id: Long, @Body body: JsonObject): ItemResponse<FirmDto>
+
+    /** 204 No Content. A Response<Unit> does not throw on 4xx; check isSuccessful. */
+    @DELETE("firms/{id}")
+    suspend fun deleteFirm(@Path("id") id: Long): Response<Unit>
 }

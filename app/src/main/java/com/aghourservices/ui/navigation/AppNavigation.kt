@@ -58,9 +58,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.aghourservices.R
+import com.aghourservices.data.remote.isSuperAdmin
 import com.aghourservices.ui.account.AccountScreen
 import com.aghourservices.ui.account.LoginScreen
 import com.aghourservices.ui.account.RegisterScreen
+import com.aghourservices.ui.admin.FirmFormScreen
 import com.aghourservices.ui.components.appContainer
 import com.aghourservices.ui.components.MessageBox
 import com.aghourservices.ui.components.ScreenTitle
@@ -104,6 +106,10 @@ import kotlinx.serialization.Serializable
 @Serializable data object ChangePasswordRoute
 @Serializable data object MyFirmsRoute
 @Serializable data object SettingsRoute
+
+// Super admin
+@Serializable data object NewFirmRoute
+@Serializable data class EditFirmRoute(val firmId: Long)
 
 /** Filled icon on the selected tab, outlined on the others; the gold label also marks the selection. */
 private data class Tab(
@@ -179,6 +185,8 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
     // Server feature flag (dashboard): plans, subscribing and payment history. null = still loading.
     val plansFlag by container.features.plansEnabled.collectAsStateWithLifecycle()
     val plansOn = plansFlag == true
+    // Shows the admin controls only; the server's policies still decide every request.
+    val isAdmin = user.isSuperAdmin
     val nav = rememberNavController()
     LaunchedEffect(openLogin) {
         if (openLogin) {
@@ -274,12 +282,18 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onChangePassword = { nav.go(ChangePasswordRoute) },
                     onMyFirms = { nav.go(MyFirmsRoute) },
                     onSettings = { nav.go(SettingsRoute) },
+                    onAddFirm = if (isAdmin) ({ nav.go(NewFirmRoute) }) else null,
                 )
             }
 
             // ---- Details ----
             composable<FirmRoute> { entry ->
-                FirmDetailScreen(firmId = entry.toRoute<FirmRoute>().firmId, onBack = { nav.back() })
+                val firmId = entry.toRoute<FirmRoute>().firmId
+                FirmDetailScreen(
+                    firmId = firmId,
+                    onBack = { nav.back() },
+                    onEdit = if (isAdmin) ({ nav.go(EditFirmRoute(firmId)) }) else null,
+                )
             }
             composable<ArticleRoute> { entry ->
                 ArticleScreen(articleId = entry.toRoute<ArticleRoute>().articleId, onBack = { nav.back() })
@@ -328,6 +342,19 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
             composable<ChangePasswordRoute> { ChangePasswordScreen(onBack = { nav.back() }) }
             composable<MyFirmsRoute> { MyFirmsScreen(onBack = { nav.back() }, onFirmClick = { nav.go(FirmRoute(it.id)) }) }
             composable<SettingsRoute> { SettingsScreen(onBack = { nav.back() }) }
+
+            // ---- Super admin ----
+            composable<NewFirmRoute> {
+                FirmFormScreen(
+                    firmId = null,
+                    onBack = { nav.back() },
+                    // Open the new firm in place of the form, so Back returns to the profile.
+                    onSaved = { id -> nav.go(FirmRoute(id)) { popUpTo<NewFirmRoute> { inclusive = true } } },
+                )
+            }
+            composable<EditFirmRoute> { entry ->
+                FirmFormScreen(firmId = entry.toRoute<EditFirmRoute>().firmId, onBack = { nav.back() }, onSaved = { nav.back() })
+            }
         }
     }
 }

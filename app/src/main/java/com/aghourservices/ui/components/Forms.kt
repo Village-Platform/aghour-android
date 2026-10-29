@@ -54,6 +54,7 @@ fun FormField(
     onDone: (() -> Unit)? = null,
     ltr: Boolean = false,
     isPassword: Boolean = false,
+    multiline: Boolean = false,
 ) {
     val focus = LocalFocusManager.current
     val c = Aghour.colors
@@ -70,7 +71,8 @@ fun FormField(
             } else {
                 null
             },
-            singleLine = true,
+            singleLine = !multiline,
+            minLines = if (multiline) 3 else 1,
             isError = error != null,
             supportingText = if (error != null) {
                 { Text(stringResource(error)) }

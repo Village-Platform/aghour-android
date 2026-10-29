@@ -97,6 +97,12 @@ data class UserDto(
     val role: String,
 )
 
+/**
+ * Shows the admin controls. Only a hint for the UI: the server's policies are what actually allow
+ * or refuse each request, so a stale role just ends in an error message.
+ */
+val UserDto?.isSuperAdmin: Boolean get() = this?.role == "super_admin"
+
 @Serializable
 data class AuthPayload(val token: String, val user: UserDto)
 

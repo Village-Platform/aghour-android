@@ -1,5 +1,6 @@
 package com.aghourservices.ui.firms
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,12 +27,20 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,9 +62,12 @@ import com.aghourservices.R
 import com.aghourservices.data.remote.ApiResult
 import com.aghourservices.data.remote.CategoryDto
 import com.aghourservices.data.remote.FirmDto
+import com.aghourservices.data.repository.AdminRepository
 import com.aghourservices.data.repository.CatalogRepository
 import com.aghourservices.ui.components.Badge
 import com.aghourservices.ui.components.BadgeTone
+import com.aghourservices.ui.components.ErrorBanner
+import com.aghourservices.ui.components.GhostButton
 import com.aghourservices.ui.components.IconTile
 import com.aghourservices.ui.components.MessageBox
 import com.aghourservices.ui.components.OverlayIconButton
@@ -75,6 +87,8 @@ import com.aghourservices.ui.theme.Aghour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class FirmDetailUiState(
@@ -82,14 +96,26 @@ data class FirmDetailUiState(
     val firm: FirmDto? = null,
     val categories: List<CategoryDto> = emptyList(),
     val error: String? = null,
+    /** Super admin actions: a status change or delete is running / failed / finished. */
+    val busy: Boolean = false,
+    val actionError: String? = null,
+    val deleted: Boolean = false,
 )
 
-class FirmDetailViewModel(private val catalog: CatalogRepository, private val firmId: Long) : ViewModel() {
+class FirmDetailViewModel(
+    private val catalog: CatalogRepository,
+    private val admin: AdminRepository,
+    private val firmId: Long,
+) : ViewModel() {
     private val _state = MutableStateFlow(FirmDetailUiState())
     val state: StateFlow<FirmDetailUiState> = _state.asStateFlow()
 
     init {
         load()
+        // Edited elsewhere (the form) -> show the new data. Not while deleting: the firm is gone.
+        viewModelScope.launch {
+            admin.firmsVersion.drop(1).collect { if (!_state.value.busy && !_state.value.deleted) load() }
+        }
     }
 
     fun load() {
@@ -102,17 +128,63 @@ class FirmDetailViewModel(private val catalog: CatalogRepository, private val fi
             }
         }
     }
+
+    fun setStatus(status: String) {
+        if (_state.value.busy) return
+        _state.update { it.copy(busy = true, actionError = null) }
+        viewModelScope.launch {
+            when (val r = admin.setFirmStatus(firmId, status)) {
+                is ApiResult.Success -> _state.update { it.copy(busy = false, firm = r.data) }
+                is ApiResult.Failure -> _state.update { it.copy(busy = false, actionError = r.message) }
+            }
+        }
+    }
+
+    fun delete() {
+        if (_state.value.busy) return
+        _state.update { it.copy(busy = true, actionError = null) }
+        viewModelScope.launch {
+            when (val r = admin.deleteFirm(firmId)) {
+                is ApiResult.Success -> _state.update { it.copy(busy = false, deleted = true) }
+                is ApiResult.Failure -> _state.update { it.copy(busy = false, actionError = r.message) }
+            }
+        }
+    }
 }
 
+/**
+ * [onEdit] is null for everyone but the super admin (decided in AppNavigation); null hides the
+ * edit / approve / suspend / delete controls.
+ */
 @Composable
-fun FirmDetailScreen(firmId: Long, onBack: () -> Unit) {
+fun FirmDetailScreen(firmId: Long, onBack: () -> Unit, onEdit: (() -> Unit)? = null, onDeleted: () -> Unit = onBack) {
     val container = appContainer()
-    val vm: FirmDetailViewModel = viewModel { FirmDetailViewModel(container.catalog, firmId) }
+    val vm: FirmDetailViewModel = viewModel { FirmDetailViewModel(container.catalog, container.admin, firmId) }
     val state by vm.state.collectAsStateWithLifecycle()
     val firm = state.firm
+    val context = LocalContext.current
+    val deletedMessage = stringResource(R.string.firm_deleted)
+
+    LaunchedEffect(state.deleted) {
+        if (state.deleted) {
+            Toast.makeText(context, deletedMessage, Toast.LENGTH_SHORT).show()
+            onDeleted()
+        }
+    }
 
     if (firm != null) {
-        FirmDetailContent(firm, firmIconUrl(firm, state.categories), onBack)
+        FirmDetailContent(firm, firmIconUrl(firm, state.categories), onBack) {
+            if (onEdit != null) {
+                AdminFirmControls(
+                    firm = firm,
+                    busy = state.busy,
+                    error = state.actionError,
+                    onEdit = onEdit,
+                    onSetStatus = vm::setStatus,
+                    onDelete = vm::delete,
+                )
+            }
+        }
     } else {
         Column(Modifier.fillMaxSize().background(Aghour.colors.page)) {
             ScreenTitle(title = "", onBack = onBack)
@@ -121,9 +193,62 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit) {
     }
 }
 
+/** Super admin: edit, approve or suspend, and delete (after a confirmation). */
+@Composable
+private fun AdminFirmControls(
+    firm: FirmDto,
+    busy: Boolean,
+    error: String?,
+    onEdit: () -> Unit,
+    onSetStatus: (String) -> Unit,
+    onDelete: () -> Unit,
+) {
+    val c = Aghour.colors
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.admin_section), style = MaterialTheme.typography.titleSmall, color = c.ink, modifier = Modifier.asHeading())
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            GhostButton(stringResource(R.string.edit), onEdit, Modifier.weight(1f))
+            if (firm.status == "active") {
+                GhostButton(stringResource(R.string.suspend), { if (!busy) onSetStatus("suspended") }, Modifier.weight(1f))
+            } else {
+                GhostButton(stringResource(R.string.approve), { if (!busy) onSetStatus("active") }, Modifier.weight(1f))
+            }
+            Button(
+                onClick = { if (!busy) confirmDelete = true },
+                modifier = Modifier.weight(1f).height(44.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = c.bad.copy(alpha = 0.10f), contentColor = c.bad),
+            ) { Text(stringResource(R.string.delete), style = MaterialTheme.typography.labelLarge) }
+        }
+        ErrorBanner(error)
+    }
+
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(stringResource(R.string.delete_firm_title)) },
+            text = { Text(stringResource(R.string.delete_firm_body, firm.name)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    onDelete()
+                }) { Text(stringResource(R.string.delete), color = c.bad) }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel), color = c.ink) } },
+        )
+    }
+}
+
 /** Design: village photo on top, a sheet with name, three action tiles and the details. */
 @Composable
-private fun FirmDetailContent(firm: FirmDto, categoryIconUrl: String?, onBack: () -> Unit) {
+private fun FirmDetailContent(
+    firm: FirmDto,
+    categoryIconUrl: String?,
+    onBack: () -> Unit,
+    footer: @Composable () -> Unit = {},
+) {
     val context = LocalContext.current
     val c = Aghour.colors
     val shareMessage = stringResource(R.string.share_firm_text, firm.name, firm.category.name, firm.phone ?: "")
@@ -221,6 +346,8 @@ private fun FirmDetailContent(firm: FirmDto, categoryIconUrl: String?, onBack: (
                 SurfaceCard { Text(description, style = MaterialTheme.typography.bodyMedium, color = c.ink) }
             }
         }
+
+        footer()
     }
 }
 

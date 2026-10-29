@@ -41,6 +41,8 @@ data class ExploreUiState(
 class ExploreViewModel(
     private val catalog: CatalogRepository,
     private val selectedCategory: MutableStateFlow<Long?>,
+    /** AdminRepository.firmsVersion: a super admin added, edited or deleted a firm. */
+    private val firmsChanged: StateFlow<Int>,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExploreUiState(categoryId = selectedCategory.value))
@@ -62,6 +64,9 @@ class ExploreViewModel(
         // Search while typing, after a short pause
         viewModelScope.launch {
             queries.drop(1).debounce(400).distinctUntilChanged().collect { reload() }
+        }
+        viewModelScope.launch {
+            firmsChanged.drop(1).collect { refresh() }
         }
     }
 

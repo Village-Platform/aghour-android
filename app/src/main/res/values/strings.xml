@@ -164,4 +164,29 @@
 
     <!-- Server feature flags -->
     <string name="feature_unavailable">هذه الخدمة غير متاحة حاليًا.</string>
+
+    <!-- Super admin -->
+    <string name="admin_section">الإدارة</string>
+    <string name="add_firm">إضافة منشأة</string>
+    <string name="edit_firm">تعديل المنشأة</string>
+    <string name="edit">تعديل</string>
+    <string name="delete">حذف</string>
+    <string name="approve">قبول</string>
+    <string name="suspend">إيقاف</string>
+    <string name="firm_name">اسم المنشأة</string>
+    <string name="firm_category">القسم</string>
+    <string name="description">الوصف</string>
+    <string name="latitude">خط العرض</string>
+    <string name="longitude">خط الطول</string>
+    <string name="firm_status">الحالة</string>
+    <string name="firm_status_active">نشطة</string>
+    <string name="firm_status_pending">قيد المراجعة</string>
+    <string name="firm_status_suspended">موقوفة</string>
+    <string name="error_required">هذا الحقل مطلوب.</string>
+    <string name="error_category_required">اختر القسم.</string>
+    <string name="error_coordinates">أدخل خطي العرض والطول معًا بأرقام صحيحة، أو اتركهما فارغين.</string>
+    <string name="firm_saved">تم حفظ المنشأة.</string>
+    <string name="firm_deleted">تم حذف المنشأة.</string>
+    <string name="delete_firm_title">حذف المنشأة؟</string>
+    <string name="delete_firm_body">سيتم حذف «%1$s» نهائيًا ولا يمكن التراجع.</string>
 </resources>
