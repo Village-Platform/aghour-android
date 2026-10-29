@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -188,6 +189,113 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit, onEdit: (() -> Unit)? = n
             ScreenTitle(title = "", onBack = onBack)
             if (state.loading) SkeletonRows(3, Modifier.padding(16.dp)) else MessageBox(state.error ?: "", onRetry = vm::load)
         }
+    }
+}
+
+@Composable
+private fun FirmDetailContent(
+    firm: FirmDto,
+    iconUrl: String?,
+    onBack: () -> Unit,
+    adminControls: @Composable ColumnScope.() -> Unit = {},
+) {
+    val context = LocalContext.current
+    val c = Aghour.colors
+    val isDark = c.isDark
+
+    SheetLayout(
+        sheetPadding = PaddingValues(20.dp),
+        header = {
+            Box(Modifier.fillMaxWidth().height(190.dp)) {
+                Image(
+                    painter = painterResource(R.drawable.brand_scene),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.30f)))
+                Row(
+                    Modifier.fillMaxWidth().statusBarsPadding().padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    OverlayIconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Color.White) }
+                    OverlayIconButton({ context.shareText("${firm.name}\n\n${firm.address.orEmpty()}\n${firm.phone.orEmpty()}") }) {
+                        Icon(Icons.Filled.Share, stringResource(R.string.share), tint = Color.White)
+                    }
+                }
+            }
+        },
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            IconTile(iconUrl, size = 52.dp)
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(firm.category.name, style = MaterialTheme.typography.labelMedium, color = c.goldInk, fontWeight = FontWeight.Bold)
+                if (firm.status != "active") {
+                    Badge(
+                        text = if (firm.status == "suspended") stringResource(R.string.firm_status_suspended) else firm.status,
+                        tone = BadgeTone.Gray,
+                    )
+                }
+            }
+        }
+
+        Text(firm.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = c.ink, modifier = Modifier.asHeading())
+
+        val phone = firm.phone?.takeIf { it.isNotBlank() }
+        val whatsappNumber = firm.whatsapp?.takeIf { it.isNotBlank() } ?: phone
+        val hasCoords = firm.latitude != null && firm.longitude != null
+
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            val callColor = if (isDark) CallDark else CallLight
+            val mapColor = if (isDark) MapDark else MapLight
+
+            ActionTile(
+                icon = rememberVectorPainter(Icons.Filled.Call),
+                label = stringResource(R.string.call),
+                color = callColor,
+                enabled = phone != null,
+                modifier = Modifier.weight(1f),
+            ) {
+                phone?.let { context.openDialer(it) }
+            }
+            ActionTile(
+                icon = painterResource(R.drawable.ic_whatsapp),
+                label = stringResource(R.string.whatsapp),
+                color = WhatsAppGreen,
+                enabled = whatsappNumber != null,
+                modifier = Modifier.weight(1f),
+            ) {
+                whatsappNumber?.let { context.openWhatsApp(it) }
+            }
+            ActionTile(
+                icon = rememberVectorPainter(Icons.Filled.LocationOn),
+                label = stringResource(R.string.open_map),
+                color = mapColor,
+                enabled = hasCoords,
+                modifier = Modifier.weight(1f),
+            ) {
+                if (firm.latitude != null && firm.longitude != null) {
+                    context.openMap(firm.latitude, firm.longitude, firm.name)
+                }
+            }
+        }
+
+        HorizontalDivider(color = c.line, thickness = 1.dp)
+
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            InfoLine(Icons.Outlined.Place, firm.address)
+            InfoLine(Icons.Outlined.Schedule, firm.workingHours)
+            InfoLine(Icons.Outlined.PhoneAndroid, firm.phone)
+        }
+
+        firm.description?.takeIf { it.isNotBlank() }?.let { desc ->
+            HorizontalDivider(color = c.line, thickness = 1.dp)
+            Text(desc, style = MaterialTheme.typography.bodyMedium, color = c.ink)
+        }
+
+        HorizontalDivider(color = c.line, thickness = 1.dp)
+
+        adminControls()
     }
 }
 
