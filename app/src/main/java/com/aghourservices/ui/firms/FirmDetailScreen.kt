@@ -57,7 +57,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aghourservices.R
 import com.aghourservices.data.remote.ApiResult
-import com.aghourservices.data.remote.CategoryDto
 import com.aghourservices.data.remote.FirmDto
 import com.aghourservices.data.repository.AdminRepository
 import com.aghourservices.data.repository.CatalogRepository
@@ -67,7 +66,6 @@ import com.aghourservices.ui.components.ConfirmDeleteDialog
 import com.aghourservices.ui.components.DangerButton
 import com.aghourservices.ui.components.ErrorBanner
 import com.aghourservices.ui.components.GhostButton
-import com.aghourservices.ui.components.IconTile
 import com.aghourservices.ui.components.MessageBox
 import com.aghourservices.ui.components.OverlayIconButton
 import com.aghourservices.ui.components.ScreenTitle
@@ -76,8 +74,7 @@ import com.aghourservices.ui.components.SkeletonRows
 import com.aghourservices.ui.components.SurfaceCard
 import com.aghourservices.ui.components.appContainer
 import com.aghourservices.ui.components.asHeading
-import com.aghourservices.ui.components.categoryLine
-import com.aghourservices.ui.components.firmIconUrl
+import com.aghourservices.ui.components.firmStatusLabel
 import com.aghourservices.ui.components.openDialer
 import com.aghourservices.ui.components.openMap
 import com.aghourservices.ui.components.openWhatsApp
@@ -93,7 +90,6 @@ import kotlinx.coroutines.launch
 data class FirmDetailUiState(
     val loading: Boolean = true,
     val firm: FirmDto? = null,
-    val categories: List<CategoryDto> = emptyList(),
     val error: String? = null,
     /** Super admin actions: a status change or delete is running / failed / finished. */
     val busy: Boolean = false,
@@ -120,9 +116,8 @@ class FirmDetailViewModel(
     fun load() {
         _state.value = FirmDetailUiState(loading = true)
         viewModelScope.launch {
-            val categories = (catalog.categories() as? ApiResult.Success)?.data.orEmpty() // only for the icon
             _state.value = when (val result = catalog.firm(firmId)) {
-                is ApiResult.Success -> FirmDetailUiState(loading = false, firm = result.data, categories = categories)
+                is ApiResult.Success -> FirmDetailUiState(loading = false, firm = result.data)
                 is ApiResult.Failure -> FirmDetailUiState(loading = false, error = result.message)
             }
         }
@@ -172,7 +167,7 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit, onEdit: (() -> Unit)? = n
     }
 
     if (firm != null) {
-        FirmDetailContent(firm, firmIconUrl(firm, state.categories), onBack) {
+        FirmDetailContent(firm, onBack) {
             if (onEdit != null) {
                 AdminFirmControls(
                     firm = firm,
@@ -195,7 +190,6 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit, onEdit: (() -> Unit)? = n
 @Composable
 private fun FirmDetailContent(
     firm: FirmDto,
-    iconUrl: String?,
     onBack: () -> Unit,
     adminControls: @Composable ColumnScope.() -> Unit = {},
 ) {
@@ -226,17 +220,9 @@ private fun FirmDetailContent(
             }
         },
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            IconTile(iconUrl, size = 52.dp)
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(firm.category.name, style = MaterialTheme.typography.labelMedium, color = c.goldInk, fontWeight = FontWeight.Bold)
-                if (firm.status != "active") {
-                    Badge(
-                        text = if (firm.status == "suspended") stringResource(R.string.firm_status_suspended) else firm.status,
-                        tone = BadgeTone.Gray,
-                    )
-                }
-            }
+        // Only owners and the super admin can open a pending / suspended firm; say so clearly.
+        if (firm.status != "active") {
+            Badge(firmStatusLabel(firm.status), if (firm.status == "suspended") BadgeTone.Red else BadgeTone.Gold)
         }
 
         Text(firm.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = c.ink, modifier = Modifier.asHeading())
