@@ -147,11 +147,27 @@ class FirmDetailViewModel(
 }
 
 /**
- * [onEdit] is null for everyone but the super admin (decided in AppNavigation); null hides the
- * edit / approve / suspend / delete controls.
+ * Who may manage a firm, mirroring FirmPolicy on the server: the owner or the super admin may edit
+ * and delete; only the super admin approves or suspends. A UI hint only: the server still decides.
  */
+data class FirmAccess(val userId: Long?, val isSuperAdmin: Boolean) {
+    fun canEdit(firm: FirmDto): Boolean = isSuperAdmin || (userId != null && firm.ownerId == userId)
+    val canModerate: Boolean get() = isSuperAdmin
+
+    companion object {
+        val Guest = FirmAccess(userId = null, isSuperAdmin = false)
+    }
+}
+
+/** [access] (built in AppNavigation) decides which of the edit / approve / suspend / delete controls show. */
 @Composable
-fun FirmDetailScreen(firmId: Long, onBack: () -> Unit, onEdit: (() -> Unit)? = null, onDeleted: () -> Unit = onBack) {
+fun FirmDetailScreen(
+    firmId: Long,
+    onBack: () -> Unit,
+    access: FirmAccess = FirmAccess.Guest,
+    onEdit: () -> Unit = {},
+    onDeleted: () -> Unit = onBack,
+) {
     val container = appContainer()
     val vm: FirmDetailViewModel = viewModel { FirmDetailViewModel(container.catalog, container.admin, firmId) }
     val state by vm.state.collectAsStateWithLifecycle()
@@ -168,13 +184,14 @@ fun FirmDetailScreen(firmId: Long, onBack: () -> Unit, onEdit: (() -> Unit)? = n
 
     if (firm != null) {
         FirmDetailContent(firm, onBack) {
-            if (onEdit != null) {
-                AdminFirmControls(
+            if (access.canEdit(firm)) {
+                ManageFirmControls(
                     firm = firm,
                     busy = state.busy,
                     error = state.actionError,
                     onEdit = onEdit,
-                    onSetStatus = vm::setStatus,
+                    // Owners cannot approve their own firm.
+                    onSetStatus = if (access.canModerate) vm::setStatus else null,
                     onDelete = vm::delete,
                 )
             }
@@ -285,27 +302,29 @@ private fun FirmDetailContent(
     }
 }
 
-/** Super admin: edit, approve or suspend, and delete (after a confirmation). */
+/** Edit and delete (after a confirmation); approve or suspend only when [onSetStatus] is set (super admin). */
 @Composable
-private fun AdminFirmControls(
+private fun ManageFirmControls(
     firm: FirmDto,
     busy: Boolean,
     error: String?,
     onEdit: () -> Unit,
-    onSetStatus: (String) -> Unit,
+    onSetStatus: ((String) -> Unit)?,
     onDelete: () -> Unit,
 ) {
     val c = Aghour.colors
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.admin_section), style = MaterialTheme.typography.titleSmall, color = c.ink, modifier = Modifier.asHeading())
+        Text(stringResource(R.string.manage_firm), style = MaterialTheme.typography.titleSmall, color = c.ink, modifier = Modifier.asHeading())
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             GhostButton(stringResource(R.string.edit), onEdit, Modifier.weight(1f))
-            if (firm.status == "active") {
-                GhostButton(stringResource(R.string.suspend), { if (!busy) onSetStatus("suspended") }, Modifier.weight(1f))
-            } else {
-                GhostButton(stringResource(R.string.approve), { if (!busy) onSetStatus("active") }, Modifier.weight(1f))
+            if (onSetStatus != null) {
+                if (firm.status == "active") {
+                    GhostButton(stringResource(R.string.suspend), { if (!busy) onSetStatus("suspended") }, Modifier.weight(1f))
+                } else {
+                    GhostButton(stringResource(R.string.approve), { if (!busy) onSetStatus("active") }, Modifier.weight(1f))
+                }
             }
             DangerButton(stringResource(R.string.delete), { if (!busy) confirmDelete = true }, Modifier.weight(1f))
         }

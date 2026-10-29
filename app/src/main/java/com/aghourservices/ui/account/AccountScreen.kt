@@ -127,6 +127,8 @@ fun AccountScreen(
     onSettings: () -> Unit,
     /** Super admin only (null for everyone else): the admin menu. */
     admin: AdminMenu? = null,
+    /** Firm admins see "My firms" even before adding one, so they can add their first firm. */
+    alwaysShowMyFirms: Boolean = false,
 ) {
     val container = appContainer()
     val user by container.auth.currentUser.collectAsStateWithLifecycle()
@@ -150,7 +152,7 @@ fun AccountScreen(
                 if (onPlans != null) SubscriptionCard(state, onPlans)
                 if (admin != null) AdminMenuCard(admin)
                 SurfaceCard(padding = 0.dp) {
-                    if (state.firms.isNotEmpty()) {
+                    if (state.firms.isNotEmpty() || alwaysShowMyFirms) {
                         MenuRow(Icons.Outlined.Storefront, stringResource(R.string.my_firms), "${state.firms.size}", onMyFirms)
                         MenuDivider()
                     }

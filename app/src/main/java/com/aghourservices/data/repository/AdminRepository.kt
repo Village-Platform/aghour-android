@@ -22,7 +22,10 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 import retrofit2.Response
 
-/** Firm fields a super admin can set. Blank text is sent as null so a field can be cleared. */
+/**
+ * Firm fields from the form. Blank text is sent as null so a field can be cleared.
+ * [status] is null for owners: only the super admin may set it, so it is not sent at all.
+ */
 data class FirmInput(
     val categoryId: Long,
     val name: String,
@@ -33,7 +36,7 @@ data class FirmInput(
     val latitude: Double?,
     val longitude: Double?,
     val workingHours: String,
-    val status: String,
+    val status: String?,
 )
 
 /** [iconPng] is a new image to upload (already scaled down); null keeps the current one. */
@@ -59,7 +62,8 @@ data class PlanInput(
 )
 
 /**
- * Super admin writes. The server's policies decide what is allowed; this class only sends.
+ * Writes from the management screens: the super admin's, and firm owners' for their own firms.
+ * The server's policies decide what is allowed; this class only sends.
  * [changes] goes up after every successful write, so any screen showing server data can reload.
  */
 class AdminRepository(private val api: AghourApi, private val json: Json, private val catalog: CatalogRepository) {
@@ -146,7 +150,7 @@ private fun FirmInput.toBody(): JsonObject = buildJsonObject {
             put("latitude", latitude)
             put("longitude", longitude)
             put("working_hours", workingHours.trim().ifEmpty { null })
-            put("status", status)
+            status?.let { put("status", it) }
         },
     )
 }

@@ -58,6 +58,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.aghourservices.R
+import com.aghourservices.data.remote.canManageFirms
 import com.aghourservices.data.remote.isSuperAdmin
 import com.aghourservices.ui.account.AccountScreen
 import com.aghourservices.ui.account.LoginScreen
@@ -73,6 +74,7 @@ import com.aghourservices.ui.components.appContainer
 import com.aghourservices.ui.components.MessageBox
 import com.aghourservices.ui.components.ScreenTitle
 import com.aghourservices.ui.explore.ExploreScreen
+import com.aghourservices.ui.firms.FirmAccess
 import com.aghourservices.ui.firms.FirmDetailScreen
 import com.aghourservices.ui.home.HomeScreen
 import com.aghourservices.ui.news.ArticleScreen
@@ -113,9 +115,11 @@ import kotlinx.serialization.Serializable
 @Serializable data object MyFirmsRoute
 @Serializable data object SettingsRoute
 
-// Super admin
+// Firm management: owners (their own firms) and the super admin
 @Serializable data object NewFirmRoute
 @Serializable data class EditFirmRoute(val firmId: Long)
+
+// Super admin
 @Serializable data object NewArticleRoute
 @Serializable data class EditArticleRoute(val articleId: Long)
 @Serializable data object AdminCategoriesRoute
@@ -201,6 +205,8 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
     val plansOn = plansFlag == true
     // Shows the admin controls only; the server's policies still decide every request.
     val isAdmin = user.isSuperAdmin
+    val canManageFirms = user.canManageFirms
+    val firmAccess = FirmAccess(userId = user?.id, isSuperAdmin = isAdmin)
     val nav = rememberNavController()
     LaunchedEffect(openLogin) {
         if (openLogin) {
@@ -280,7 +286,13 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onFirmClick = { nav.go(FirmRoute(it.id)) },
                     onArticleClick = { nav.go(ArticleRoute(it.id)) },
                     onSeeAllNews = { nav.navigateToTab(NewsRoute) },
-                    onAddFirm = if (plansOn) ({ nav.go(PlansRoute) }) else null,
+                    // Firm admins add a firm directly (the server answers if their subscription ended);
+                    // everyone else is sent to the plans first.
+                    onAddFirm = when {
+                        canManageFirms -> ({ nav.go(NewFirmRoute) })
+                        plansOn -> ({ nav.go(PlansRoute) })
+                        else -> null
+                    },
                     onNotifications = { nav.go(NotificationsRoute) },
                 )
             }
@@ -296,6 +308,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onChangePassword = { nav.go(ChangePasswordRoute) },
                     onMyFirms = { nav.go(MyFirmsRoute) },
                     onSettings = { nav.go(SettingsRoute) },
+                    alwaysShowMyFirms = canManageFirms,
                     admin = if (isAdmin) {
                         AdminMenu(
                             onAddFirm = { nav.go(NewFirmRoute) },
@@ -315,7 +328,8 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                 FirmDetailScreen(
                     firmId = firmId,
                     onBack = { nav.back() },
-                    onEdit = if (isAdmin) ({ nav.go(EditFirmRoute(firmId)) }) else null,
+                    access = firmAccess,
+                    onEdit = { nav.go(EditFirmRoute(firmId)) },
                 )
             }
             composable<ArticleRoute> { entry ->
@@ -368,20 +382,32 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                 )
             }
             composable<ChangePasswordRoute> { ChangePasswordScreen(onBack = { nav.back() }) }
-            composable<MyFirmsRoute> { MyFirmsScreen(onBack = { nav.back() }, onFirmClick = { nav.go(FirmRoute(it.id)) }) }
+            composable<MyFirmsRoute> {
+                MyFirmsScreen(
+                    onBack = { nav.back() },
+                    onFirmClick = { nav.go(FirmRoute(it.id)) },
+                    onAddFirm = if (canManageFirms) ({ nav.go(NewFirmRoute) }) else null,
+                )
+            }
             composable<SettingsRoute> { SettingsScreen(onBack = { nav.back() }) }
 
-            // ---- Super admin ----
+            // ---- Firm management: owners (their own firms) and the super admin ----
             composable<NewFirmRoute> {
                 FirmFormScreen(
                     firmId = null,
+                    canSetStatus = isAdmin,
                     onBack = { nav.back() },
                     // Open the new firm in place of the form, so Back returns to the profile.
                     onSaved = { id -> nav.go(FirmRoute(id)) { popUpTo<NewFirmRoute> { inclusive = true } } },
                 )
             }
             composable<EditFirmRoute> { entry ->
-                FirmFormScreen(firmId = entry.toRoute<EditFirmRoute>().firmId, onBack = { nav.back() }, onSaved = { nav.back() })
+                FirmFormScreen(
+                    firmId = entry.toRoute<EditFirmRoute>().firmId,
+                    canSetStatus = isAdmin,
+                    onBack = { nav.back() },
+                    onSaved = { nav.back() },
+                )
             }
             composable<NewArticleRoute> {
                 ArticleFormScreen(

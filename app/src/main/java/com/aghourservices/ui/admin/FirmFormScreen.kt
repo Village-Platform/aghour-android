@@ -26,6 +26,7 @@ import com.aghourservices.data.repository.CatalogRepository
 import com.aghourservices.data.repository.FirmInput
 import com.aghourservices.ui.components.FilterChipsRow
 import com.aghourservices.ui.components.FormField
+import com.aghourservices.ui.components.MutedText
 import com.aghourservices.ui.components.Segmented
 import com.aghourservices.ui.components.appContainer
 import com.aghourservices.ui.components.categoryIconUrl
@@ -62,11 +63,12 @@ data class FirmFormUiState(
     val savedId: Long? = null,
 )
 
-/** Create ([firmId] null) or edit a firm. */
+/** Create ([firmId] null) or edit a firm. [canSetStatus]: super admin only; owners never send a status. */
 class FirmFormViewModel(
     private val catalog: CatalogRepository,
     private val admin: AdminRepository,
     private val firmId: Long?,
+    private val canSetStatus: Boolean,
 ) : ViewModel() {
     private val _state = MutableStateFlow(FirmFormUiState())
     val state: StateFlow<FirmFormUiState> = _state.asStateFlow()
@@ -120,7 +122,7 @@ class FirmFormViewModel(
             latitude = latitude,
             longitude = longitude,
             workingHours = s.workingHours,
-            status = s.status,
+            status = s.status.takeIf { canSetStatus },
         )
         _state.update { it.copy(submitting = true) }
         viewModelScope.launch {
@@ -147,9 +149,9 @@ private fun FirmFormUiState.filledFrom(firm: FirmDto) = copy(
 )
 
 @Composable
-fun FirmFormScreen(firmId: Long?, onBack: () -> Unit, onSaved: (Long) -> Unit) {
+fun FirmFormScreen(firmId: Long?, canSetStatus: Boolean, onBack: () -> Unit, onSaved: (Long) -> Unit) {
     val container = appContainer()
-    val vm: FirmFormViewModel = viewModel { FirmFormViewModel(container.catalog, container.admin, firmId) }
+    val vm: FirmFormViewModel = viewModel { FirmFormViewModel(container.catalog, container.admin, firmId, canSetStatus) }
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val saved = stringResource(R.string.firm_saved)
@@ -188,13 +190,18 @@ fun FirmFormScreen(firmId: Long?, onBack: () -> Unit, onSaved: (Long) -> Unit) {
         )
         FieldError(state.categoryError)
 
-        FieldLabel(stringResource(R.string.firm_status))
-        Row {
-            Segmented(
-                options = FirmStatuses.map { it to firmStatusLabel(it) },
-                selected = state.status,
-                onSelect = { s -> vm.update { copy(status = s) } },
-            )
+        if (canSetStatus) {
+            FieldLabel(stringResource(R.string.firm_status))
+            Row {
+                Segmented(
+                    options = FirmStatuses.map { it to firmStatusLabel(it) },
+                    selected = state.status,
+                    onSelect = { s -> vm.update { copy(status = s) } },
+                )
+            }
+        } else if (firmId == null) {
+            // Owners: a new firm waits for the super admin's approval.
+            MutedText(stringResource(R.string.firm_review_note))
         }
 
         FormField(
