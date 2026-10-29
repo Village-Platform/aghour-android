@@ -40,8 +40,7 @@
     <string name="have_account">لديك حساب؟ سجّل الدخول</string>
     <string name="account_guest_title">مرحبًا بك في أجهور الكبرى</string>
     <string name="account_guest_body">سجّل الدخول لإدارة منشأتك ومتابعة اشتراكك والإشعارات.</string>
-    <string name="role_firm_admin">صاحب منشأة</string>
-    <string name="role_super_admin">مدير النظام</string>
+    <string name="role_super_admin">سوبر أدمن</string>
 
     <string name="kind_news">خبر</string>
     <string name="kind_article">مقال</string>

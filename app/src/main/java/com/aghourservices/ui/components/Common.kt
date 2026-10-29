@@ -97,7 +97,6 @@ fun kindTone(kind: String): BadgeTone = when (kind) {
 /** Label for elevated roles only; plain users (and any role this app version doesn't know) get no badge. */
 @Composable
 fun roleLabel(role: String): String? = when (role) {
-    "firm_admin" -> stringResource(R.string.role_firm_admin)
     "super_admin" -> stringResource(R.string.role_super_admin)
     else -> null
 }
