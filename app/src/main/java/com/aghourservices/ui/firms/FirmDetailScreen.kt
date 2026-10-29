@@ -147,12 +147,16 @@ class FirmDetailViewModel(
 }
 
 /**
- * Who may manage a firm, mirroring FirmPolicy on the server: the owner or the super admin may edit
- * and delete; only the super admin approves or suspends. A UI hint only: the server still decides.
+ * Which firm controls to show. The server sends them in `can` (from its FirmPolicy); an older API
+ * without it falls back to the same rule worked out here: the owner or the super admin may edit and
+ * delete, only the super admin approves or suspends. A UI hint only: the server still decides.
  */
 data class FirmAccess(val userId: Long?, val isSuperAdmin: Boolean) {
-    fun canEdit(firm: FirmDto): Boolean = isSuperAdmin || (userId != null && firm.ownerId == userId)
-    val canModerate: Boolean get() = isSuperAdmin
+    private fun ownsOrAdmin(firm: FirmDto) = isSuperAdmin || (userId != null && firm.ownerId == userId)
+
+    fun canEdit(firm: FirmDto): Boolean = firm.can?.update ?: ownsOrAdmin(firm)
+    fun canDelete(firm: FirmDto): Boolean = firm.can?.destroy ?: ownsOrAdmin(firm)
+    fun canModerate(firm: FirmDto): Boolean = firm.can?.moderate ?: isSuperAdmin
 
     companion object {
         val Guest = FirmAccess(userId = null, isSuperAdmin = false)
@@ -184,15 +188,15 @@ fun FirmDetailScreen(
 
     if (firm != null) {
         FirmDetailContent(firm, onBack) {
-            if (access.canEdit(firm)) {
+            if (access.canEdit(firm) || access.canDelete(firm)) {
                 ManageFirmControls(
                     firm = firm,
                     busy = state.busy,
                     error = state.actionError,
-                    onEdit = onEdit,
+                    onEdit = if (access.canEdit(firm)) onEdit else null,
                     // Owners cannot approve their own firm.
-                    onSetStatus = if (access.canModerate) vm::setStatus else null,
-                    onDelete = vm::delete,
+                    onSetStatus = if (access.canModerate(firm)) vm::setStatus else null,
+                    onDelete = if (access.canDelete(firm)) vm::delete else null,
                 )
             }
         }
@@ -302,15 +306,15 @@ private fun FirmDetailContent(
     }
 }
 
-/** Edit and delete (after a confirmation); approve or suspend only when [onSetStatus] is set (super admin). */
+/** Each control shows only when its callback is set: edit, approve / suspend, delete (after a confirmation). */
 @Composable
 private fun ManageFirmControls(
     firm: FirmDto,
     busy: Boolean,
     error: String?,
-    onEdit: () -> Unit,
+    onEdit: (() -> Unit)?,
     onSetStatus: ((String) -> Unit)?,
-    onDelete: () -> Unit,
+    onDelete: (() -> Unit)?,
 ) {
     val c = Aghour.colors
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
@@ -318,7 +322,7 @@ private fun ManageFirmControls(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.manage_firm), style = MaterialTheme.typography.titleSmall, color = c.ink, modifier = Modifier.asHeading())
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            GhostButton(stringResource(R.string.edit), onEdit, Modifier.weight(1f))
+            if (onEdit != null) GhostButton(stringResource(R.string.edit), onEdit, Modifier.weight(1f))
             if (onSetStatus != null) {
                 if (firm.status == "active") {
                     GhostButton(stringResource(R.string.suspend), { if (!busy) onSetStatus("suspended") }, Modifier.weight(1f))
@@ -326,12 +330,12 @@ private fun ManageFirmControls(
                     GhostButton(stringResource(R.string.approve), { if (!busy) onSetStatus("active") }, Modifier.weight(1f))
                 }
             }
-            DangerButton(stringResource(R.string.delete), { if (!busy) confirmDelete = true }, Modifier.weight(1f))
+            if (onDelete != null) DangerButton(stringResource(R.string.delete), { if (!busy) confirmDelete = true }, Modifier.weight(1f))
         }
         ErrorBanner(error)
     }
 
-    if (confirmDelete) {
+    if (confirmDelete && onDelete != null) {
         ConfirmDeleteDialog(
             title = stringResource(R.string.delete_firm_title),
             body = stringResource(R.string.delete_firm_body, firm.name),

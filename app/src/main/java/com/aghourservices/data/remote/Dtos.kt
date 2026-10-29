@@ -77,7 +77,12 @@ data class FirmDto(
     val category: CategoryRefDto,
     /** Optional so the app works with older API responses; null hides the owner controls. */
     @SerialName("owner_id") val ownerId: Long? = null,
+    /** What the signed-in user may do, from the server's FirmPolicy. null on older API versions. */
+    val can: FirmCanDto? = null,
 )
+
+@Serializable
+data class FirmCanDto(val update: Boolean = false, val destroy: Boolean = false, val moderate: Boolean = false)
 
 @Serializable
 data class AuthorDto(val id: Long, val name: String)

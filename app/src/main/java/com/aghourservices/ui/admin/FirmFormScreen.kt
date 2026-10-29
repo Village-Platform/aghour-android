@@ -61,6 +61,8 @@ data class FirmFormUiState(
     val error: String? = null,
     /** Set once saved; the screen then closes. */
     val savedId: Long? = null,
+    /** The owner's edit sent an approved firm back for review (the server set it to pending). */
+    val sentForReview: Boolean = false,
 )
 
 /** Create ([firmId] null) or edit a firm. [canSetStatus]: super admin only; owners never send a status. */
@@ -128,7 +130,13 @@ class FirmFormViewModel(
         viewModelScope.launch {
             val result = if (firmId == null) admin.createFirm(input) else admin.updateFirm(firmId, input)
             when (result) {
-                is ApiResult.Success -> _state.update { it.copy(submitting = false, savedId = result.data.id) }
+                is ApiResult.Success -> _state.update {
+                    it.copy(
+                        submitting = false,
+                        savedId = result.data.id,
+                        sentForReview = s.status == "active" && result.data.status == "pending",
+                    )
+                }
                 is ApiResult.Failure -> _state.update { it.copy(submitting = false, error = result.message) }
             }
         }
@@ -155,10 +163,11 @@ fun FirmFormScreen(firmId: Long?, canSetStatus: Boolean, onBack: () -> Unit, onS
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val saved = stringResource(R.string.firm_saved)
+    val sentForReview = stringResource(R.string.firm_sent_for_review)
 
     LaunchedEffect(state.savedId) {
         state.savedId?.let {
-            Toast.makeText(context, saved, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, if (state.sentForReview) sentForReview else saved, Toast.LENGTH_LONG).show()
             onSaved(it)
         }
     }
@@ -202,6 +211,9 @@ fun FirmFormScreen(firmId: Long?, canSetStatus: Boolean, onBack: () -> Unit, onS
         } else if (firmId == null) {
             // Owners: a new firm waits for the super admin's approval.
             MutedText(stringResource(R.string.firm_review_note))
+        } else if (state.status == "active") {
+            // Owners: the server sends an edited approved firm back for review (Firms::Update).
+            MutedText(stringResource(R.string.firm_edit_review_note))
         }
 
         FormField(

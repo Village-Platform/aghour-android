@@ -191,6 +191,8 @@
     <string name="delete_firm_body">سيتم حذف «%1$s» نهائيًا ولا يمكن التراجع.</string>
     <string name="manage_firm">إدارة المنشأة</string>
     <string name="firm_review_note">ستظهر المنشأة للجميع بعد مراجعتها والموافقة عليها من الإدارة.</string>
+    <string name="firm_edit_review_note">تعديل منشأة معتمدة يعيدها إلى المراجعة، فتختفي من القوائم حتى توافق الإدارة عليها.</string>
+    <string name="firm_sent_for_review">تم الحفظ. أُرسلت المنشأة للمراجعة وستظهر بعد موافقة الإدارة.</string>
     <string name="no_my_firms">لم تُضف أي منشأة بعد. اضغط + لإضافة منشأتك.</string>
     <string name="add">إضافة</string>
     <string name="saved">تم الحفظ.</string>
