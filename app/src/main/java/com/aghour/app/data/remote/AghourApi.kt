@@ -2,6 +2,7 @@ package com.aghour.app.data.remote
 
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -58,6 +59,10 @@ interface AghourApi {
 
     @PATCH("me")
     suspend fun updateMe(@Body body: UpdateMeRequest): ItemResponse<UserDto>
+
+    /** 204 on success. Plain Unit (not Response<Unit>) so a 422 wrong password throws into safeApiCall. */
+    @HTTP(method = "DELETE", path = "me", hasBody = true)
+    suspend fun deleteMe(@Body body: DeleteMeRequest)
 
     // ---- Firm owners: plans, payment, subscriptions ----
 

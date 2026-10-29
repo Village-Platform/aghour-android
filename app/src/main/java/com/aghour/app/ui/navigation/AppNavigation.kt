@@ -64,6 +64,7 @@ import com.aghour.app.ui.home.HomeScreen
 import com.aghour.app.ui.news.ArticleScreen
 import com.aghour.app.ui.news.NewsScreen
 import com.aghour.app.ui.owner.ChangePasswordScreen
+import com.aghour.app.ui.owner.DeleteAccountScreen
 import com.aghour.app.ui.owner.MyFirmsScreen
 import com.aghour.app.ui.owner.NotificationsScreen
 import com.aghour.app.ui.owner.PaymentsScreen
@@ -95,6 +96,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object PaymentsRoute
 @Serializable data object NotificationsRoute
 @Serializable data object ChangePasswordRoute
+@Serializable data object DeleteAccountRoute
 @Serializable data object MyFirmsRoute
 
 private data class Tab(val route: Any, val labelRes: Int, val icon: ImageVector, val matches: (NavDestination) -> Boolean)
@@ -235,6 +237,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onPayments = { nav.go(PaymentsRoute) },
                     onNotifications = { nav.go(NotificationsRoute) },
                     onChangePassword = { nav.go(ChangePasswordRoute) },
+                    onDeleteAccount = { nav.go(DeleteAccountRoute) },
                     onMyFirms = { nav.go(MyFirmsRoute) },
                 )
             }
@@ -265,6 +268,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
             composable<PaymentsRoute> { PaymentsScreen(onBack = { nav.back() }) }
             composable<NotificationsRoute> { NotificationsScreen(onBack = { nav.back() }) }
             composable<ChangePasswordRoute> { ChangePasswordScreen(onBack = { nav.back() }) }
+            composable<DeleteAccountRoute> { DeleteAccountScreen(onBack = { nav.back() }) }
             composable<MyFirmsRoute> { MyFirmsScreen(onBack = { nav.back() }, onFirmClick = { nav.go(FirmRoute(it.id)) }) }
         }
     }

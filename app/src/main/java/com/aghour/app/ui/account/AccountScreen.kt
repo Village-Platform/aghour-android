@@ -110,6 +110,7 @@ fun AccountScreen(
     onNotifications: () -> Unit,
     onChangePassword: () -> Unit,
     onMyFirms: () -> Unit,
+    onDeleteAccount: () -> Unit,
 ) {
     val container = appContainer()
     val user by container.auth.currentUser.collectAsStateWithLifecycle()
@@ -144,6 +145,8 @@ fun AccountScreen(
                 MenuRow("🔒", stringResource(R.string.change_password), null, onChangePassword)
                 MenuDivider()
                 MenuRow("ℹ️", stringResource(R.string.about_app), null) { showAbout = true }
+                MenuDivider()
+                MenuRow("🗑️", stringResource(R.string.delete_account), null, onDeleteAccount)
             }
             Button(
                 onClick = { confirmLogout = true },
