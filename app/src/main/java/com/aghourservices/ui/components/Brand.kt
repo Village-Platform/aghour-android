@@ -50,6 +50,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -72,6 +75,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
 import com.aghourservices.R
 import com.aghourservices.ui.theme.Aghour
 
@@ -198,20 +202,32 @@ fun MarkTile(size: Dp = 44.dp, corner: Dp = 12.dp) {
 }
 
 /**
- * Rounded square with the category image from the API. The app logo sits underneath on a neutral
- * tint: it shows when the category has no image and while the image loads or if it fails.
+ * A category image from the API or the app logo, never both. The logo shows when there is no
+ * image ([url] null), while it loads, and when it fails (broken URL, no network).
+ * Fit + a little padding keeps the whole icon visible, whatever its shape.
  */
 @Composable
-fun IconTile(iconUrl: String?, size: Dp = 48.dp) {
-    val c = Aghour.colors
-    Box(
-        Modifier.size(size).clip(RoundedCornerShape(size * 0.32f)).background(c.brand.copy(alpha = 0.10f)),
-        contentAlignment = Alignment.Center,
-    ) {
-        BrandMark(Modifier.size(size * 0.66f))
-        if (iconUrl != null) {
-            AsyncImage(model = iconUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+fun CategoryImage(url: String?, size: Dp, modifier: Modifier = Modifier) {
+    var loaded by remember(url) { mutableStateOf(false) }
+    Box(modifier.size(size), contentAlignment = Alignment.Center) {
+        if (url != null) {
+            AsyncImage(
+                model = url,
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                onState = { loaded = it is AsyncImagePainter.State.Success },
+                modifier = Modifier.fillMaxSize().padding(size * 0.08f),
+            )
         }
+        if (!loaded) BrandMark(Modifier.size(size * 0.66f))
+    }
+}
+
+/** Rounded square on a neutral tint with the category image, or the logo (see [CategoryImage]). */
+@Composable
+fun IconTile(iconUrl: String?, size: Dp = 48.dp) {
+    Box(Modifier.size(size).clip(RoundedCornerShape(size * 0.32f)).background(Aghour.colors.brand.copy(alpha = 0.10f))) {
+        CategoryImage(iconUrl, size)
     }
 }
 
@@ -269,7 +285,7 @@ fun SectionHeader(title: String, action: String? = null, onAction: (() -> Unit)?
 /**
  * Filter chips row: selected = gold, others = soft grey (surface2). [icons] adds an icon per option;
  * an option mapped to null shows the app logo mark (category without an image). [imageUrls] shows
- * an image instead (category images from the API).
+ * the category image instead, with the logo while it loads or if it fails (see [CategoryImage]).
  */
 @Composable
 fun <T> FilterChipsRow(
@@ -295,12 +311,7 @@ fun <T> FilterChipsRow(
             ) {
                 val imageUrl = imageUrls[value]
                 if (imageUrl != null) {
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(20.dp).clip(RoundedCornerShape(6.dp)),
-                    )
+                    CategoryImage(imageUrl, 20.dp, Modifier.clip(RoundedCornerShape(6.dp)))
                     Spacer(Modifier.width(6.dp))
                 } else if (value in icons) {
                     val icon = icons[value]

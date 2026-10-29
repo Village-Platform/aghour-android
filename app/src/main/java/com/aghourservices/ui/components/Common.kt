@@ -101,6 +101,15 @@ fun roleLabel(role: String): String? = when (role) {
     else -> null
 }
 
+/** Firm status from the API (pending / active / suspended); an unknown one is shown as sent. */
+@Composable
+fun firmStatusLabel(status: String): String = when (status) {
+    "active" -> stringResource(R.string.firm_status_active)
+    "pending" -> stringResource(R.string.firm_status_pending)
+    "suspended" -> stringResource(R.string.firm_status_suspended)
+    else -> status
+}
+
 /** Subscription state -> label + badge tone (states come from the API: pending/rejected/scheduled/current/expired). */
 fun subscriptionState(state: String): Pair<String, BadgeTone> = when (state) {
     "current" -> "ساري" to BadgeTone.Green

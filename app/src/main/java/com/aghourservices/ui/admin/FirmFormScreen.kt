@@ -29,6 +29,7 @@ import com.aghourservices.ui.components.FormField
 import com.aghourservices.ui.components.Segmented
 import com.aghourservices.ui.components.appContainer
 import com.aghourservices.ui.components.categoryIconUrl
+import com.aghourservices.ui.components.firmStatusLabel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -144,14 +145,6 @@ private fun FirmFormUiState.filledFrom(firm: FirmDto) = copy(
     workingHours = firm.workingHours.orEmpty(),
     status = firm.status,
 )
-
-@Composable
-fun firmStatusLabel(status: String): String = when (status) {
-    "active" -> stringResource(R.string.firm_status_active)
-    "pending" -> stringResource(R.string.firm_status_pending)
-    "suspended" -> stringResource(R.string.firm_status_suspended)
-    else -> status
-}
 
 @Composable
 fun FirmFormScreen(firmId: Long?, onBack: () -> Unit, onSaved: (Long) -> Unit) {
