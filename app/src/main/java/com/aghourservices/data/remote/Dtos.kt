@@ -24,6 +24,10 @@ data class PageMeta(
     @SerialName("total_pages") val totalPages: Int,
 )
 
+/** GET app_config. Unknown flags are ignored; a missing flag means off. */
+@Serializable
+data class AppConfigDto(val features: Map<String, Boolean> = emptyMap())
+
 @Serializable
 data class ErrorEnvelope(val error: ApiErrorBody)
 

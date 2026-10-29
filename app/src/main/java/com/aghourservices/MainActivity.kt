@@ -36,4 +36,10 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    /** Each time the app comes to the front: pick up features switched on or off in the dashboard. */
+    override fun onStart() {
+        super.onStart()
+        (application as AghourApp).container.features.refresh()
+    }
 }

@@ -2,6 +2,7 @@ package com.aghourservices.di
 
 import android.content.Context
 import com.aghourservices.BuildConfig
+import com.aghourservices.data.config.FeatureFlags
 import com.aghourservices.data.remote.AghourApi
 import com.aghourservices.data.remote.AuthInterceptor
 import com.aghourservices.data.repository.AuthRepository
@@ -60,6 +61,7 @@ class AppContainer(context: Context) {
     val catalog = CatalogRepository(api, json)
     val auth = AuthRepository(api, session, json)
     val owner = OwnerRepository(api, json)
+    val features = FeatureFlags(context, api, json, appScope)
 
     /** Category chosen on Home; the Explore tab reads it (tabs keep their own state otherwise). */
     val exploreCategory = MutableStateFlow<Long?>(null)

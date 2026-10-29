@@ -115,7 +115,12 @@ fun notificationTarget(kind: String): NotificationTarget? = when {
 }
 
 @Composable
-fun NotificationsScreen(onBack: () -> Unit, onOpen: (NotificationTarget) -> Unit) {
+fun NotificationsScreen(
+    onBack: () -> Unit,
+    onOpen: (NotificationTarget) -> Unit,
+    /** Targets that can be opened now (plans and payments disappear while plans are switched off). */
+    isAvailable: (NotificationTarget) -> Boolean = { true },
+) {
     val container = appContainer()
     val vm: NotificationsViewModel = viewModel { NotificationsViewModel(container.owner) }
     val state by vm.state.collectAsStateWithLifecycle()
@@ -144,7 +149,7 @@ fun NotificationsScreen(onBack: () -> Unit, onOpen: (NotificationTarget) -> Unit
             state.visible.isEmpty() -> MessageBox(stringResource(R.string.no_notifications))
             else -> LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(state.visible, key = { it.id }) { n ->
-                    val target = notificationTarget(n.kind)
+                    val target = notificationTarget(n.kind)?.takeIf(isAvailable)
                     NotificationRow(n, target, onClick = {
                         if (!n.read) vm.markRead(n.id)
                         target?.let(onOpen)

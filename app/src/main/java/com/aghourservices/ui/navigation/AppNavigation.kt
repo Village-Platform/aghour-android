@@ -9,7 +9,9 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
@@ -60,6 +62,8 @@ import com.aghourservices.ui.account.AccountScreen
 import com.aghourservices.ui.account.LoginScreen
 import com.aghourservices.ui.account.RegisterScreen
 import com.aghourservices.ui.components.appContainer
+import com.aghourservices.ui.components.MessageBox
+import com.aghourservices.ui.components.ScreenTitle
 import com.aghourservices.ui.explore.ExploreScreen
 import com.aghourservices.ui.firms.FirmDetailScreen
 import com.aghourservices.ui.home.HomeScreen
@@ -172,6 +176,9 @@ fun AppNavigation() {
 private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
     val container = appContainer()
     val user by container.auth.currentUser.collectAsStateWithLifecycle()
+    // Server feature flag (dashboard): plans, subscribing and payment history. null = still loading.
+    val plansFlag by container.features.plansEnabled.collectAsStateWithLifecycle()
+    val plansOn = plansFlag == true
     val nav = rememberNavController()
     LaunchedEffect(openLogin) {
         if (openLogin) {
@@ -251,7 +258,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onFirmClick = { nav.go(FirmRoute(it.id)) },
                     onArticleClick = { nav.go(ArticleRoute(it.id)) },
                     onSeeAllNews = { nav.navigateToTab(NewsRoute) },
-                    onAddFirm = { nav.go(PlansRoute) },
+                    onAddFirm = if (plansOn) ({ nav.go(PlansRoute) }) else null,
                     onNotifications = { nav.go(NotificationsRoute) },
                 )
             }
@@ -261,8 +268,8 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                 AccountScreen(
                     onLogin = { nav.go(LoginRoute) },
                     onRegister = { nav.go(RegisterRoute) },
-                    onPlans = { nav.go(PlansRoute) },
-                    onPayments = { nav.go(PaymentsRoute) },
+                    onPlans = if (plansOn) ({ nav.go(PlansRoute) }) else null,
+                    onPayments = if (plansOn) ({ nav.go(PaymentsRoute) }) else null,
                     onNotifications = { nav.go(NotificationsRoute) },
                     onChangePassword = { nav.go(ChangePasswordRoute) },
                     onMyFirms = { nav.go(MyFirmsRoute) },
@@ -279,24 +286,35 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
             }
 
             // ---- Firm owners ----
+            // Behind the plans flag. Their entry points are hidden while it is off; the gate covers a
+            // screen that was already open when the flag was switched off.
             composable<PlansRoute> {
-                PlansScreen(
-                    onBack = { nav.back() },
-                    // Paying needs an account: guests sign in first, then come back here.
-                    onSubscribe = { plan -> if (user == null) nav.go(LoginRoute) else nav.go(PayRoute(plan.id)) },
-                )
+                PlansGate(plansFlag, onBack = { nav.back() }) {
+                    PlansScreen(
+                        onBack = { nav.back() },
+                        // Paying needs an account: guests sign in first, then come back here.
+                        onSubscribe = { plan -> if (user == null) nav.go(LoginRoute) else nav.go(PayRoute(plan.id)) },
+                    )
+                }
             }
             composable<PayRoute> { entry ->
-                PayScreen(
-                    planId = entry.toRoute<PayRoute>().planId,
-                    onBack = { nav.back() },
-                    onDone = { nav.go(PaymentsRoute) { popUpTo<PlansRoute> { inclusive = true } } },
-                )
+                PlansGate(plansFlag, onBack = { nav.back() }) {
+                    PayScreen(
+                        planId = entry.toRoute<PayRoute>().planId,
+                        onBack = { nav.back() },
+                        onDone = { nav.go(PaymentsRoute) { popUpTo<PlansRoute> { inclusive = true } } },
+                    )
+                }
             }
-            composable<PaymentsRoute> { PaymentsScreen(onBack = { nav.back() }) }
+            composable<PaymentsRoute> {
+                PlansGate(plansFlag, onBack = { nav.back() }) { PaymentsScreen(onBack = { nav.back() }) }
+            }
             composable<NotificationsRoute> {
                 NotificationsScreen(
                     onBack = { nav.back() },
+                    isAvailable = { target ->
+                        plansOn || (target != NotificationTarget.Plans && target != NotificationTarget.Payments)
+                    },
                     onOpen = { target ->
                         when (target) {
                             NotificationTarget.Payments -> nav.go(PaymentsRoute)
@@ -311,6 +329,23 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
             composable<MyFirmsRoute> { MyFirmsScreen(onBack = { nav.back() }, onFirmClick = { nav.go(FirmRoute(it.id)) }) }
             composable<SettingsRoute> { SettingsScreen(onBack = { nav.back() }) }
         }
+    }
+}
+
+/**
+ * Shows [content] unless the plans flag is known to be off; then a short "not available" page with
+ * a back button. A message rather than an automatic pop: popping during the enter transition would
+ * be ignored by the safe-navigation helpers below and leave a blank screen.
+ */
+@Composable
+private fun PlansGate(enabled: Boolean?, onBack: () -> Unit, content: @Composable () -> Unit) {
+    if (enabled == false) {
+        Column(Modifier.fillMaxSize().background(Aghour.colors.page)) {
+            ScreenTitle(stringResource(R.string.subscription_and_plans), onBack = onBack)
+            MessageBox(stringResource(R.string.feature_unavailable))
+        }
+    } else {
+        content()
     }
 }
 

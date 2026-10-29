@@ -163,4 +163,7 @@
     <string name="notif_open_plans">الباقات</string>
     <string name="notif_open_firm">صفحة المنشأة</string>
     <string name="notif_open_news">الخبر</string>
+
+    <!-- Server feature flags -->
+    <string name="feature_unavailable">هذه الخدمة غير متاحة حاليًا.</string>
 </resources>
