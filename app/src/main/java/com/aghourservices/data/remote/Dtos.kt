@@ -205,3 +205,6 @@ data class UpdateMeUser(
     val password: String,
     @SerialName("password_confirmation") val passwordConfirmation: String,
 )
+
+@Serializable
+data class DeleteMeRequest(val password: String)
