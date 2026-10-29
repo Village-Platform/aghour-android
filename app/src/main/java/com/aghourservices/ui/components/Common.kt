@@ -94,11 +94,11 @@ fun kindTone(kind: String): BadgeTone = when (kind) {
     else -> BadgeTone.Green
 }
 
+/** Label for elevated roles only; plain users (and any role this app version doesn't know) get no badge. */
 @Composable
-fun roleLabel(role: String): String = when (role) {
-    "firm_admin" -> stringResource(R.string.role_firm_admin)
+fun roleLabel(role: String): String? = when (role) {
     "super_admin" -> stringResource(R.string.role_super_admin)
-    else -> stringResource(R.string.role_user)
+    else -> null
 }
 
 /** Subscription state -> label + badge tone (states come from the API: pending/rejected/scheduled/current/expired). */
