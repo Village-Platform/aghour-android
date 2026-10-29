@@ -24,6 +24,11 @@ class CatalogRepository(private val api: AghourApi, private val json: Json) {
             .also { if (it is ApiResult.Success) cachedCategories = it.data }
     }
 
+    /** A super admin changed a category: the next [categories] call fetches again. */
+    fun forgetCategories() {
+        cachedCategories = null
+    }
+
     suspend fun categoryFirms(categoryId: Long, query: String?, page: Int): ApiResult<ListResponse<FirmDto>> =
         safeApiCall(json) { api.categoryFirms(categoryId, query?.takeIf { it.isNotBlank() }, page) }
 

@@ -5,6 +5,7 @@ import com.aghourservices.BuildConfig
 import com.aghourservices.data.config.FeatureFlags
 import com.aghourservices.data.remote.AghourApi
 import com.aghourservices.data.remote.AuthInterceptor
+import com.aghourservices.data.repository.AdminRepository
 import com.aghourservices.data.repository.AuthRepository
 import com.aghourservices.data.repository.CatalogRepository
 import com.aghourservices.data.repository.OwnerRepository
@@ -61,6 +62,7 @@ class AppContainer(context: Context) {
     val catalog = CatalogRepository(api, json)
     val auth = AuthRepository(api, session, json)
     val owner = OwnerRepository(api, json)
+    val admin = AdminRepository(api, json, catalog)
     val features = FeatureFlags(context, api, json, appScope)
 
     /** Category chosen on Home; the Explore tab reads it (tabs keep their own state otherwise). */

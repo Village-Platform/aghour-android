@@ -8,6 +8,7 @@ import com.aghourservices.data.repository.CatalogRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -24,12 +25,14 @@ data class NewsUiState(
     val canLoadMore: Boolean get() = page < totalPages && !loading && !loadingMore && !refreshing
 }
 
-class NewsViewModel(private val catalog: CatalogRepository) : ViewModel() {
+class NewsViewModel(private val catalog: CatalogRepository, adminChanges: StateFlow<Int>) : ViewModel() {
     private val _state = MutableStateFlow(NewsUiState())
     val state: StateFlow<NewsUiState> = _state.asStateFlow()
 
     init {
         reload()
+        // A super admin added, edited or deleted an article.
+        viewModelScope.launch { adminChanges.drop(1).collect { refresh() } }
     }
 
     /** null = all kinds; "news", "announcement" or "article". */
@@ -77,12 +80,18 @@ class NewsViewModel(private val catalog: CatalogRepository) : ViewModel() {
 
 data class ArticleUiState(val loading: Boolean = true, val article: ArticleDto? = null, val error: String? = null)
 
-class ArticleViewModel(private val catalog: CatalogRepository, private val articleId: Long) : ViewModel() {
+class ArticleViewModel(
+    private val catalog: CatalogRepository,
+    private val articleId: Long,
+    adminChanges: StateFlow<Int>,
+) : ViewModel() {
     private val _state = MutableStateFlow(ArticleUiState())
     val state: StateFlow<ArticleUiState> = _state.asStateFlow()
 
     init {
         load()
+        // Edited by a super admin. After a delete this screen is popped together with the form.
+        viewModelScope.launch { adminChanges.drop(1).collect { load() } }
     }
 
     fun load() {
