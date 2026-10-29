@@ -2,6 +2,7 @@ package com.aghourservices.data.repository
 
 import com.aghourservices.data.remote.AghourApi
 import com.aghourservices.data.remote.ApiResult
+import com.aghourservices.data.remote.DeleteMeRequest
 import com.aghourservices.data.remote.LoginRequest
 import com.aghourservices.data.remote.RegisterRequest
 import com.aghourservices.data.remote.RegisterUser
@@ -66,6 +67,16 @@ class AuthRepository(
 
     suspend fun changePassword(password: String, confirmation: String): ApiResult<UserDto> =
         safeApiCall(json) { api.updateMe(UpdateMeRequest(UpdateMeUser(password, confirmation))).data }
+
+    /** Deletes the account on the server, then signs out locally. */
+    suspend fun deleteAccount(password: String): ApiResult<Unit> =
+        when (val result = safeApiCall(json) { api.deleteMe(DeleteMeRequest(password)) }) {
+            is ApiResult.Success -> {
+                session.clear()
+                result
+            }
+            is ApiResult.Failure -> result
+        }
 
     suspend fun logout() = session.clear()
 }

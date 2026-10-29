@@ -67,6 +67,7 @@
     <string name="register_subtitle">أنشئ حسابك في دقيقة</string>
     <string name="error_name_required">اكتب اسمك.</string>
     <string name="error_phone_invalid">رقم الهاتف يجب أن يكون 11 رقمًا ويبدأ بـ 01.</string>
+    <string name="error_password_required">اكتب كلمة المرور.</string>
     <string name="error_password_short">كلمة المرور 8 أحرف على الأقل.</string>
     <string name="error_password_mismatch">كلمتا المرور غير متطابقتين.</string>
     <string name="logout_confirm_title">تسجيل الخروج؟</string>
@@ -139,6 +140,13 @@
     <string name="new_password">كلمة المرور الجديدة</string>
     <string name="save">حفظ</string>
     <string name="password_changed">تم تغيير كلمة المرور.</string>
+    <string name="delete_account">حذف الحساب</string>
+    <string name="delete_account_body">سيتم حذف اسمك ورقم هاتفك وبريدك الإلكتروني وكلمة المرور، والأنشطة التي أضفتها، والإشعارات، وصور إيصالات الدفع نهائياً. نحتفظ فقط بسجل مدفوعات الاشتراكات دون أي بيانات تعرّف بك، لأغراض المراجعة المالية.</string>
+    <string name="delete_account_password_hint">أدخل كلمة المرور للتأكيد</string>
+    <string name="delete_account_confirm_title">حذف الحساب نهائياً؟</string>
+    <string name="delete_account_confirm_body">لا يمكن التراجع عن هذه الخطوة.</string>
+    <string name="delete_account_confirm">حذف نهائياً</string>
+    <string name="account_deleted">تم حذف حسابك.</string>
     <string name="reference">المرجع: %1$s</string>
     <string name="guest_profile_title">سجّل دخولك</string>
     <string name="guest_profile_body">لإضافة نشاطك والاشتراك في الباقات ومتابعة الإشعارات.</string>

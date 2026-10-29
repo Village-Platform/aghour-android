@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddBusiness
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
@@ -125,6 +126,7 @@ fun AccountScreen(
     onChangePassword: () -> Unit,
     onMyFirms: () -> Unit,
     onSettings: () -> Unit,
+    onDeleteAccount: () -> Unit,
     /** Super admin only (null for everyone else): the admin menu. */
     admin: AdminMenu? = null,
     /** Firm admins see "My firms" even before adding one, so they can add their first firm. */
@@ -175,6 +177,8 @@ fun AccountScreen(
                     MenuRow(Icons.Outlined.Lock, stringResource(R.string.change_password), null, onChangePassword)
                     MenuDivider()
                     MenuRow(Icons.Outlined.Info, stringResource(R.string.about_app), null) { showAbout = true }
+                    MenuDivider()
+                    MenuRow(Icons.Outlined.DeleteForever, stringResource(R.string.delete_account), null, onDeleteAccount)
                 }
                 Button(
                     onClick = { confirmLogout = true },

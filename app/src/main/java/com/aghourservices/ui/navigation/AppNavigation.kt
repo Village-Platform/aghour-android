@@ -80,6 +80,7 @@ import com.aghourservices.ui.home.HomeScreen
 import com.aghourservices.ui.news.ArticleScreen
 import com.aghourservices.ui.news.NewsScreen
 import com.aghourservices.ui.owner.ChangePasswordScreen
+import com.aghourservices.ui.owner.DeleteAccountScreen
 import com.aghourservices.ui.owner.MyFirmsScreen
 import com.aghourservices.ui.owner.NotificationTarget
 import com.aghourservices.ui.owner.NotificationsScreen
@@ -112,6 +113,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object PaymentsRoute
 @Serializable data object NotificationsRoute
 @Serializable data object ChangePasswordRoute
+@Serializable data object DeleteAccountRoute
 @Serializable data object MyFirmsRoute
 @Serializable data object SettingsRoute
 
@@ -308,6 +310,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onChangePassword = { nav.go(ChangePasswordRoute) },
                     onMyFirms = { nav.go(MyFirmsRoute) },
                     onSettings = { nav.go(SettingsRoute) },
+                    onDeleteAccount = { nav.go(DeleteAccountRoute) },
                     alwaysShowMyFirms = canManageFirms,
                     admin = if (isAdmin) {
                         AdminMenu(
@@ -382,6 +385,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                 )
             }
             composable<ChangePasswordRoute> { ChangePasswordScreen(onBack = { nav.back() }) }
+            composable<DeleteAccountRoute> { DeleteAccountScreen(onBack = { nav.back() }) }
             composable<MyFirmsRoute> {
                 MyFirmsScreen(
                     onBack = { nav.back() },
