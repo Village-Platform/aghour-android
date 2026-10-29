@@ -8,11 +8,11 @@ val apiUrlDebug = providers.gradleProperty("AGHOUR_API_URL_DEBUG").getOrElse("ht
 val apiUrlRelease = providers.gradleProperty("AGHOUR_API_URL_RELEASE").getOrElse("https://api.example.com/api/v1/")
 
 android {
-    namespace = "com.aghour.app"
+    namespace = "com.aghourservices"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.aghour.app"
+        applicationId = "com.aghourservices"
         minSdk = 26
         targetSdk = 36 // Google Play requires API 36+ for new apps (since Aug 31, 2026)
         versionCode = 1
@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.core)
+    // Category / menu icons (Mosque, LocalPharmacy, Storefront…). Large: R8 strips unused icons in release.
+    implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
 
@@ -65,4 +67,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)
     implementation(libs.okhttp.logging)
+    // Category icon images from the API (memory + disk cache, honours the server's Cache-Control).
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 }

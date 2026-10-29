@@ -67,6 +67,15 @@ in the `ListResponse<T>` / `ItemResponse<T>` / `DataList<T>` envelopes. `Json` i
 `AuthInterceptor` attaches the bearer token and `Accept-Language: ar`, and clears the session on
 401. Token + user + welcome flag persist in DataStore via `SessionStore`.
 
+### Feature flags
+
+`data/config/FeatureFlags.kt` reads `GET app_config` (flags toggled in the admin dashboard at
+`/admin/feature_flags`) on every `MainActivity.onStart`, at most every 5 minutes, and keeps the last
+answer in DataStore. Features **fail closed**: a fresh install with no network, or a flag the server
+does not send, means off. `plansEnabled` is `null` while loading — hide entry points, but only close
+an open screen on `false`. The flag is read once in `AppNavigation`, which passes `null` callbacks
+(`onPlans`, `onPayments`, `onAddFirm`) to screens; screens never read flags themselves.
+
 ## Navigation
 
 Routes are `@Serializable` objects/classes declared at the top of `ui/navigation/AppNavigation.kt`.
@@ -86,15 +95,23 @@ ViewModel.
   `start`/`end` (never `left`/`right`) and `Icons.AutoMirrored.*` for directional icons.
 - **Arabic text goes in `res/values/strings.xml`** and is read with `stringResource`. The only
   literals in Kotlin are the formatting/mapping helpers in `ui/components/Common.kt`
-  (relative time, category symbols, status labels) and the fallbacks in `ApiResult.kt`.
-- **Colors** are the named palette vals in `ui/theme/Theme.kt` (`Forest`, `Gold`, `Cream`, `Sand`,
-  `Ink`, `Muted`) or `MaterialTheme.colorScheme`. Light theme only — there is no dark scheme yet.
-- **Page shell:** `SheetLayout` for dark-header screens (Home, Profile, details), `ScreenTitle` for
-  cream screens (Explore, News, Plans, Pay). Both set the status-bar icon colour themselves via
-  `StatusBarIcons` — don't set it separately.
-- Reuse `ui/components/` before writing new widgets: `GoldButton`, `ForestButton`, `SandCard`,
-  `Badge`, `SectionHeader`, `FilterChipsRow`, `SearchPill`, `FormField`, `ErrorBanner`,
-  `MessageBox`, `SkeletonRows`, `FirmRow`, `NewsRow`, and the `Context.openDialer/openWhatsApp/
+  (relative time, category / notification icons, status labels) and the fallbacks in `ApiResult.kt`.
+- **Colors** come from the design tokens: `val c = Aghour.colors`, then `c.page`, `c.surface`,
+  `c.surface2`, `c.ink`, `c.muted`, `c.line`, `c.gold`, `c.goldInk`, `c.brand`, `c.ok`, `c.bad`
+  (`ui/theme/Theme.kt`). Light and dark palettes exist; the user picks Light / Dark / System in
+  Settings (`SettingsStore`). Never hard-code a colour for page content. The fixed `Forest`, `Gold`,
+  `Cream` vals are only for the welcome artwork and text drawn over photos.
+- **Icons** are Material icons (`Icons.Outlined.*`, `material-icons-extended`), tinted with a token —
+  never emoji. Notification icons map server keys in `Common.kt` (`notificationIcon`).
+- **Category icons are images from the API** (`icon_url`, relative to the API host → resolve with
+  `categoryIconUrl()` / `firmIconUrl()`), drawn by `IconTile(url)` with Coil; no image = the app logo.
+- **Logos:** use `BrandMark` / `BrandLogo` — they switch between the green and cream artwork by theme.
+- **Page shell:** `SheetLayout` for photo-header screens (firm, article), `ScreenTitle` for plain
+  screens. Both set the status-bar icon colour via `StatusBarIcons`; screens without either
+  (Home, Profile, Login) call `StatusBarIcons()` themselves.
+- Reuse `ui/components/` before writing new widgets: `GoldButton`, `GhostButton`, `SurfaceCard`,
+  `Badge`, `Segmented`, `SectionHeader`, `FilterChipsRow`, `SearchPill`, `FormField`, `ErrorBanner`,
+  `MessageBox`, `SkeletonRows`, `FirmRow`, `NewsRow`, `IconTile`, `CheckLine`, `Chevron`, and the `Context.openDialer/openWhatsApp/
   openMap/shareText/copyToClipboard` intent helpers.
 - Lists that page follow the Explore pattern: `canLoadMore` on the state, `loadMore()` on the VM,
   triggered from the scroll position.

@@ -40,9 +40,7 @@
     <string name="have_account">لديك حساب؟ سجّل الدخول</string>
     <string name="account_guest_title">مرحبًا بك في أجهور الكبرى</string>
     <string name="account_guest_body">سجّل الدخول لإدارة منشأتك ومتابعة اشتراكك والإشعارات.</string>
-    <string name="role_user">مستخدم</string>
-    <string name="role_firm_admin">صاحب منشأة</string>
-    <string name="role_super_admin">مدير النظام</string>
+    <string name="role_super_admin">سوبر أدمن</string>
 
     <string name="kind_news">خبر</string>
     <string name="kind_article">مقال</string>
@@ -96,7 +94,6 @@
     <string name="first_name">الاسم الأول</string>
     <string name="last_name">اسم العائلة</string>
     <string name="create_account">إنشاء الحساب</string>
-    <string name="hey_name">يا %1$s</string>
     <string name="hey_guest">يا أهلاً بك</string>
     <string name="explore_hint">أطباء، مطاعم، خدمات…</string>
     <string name="all">الكل</string>
@@ -126,7 +123,6 @@
     <string name="transfer_reference">رقم العملية بعد التحويل</string>
     <string name="transfer_reference_hint">الصق رقم المرجع هنا</string>
     <string name="payer_phone">رقم المحوِّل (اختياري)</string>
-    <string name="confirm_payment">تأكيد الدفع</string>
     <string name="error_reference_required">اكتب رقم العملية.</string>
     <string name="payment_sent_title">تم إرسال طلبك</string>
     <string name="payment_sent_body">سنراجع التحويل ونفعّل اشتراكك، وسيصلك إشعار عند الموافقة.</string>
@@ -157,4 +153,91 @@
     <string name="no_account_q">ليس لديك حساب؟</string>
     <string name="create_account_link">أنشئ حساباً</string>
     <string name="have_account_q">لديك حساب بالفعل؟</string>
+
+    <!-- v4: light / dark design -->
+    <string name="unread_count">غير مقروء %1$d</string>
+    <string name="settings">الإعدادات</string>
+    <string name="appearance">المظهر</string>
+    <string name="appearance_menu">المظهر (فاتح / داكن)</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="theme_system">حسب الجهاز</string>
+    <string name="theme_system_hint">«حسب الجهاز» يتبع إعداد الوضع الليلي في أندرويد</string>
+    <string name="send_for_review">إرسال للمراجعة</string>
+    <string name="pay_activation_note">يتم التفعيل بعد تأكيد الإدارة وصول المبلغ</string>
+    <string name="notif_open_subscription">تفاصيل الاشتراك</string>
+    <string name="notif_open_plans">الباقات</string>
+    <string name="notif_open_firm">صفحة المنشأة</string>
+    <string name="notif_open_news">الخبر</string>
+
+    <!-- Server feature flags -->
+    <string name="feature_unavailable">هذه الخدمة غير متاحة حاليًا.</string>
+
+    <!-- Super admin -->
+    <string name="admin_section">الإدارة</string>
+    <string name="add_firm">إضافة منشأة</string>
+    <string name="edit_firm">تعديل المنشأة</string>
+    <string name="edit">تعديل</string>
+    <string name="delete">حذف</string>
+    <string name="approve">قبول</string>
+    <string name="suspend">إيقاف</string>
+    <string name="firm_name">اسم المنشأة</string>
+    <string name="firm_category">القسم</string>
+    <string name="description">الوصف</string>
+    <string name="latitude">خط العرض</string>
+    <string name="longitude">خط الطول</string>
+    <string name="firm_status">الحالة</string>
+    <string name="firm_status_active">نشطة</string>
+    <string name="firm_status_pending">قيد المراجعة</string>
+    <string name="firm_status_suspended">موقوفة</string>
+    <string name="error_required">هذا الحقل مطلوب.</string>
+    <string name="error_category_required">اختر القسم.</string>
+    <string name="error_coordinates">أدخل خطي العرض والطول معًا بأرقام صحيحة، أو اتركهما فارغين.</string>
+    <string name="firm_saved">تم حفظ المنشأة.</string>
+    <string name="firm_deleted">تم حذف المنشأة.</string>
+    <string name="delete_firm_title">حذف المنشأة؟</string>
+    <string name="delete_firm_body">سيتم حذف «%1$s» نهائيًا ولا يمكن التراجع.</string>
+    <string name="manage_firm">إدارة المنشأة</string>
+    <string name="firm_review_note">ستظهر المنشأة للجميع بعد مراجعتها والموافقة عليها من الإدارة.</string>
+    <string name="firm_edit_review_note">تعديل منشأة معتمدة يعيدها إلى المراجعة، فتختفي من القوائم حتى توافق الإدارة عليها.</string>
+    <string name="firm_sent_for_review">تم الحفظ. أُرسلت المنشأة للمراجعة وستظهر بعد موافقة الإدارة.</string>
+    <string name="no_my_firms">لم تُضف أي منشأة بعد. اضغط + لإضافة منشأتك.</string>
+    <string name="add">إضافة</string>
+    <string name="saved">تم الحفظ.</string>
+    <string name="deleted">تم الحذف.</string>
+    <string name="inactive">غير نشط</string>
+    <string name="active">نشط (يظهر للجميع)</string>
+    <string name="position">الترتيب</string>
+    <string name="admin_list_empty">لا توجد عناصر بعد. اضغط + للإضافة.</string>
+    <string name="error_whole_number">أدخل رقمًا صحيحًا (0 أو أكثر).</string>
+    <string name="error_positive_number">أدخل رقمًا صحيحًا أكبر من صفر.</string>
+    <string name="error_amount">أدخل مبلغًا صحيحًا بالجنيه، مثل 150 أو 150.50.</string>
+    <string name="error_image_unreadable">تعذّرت قراءة الصورة. اختر صورة أخرى.</string>
+    <string name="manage_categories">الأقسام</string>
+    <string name="add_category">إضافة قسم</string>
+    <string name="edit_category">تعديل القسم</string>
+    <string name="category_name">اسم القسم</string>
+    <string name="category_image">صورة القسم</string>
+    <string name="choose_image">اختيار صورة</string>
+    <string name="delete_category_title">حذف القسم؟</string>
+    <string name="delete_category_body">سيتم حذف «%1$s» نهائيًا. لا يمكن حذف قسم به منشآت.</string>
+    <string name="add_article">إضافة خبر</string>
+    <string name="edit_article">تعديل الخبر</string>
+    <string name="article_title">العنوان</string>
+    <string name="article_kind">النوع</string>
+    <string name="article_body">النص</string>
+    <string name="published">منشور (يظهر للجميع)</string>
+    <string name="draft">مسودة</string>
+    <string name="delete_article_title">حذف الخبر؟</string>
+    <string name="delete_article_body">سيتم حذف «%1$s» نهائيًا ولا يمكن التراجع.</string>
+    <string name="manage_plans">الباقات</string>
+    <string name="add_plan">إضافة باقة</string>
+    <string name="edit_plan">تعديل الباقة</string>
+    <string name="plan_name">اسم الباقة</string>
+    <string name="price_egp">السعر (جنيه)</string>
+    <string name="duration_days">المدة (أيام)</string>
+    <string name="max_firms">عدد المنشآت</string>
+    <string name="plan_features">المزايا (كل ميزة في سطر)</string>
+    <string name="delete_plan_title">حذف الباقة؟</string>
+    <string name="delete_plan_body">سيتم حذف «%1$s» نهائيًا. لا يمكن حذف باقة لها اشتراكات؛ أوقفها بدلًا من ذلك.</string>
 </resources>

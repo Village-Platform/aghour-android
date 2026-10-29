@@ -34,14 +34,15 @@ Debug builds allow plain HTTP (local Rails). Release builds are HTTPS-only.
 ## Structure
 
 ```
-app/src/main/java/com/aghour/app/
+app/src/main/java/com/aghourservices/
 ├── AghourApp.kt / MainActivity.kt   app start, splash (kept until the welcome flag is read)
 ├── di/AppContainer.kt               API client, session, repositories, Explore category filter
 ├── data/
 │   ├── remote/      AghourApi (endpoints), Dtos, ApiResult (Arabic error messages), AuthInterceptor
 │   ├── session/     SessionStore (token, user, welcome flag in DataStore)
 │   └── repository/  CatalogRepository (categories, firms, news), AuthRepository (login, register,
-│                    me, password), OwnerRepository (plans, payment, subscriptions, my firms, notifications)
+│                    me, password), OwnerRepository (plans, payment, subscriptions, my firms, notifications),
+│                    AdminRepository (super admin writes; `changes` tells screens to reload)
 └── ui/
     ├── theme/       palette from the designs (forest, gold, cream, sand), Cairo font, right-to-left
     ├── components/  SheetLayout, ScreenTitle, chips, badges, buttons, form fields, cards, skeletons, intents
@@ -52,29 +53,45 @@ app/src/main/java/com/aghour/app/
     ├── firms/       firm details (photo header, call / location / WhatsApp, hours, about)
     ├── news/        news with kind chips (featured first item) and article page
     ├── account/     profile (subscription progress, menu), login, register
-    └── owner/       plans, payment (InstaPay / Vodafone Cash), payments history, notifications,
-                     my firms, change password
+    ├── owner/       plans, payment (InstaPay / Vodafone Cash), payments history, notifications,
+    │                my firms, change password
+    └── admin/       super admin: form scaffold, lists, firm / article / category / plan forms
 ```
 
 Every screen = a `ViewModel` (state as `StateFlow`) + a `@Composable` that draws that state.
 
 ## Design
 
-The UI follows the screen designs in `ajhour_screens.html`, which is kept outside this repo
-(`~/Downloads/Village Platform/ajhour_screens.html`):
+The UI follows the screen designs artifact "أجهور الكبرى — تصميم الشاشات" (light / dark):
 
-- Palette: forest `#0B3727`, gold `#C28D40`, cream `#FAF5EC`, sand `#E6DCC6` (`ui/theme/Theme.kt`).
-- Font: Cairo, bundled as one variable font (`res/font/cairo.ttf`, SIL Open Font License in `licenses/`).
+- Design tokens in `ui/theme/Theme.kt` (`Aghour.colors`), one palette per theme:
+  light = white page, black text, grey fields, gold `#C28D40` actions;
+  dark = GitHub Dark greys (page `#0D1117`, cards `#161B22`, borders `#30363D`, text `#E6EDF3`), gold `#D9A458` actions.
+- Theme: follows the phone's dark mode by default ("حسب الجهاز"); Light or Dark can be forced in
+  Settings (Profile → المظهر). Saved on the device in `SettingsStore` (survives logout).
+- Font: Cairo, one static file per weight (`res/font/cairo_regular.ttf` … `cairo_black.ttf`, cut from
+  the variable font, because Android rendered the variable file as Regular for every weight; SIL Open
+  Font License in `licenses/`).
 - Welcome screen text and "ابدأ الآن" button use Tajawal (`res/font/tajawal_*.ttf`, SIL Open Font License).
-- Dark screens (Home, Profile, Login, details) use `SheetLayout`: forest or photo header, then a cream
-  sheet with rounded top corners. Light screens (Explore, News, Plans, Pay) use `ScreenTitle`.
-  The status-bar icon color follows the screen.
+- Detail screens (firm, article) use `SheetLayout`: photo header, then a sheet with rounded top
+  corners. Other screens are plain pages with `ScreenTitle` or their own header (Home, Profile, Login).
+  The status-bar icon color follows the screen and the theme.
 - Logos and icons are generated from the high-resolution original `../village-platform/public/brand/logo.png`
   (1254 px): faint edge noise removed, the symbol separated from the name, and the green parts recolored
   to cream for dark backgrounds — `logo_cream` / `logo_green` (640 px), `mark_cream` / `mark_green` (512 px).
-- App icon: adaptive icon with the cream symbol on forest (`ic_launcher_foreground`, inside the 66dp safe
+- App icon: adaptive icon with the green symbol (`mark_green`) on white (`ic_launcher_foreground`, inside the 66dp safe
   zone), a white `ic_launcher_monochrome` layer for Android 13+ themed icons, and a 512 px
-  `app/src/main/ic_launcher-playstore.png` for the Play Store listing. The splash uses the same symbol.
+  `app/src/main/ic_launcher-playstore.png` for the Play Store listing.
+- Category icons are images from the API: `icon_url` on categories and on each firm's `category`
+  (uploaded in the admin dashboard, default artwork for the seed categories). The app resolves the
+  relative URL against `API_BASE_URL` and loads it with Coil (memory + disk cache; the server marks
+  each image version cacheable for a year). No image, or while it loads → the app logo.
+  Categories are cached in memory by `CatalogRepository`.
+- Splash: the system splash shows the logo mark on the page colour (white / `#0D1117`), then
+  `LaunchScreen` keeps the mark in place and fades in the name + "تطبيق القرية" (~1.2 s), then
+  Welcome (first launch) or Home. Assets `splash_mark` / `splash_name` in `drawable-nodpi` (light)
+  and `drawable-night-nodpi` (dark), cut from the 2000 px logo. On Android 12+ the app's theme choice
+  is passed to the system (`UiModeManager.setApplicationNightMode`) so the system splash matches it.
 - The welcome artwork and the home cover banner are made from the originals in `../village-platform/public/brand`.
 
 ## Navigation
@@ -96,14 +113,23 @@ The UI follows the screen designs in `ajhour_screens.html`, which is kept outsid
 |--------|--------------|
 | Welcome | First launch: start, or go straight to login |
 | Login / Register | Phone + password; checks the phone (11 digits, 01…), password length and match |
-| Home | Greeting, search, categories, cover banner (→ plans), featured firms, latest news, pull-to-refresh |
+| Home | Greeting, notifications bell with unread count, search, categories, cover banner (→ plans), featured firms, latest news, pull-to-refresh |
 | Explore | Search while typing + category chips, results count, paging |
 | Firm | Photo header, share, call / location / WhatsApp tiles, hours, phone, address, about |
 | News | Kind chips (all, news, announcements, articles), featured first item, paging |
 | Plans | Plans from the API, middle one highlighted; guests are asked to log in first |
 | Pay | InstaPay / Vodafone Cash account with copy button, transfer reference → sends the request |
 | Profile | Subscription progress (days left) or "subscribe now", menu, logout with confirmation |
-| Payments / Notifications / My firms / Change password | From the profile menu |
+| Notifications | All / unread chips, unread rows tinted gold, mark one or all as read |
+| Settings | Appearance: light / dark / follow the phone |
+| Payments / My firms / Change password | From the profile menu |
+| Firm form (super admin) | Create from the profile's admin menu, edit from the firm page; the firm page also has approve / suspend and delete with confirmation |
+| Article form (super admin) | Create from the admin menu, edit from the article page; kind, published / draft, delete |
+| Categories / Plans (super admin) | Lists from the admin menu (inactive items marked), + to add, tap to edit or delete. A category image is picked with the system photo picker and scaled to ≤ 256px PNG before upload |
+
+Admin controls appear only when the stored user is a super admin. `AppNavigation` decides and passes
+`null` callbacks to everyone else, the same way it handles feature flags; the server's policies still
+accept or refuse every request.
 
 ## Next steps
 
@@ -111,4 +137,5 @@ The UI follows the screen designs in `ajhour_screens.html`, which is kept outsid
 2. Push notifications with FCM (the in-app notifications screen already works).
 3. Real photos for firms, categories and news (after the backend adds image uploads).
 4. Ratings and reviews (shown in the designs; needs a backend model first).
-5. Enable R8 for release, app signing, dark theme.
+5. Enable R8 for release, app signing.
+6. Notification preferences (the designs' Settings toggles) — needs a server-side preferences endpoint first.

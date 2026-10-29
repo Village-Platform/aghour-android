@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
 
+# Unset ANDROID_PREFS_ROOT to prevent AGP 9 environment variable collision with ANDROID_USER_HOME
+unset ANDROID_PREFS_ROOT
+
 #
 # Copyright 2015 the original author or authors.
 #
