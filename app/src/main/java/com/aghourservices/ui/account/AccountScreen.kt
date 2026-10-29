@@ -210,7 +210,7 @@ private fun ProfileHeader(user: UserDto) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(user.name, color = c.ink, style = MaterialTheme.typography.titleMedium)
                 Text("\u2066${user.email ?: user.phone}\u2069", color = c.muted, style = MaterialTheme.typography.bodySmall)
-                Badge(roleLabel(user.role), BadgeTone.Gold)
+                roleLabel(user.role)?.let { Badge(it, BadgeTone.Gold) }
             }
         }
         HorizontalDivider(color = c.line)
