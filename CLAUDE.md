@@ -67,6 +67,15 @@ in the `ListResponse<T>` / `ItemResponse<T>` / `DataList<T>` envelopes. `Json` i
 `AuthInterceptor` attaches the bearer token and `Accept-Language: ar`, and clears the session on
 401. Token + user + welcome flag persist in DataStore via `SessionStore`.
 
+### Feature flags
+
+`data/config/FeatureFlags.kt` reads `GET app_config` (flags toggled in the admin dashboard at
+`/admin/feature_flags`) on every `MainActivity.onStart`, at most every 5 minutes, and keeps the last
+answer in DataStore. Features **fail closed**: a fresh install with no network, or a flag the server
+does not send, means off. `plansEnabled` is `null` while loading — hide entry points, but only close
+an open screen on `false`. The flag is read once in `AppNavigation`, which passes `null` callbacks
+(`onPlans`, `onPayments`, `onAddFirm`) to screens; screens never read flags themselves.
+
 ## Navigation
 
 Routes are `@Serializable` objects/classes declared at the top of `ui/navigation/AppNavigation.kt`.

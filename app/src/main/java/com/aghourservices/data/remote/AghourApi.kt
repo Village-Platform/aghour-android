@@ -64,6 +64,10 @@ interface AghourApi {
     @GET("subscription_plans")
     suspend fun plans(): ListResponse<SubscriptionPlanDto>
 
+    /** Feature flags from the dashboard: { data: { features: { "plans": false } } }. Public. */
+    @GET("app_config")
+    suspend fun appConfig(): ItemResponse<AppConfigDto>
+
     @GET("payment_methods")
     suspend fun paymentMethods(): DataList<PaymentMethodDto>
 

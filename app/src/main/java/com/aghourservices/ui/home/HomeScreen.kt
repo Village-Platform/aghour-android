@@ -77,7 +77,8 @@ fun HomeScreen(
     onFirmClick: (FirmDto) -> Unit,
     onArticleClick: (ArticleDto) -> Unit,
     onSeeAllNews: () -> Unit,
-    onAddFirm: () -> Unit,
+    /** null while plans are switched off: the banner stays, but is not a link. */
+    onAddFirm: (() -> Unit)?,
     onNotifications: () -> Unit,
 ) {
     val container = appContainer()
@@ -153,17 +154,17 @@ fun HomeScreen(
                 }
             }
 
-            // Cover banner -> "add your firm"
+            // Cover banner -> "add your firm" (plans), or just the village artwork while plans are off.
             Image(
                 painter = painterResource(R.drawable.cover_banner),
-                contentDescription = stringResource(R.string.add_your_firm),
+                contentDescription = if (onAddFirm != null) stringResource(R.string.add_your_firm) else null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth()
                     .aspectRatio(2f)
                     .clip(RoundedCornerShape(16.dp))
-                    .clickable(onClick = onAddFirm),
+                    .then(if (onAddFirm != null) Modifier.clickable(onClick = onAddFirm) else Modifier),
             )
 
             if (state.featuredFirms.isNotEmpty()) {

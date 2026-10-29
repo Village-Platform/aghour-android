@@ -114,8 +114,9 @@ class ProfileViewModel(private val auth: AuthRepository, private val owner: Owne
 fun AccountScreen(
     onLogin: () -> Unit,
     onRegister: () -> Unit,
-    onPlans: () -> Unit,
-    onPayments: () -> Unit,
+    /** Both null while plans are switched off: the subscription card and these rows are hidden. */
+    onPlans: (() -> Unit)?,
+    onPayments: (() -> Unit)?,
     onNotifications: () -> Unit,
     onChangePassword: () -> Unit,
     onMyFirms: () -> Unit,
@@ -140,16 +141,20 @@ fun AccountScreen(
         Column(Modifier.fillMaxSize().background(c.page).verticalScroll(rememberScrollState())) {
             ProfileHeader(current)
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                SubscriptionCard(state, onPlans)
+                if (onPlans != null) SubscriptionCard(state, onPlans)
                 SurfaceCard(padding = 0.dp) {
                     if (state.firms.isNotEmpty()) {
                         MenuRow(Icons.Outlined.Storefront, stringResource(R.string.my_firms), "${state.firms.size}", onMyFirms)
                         MenuDivider()
                     }
-                    MenuRow(Icons.Outlined.CreditCard, stringResource(R.string.subscription_and_plans), null, onPlans)
-                    MenuDivider()
-                    MenuRow(Icons.Outlined.Payments, stringResource(R.string.payments_history), null, onPayments)
-                    MenuDivider()
+                    if (onPlans != null) {
+                        MenuRow(Icons.Outlined.CreditCard, stringResource(R.string.subscription_and_plans), null, onPlans)
+                        MenuDivider()
+                    }
+                    if (onPayments != null) {
+                        MenuRow(Icons.Outlined.Payments, stringResource(R.string.payments_history), null, onPayments)
+                        MenuDivider()
+                    }
                     MenuRow(Icons.Outlined.Notifications, stringResource(R.string.notifications), null, onNotifications)
                     MenuDivider()
                     MenuRow(Icons.Outlined.Palette, stringResource(R.string.appearance_menu), null, onSettings)
