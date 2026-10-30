@@ -1,5 +1,7 @@
 package com.aghourservices.ui.news
 
+import com.aghourservices.data.analytics.AnalyticsEvent
+import com.aghourservices.data.analytics.AnalyticsService
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aghourservices.data.remote.ApiResult
@@ -25,7 +27,11 @@ data class NewsUiState(
     val canLoadMore: Boolean get() = page < totalPages && !loading && !loadingMore && !refreshing
 }
 
-class NewsViewModel(private val catalog: CatalogRepository, adminChanges: StateFlow<Int>) : ViewModel() {
+class NewsViewModel(
+    private val catalog: CatalogRepository,
+    adminChanges: StateFlow<Int>,
+    private val analytics: AnalyticsService,
+) : ViewModel() {
     private val _state = MutableStateFlow(NewsUiState())
     val state: StateFlow<NewsUiState> = _state.asStateFlow()
 
@@ -38,6 +44,7 @@ class NewsViewModel(private val catalog: CatalogRepository, adminChanges: StateF
     /** null = all kinds; "news", "announcement" or "article". */
     fun selectKind(kind: String?) {
         if (kind == _state.value.kind) return
+        analytics.log(AnalyticsEvent.FilterNews(kind))
         _state.value = NewsUiState(kind = kind, loading = true)
         viewModelScope.launch { loadPage(1) }
     }
@@ -84,6 +91,7 @@ class ArticleViewModel(
     private val catalog: CatalogRepository,
     private val articleId: Long,
     adminChanges: StateFlow<Int>,
+    private val analytics: AnalyticsService,
 ) : ViewModel() {
     private val _state = MutableStateFlow(ArticleUiState())
     val state: StateFlow<ArticleUiState> = _state.asStateFlow()
@@ -94,11 +102,18 @@ class ArticleViewModel(
         viewModelScope.launch { adminChanges.drop(1).collect { load() } }
     }
 
+    /** view_article once per visit, not again when an edit reloads the page. */
+    private var viewLogged = false
+
     fun load() {
         _state.value = ArticleUiState(loading = true)
         viewModelScope.launch {
             _state.value = when (val result = catalog.article(articleId)) {
-                is ApiResult.Success -> ArticleUiState(loading = false, article = result.data)
+                is ApiResult.Success -> {
+                    if (!viewLogged) analytics.log(AnalyticsEvent.ViewArticle(result.data))
+                    viewLogged = true
+                    ArticleUiState(loading = false, article = result.data)
+                }
                 is ApiResult.Failure -> ArticleUiState(loading = false, error = result.message)
             }
         }

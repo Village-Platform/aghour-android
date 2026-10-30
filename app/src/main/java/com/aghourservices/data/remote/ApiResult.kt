@@ -13,6 +13,14 @@ sealed interface ApiResult<out T> {
     data class Failure(val message: String, val code: String? = null, val httpStatus: Int? = null) : ApiResult<Nothing>
 }
 
+/**
+ * Where [safeApiCall] sends failures that are bugs rather than bad luck (a response the DTOs can't
+ * decode). Set once by AppContainer, so the data layer never depends on Crashlytics directly.
+ */
+object ApiErrorReporter {
+    @Volatile var report: (Throwable) -> Unit = {}
+}
+
 private const val NETWORK_ERROR = "تعذّر الاتصال بالخادم. تأكد من الإنترنت وحاول مرة أخرى."
 private const val UNEXPECTED_ERROR = "حدث خطأ غير متوقع. حاول مرة أخرى."
 
@@ -28,6 +36,8 @@ suspend fun <T> safeApiCall(json: Json, block: suspend () -> T): ApiResult<T> =
     } catch (e: IOException) {
         ApiResult.Failure(NETWORK_ERROR)
     } catch (e: SerializationException) {
+        // Client and server disagree on a response shape: worth a non-fatal report.
+        ApiErrorReporter.report(e)
         ApiResult.Failure(UNEXPECTED_ERROR)
     }
 

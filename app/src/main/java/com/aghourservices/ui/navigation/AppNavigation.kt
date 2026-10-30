@@ -58,6 +58,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.aghourservices.R
+import com.aghourservices.data.analytics.AnalyticsEvent
 import com.aghourservices.data.remote.canManageFirms
 import com.aghourservices.data.remote.isSuperAdmin
 import com.aghourservices.ui.account.AccountScreen
@@ -178,16 +179,20 @@ fun AppNavigation() {
         showWelcome == true -> Stage.Welcome
         else -> Stage.Main
     }
+    // The welcome artwork is outside the nav graph, so it is not counted by MainNavigation.
+    LaunchedEffect(stage) { if (stage == Stage.Welcome) container.analytics.logScreenView("Welcome") }
     // Soft cross-fades: logo -> welcome artwork (first launch) or straight into the app.
     Crossfade(targetState = stage, animationSpec = tween(450), label = "stage") { current ->
         when (current) {
             Stage.Launch -> LaunchScreen()
             Stage.Welcome -> WelcomeScreen(
                 onStart = {
+                    container.analytics.log(AnalyticsEvent.WelcomeCompleted("start"))
                     scope.launch { container.session.setWelcomeDone() }
                     showWelcome = false
                 },
                 onLogin = {
+                    container.analytics.log(AnalyticsEvent.WelcomeCompleted("login"))
                     scope.launch { container.session.setWelcomeDone() }
                     openLoginAfterWelcome = true
                     showWelcome = false
@@ -218,6 +223,15 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
     }
     val backStack by nav.currentBackStackEntryAsState()
     val destination = backStack?.destination
+    // Every screen in one place: an analytics screen_view, and a breadcrumb so a crash report lists
+    // the screens the user went through before it.
+    LaunchedEffect(destination?.route) {
+        destination?.route?.let { route ->
+            val screen = screenName(route)
+            container.analytics.logScreenView(screen)
+            container.crashReporting.log("screen: $screen")
+        }
+    }
     val currentTab = destination?.let { d -> tabs.firstOrNull { it.matches(d) } }
     val c = Aghour.colors
 
@@ -281,6 +295,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
             composable<HomeRoute> {
                 HomeScreen(
                     onCategoryClick = { category ->
+                        container.analytics.log(AnalyticsEvent.SelectCategory(category.id, category.name, AnalyticsEvent.Source.Home))
                         container.exploreCategory.value = category.id
                         nav.navigateToTab(ExploreRoute)
                     },
@@ -352,7 +367,10 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     PlansScreen(
                         onBack = { nav.back() },
                         // Paying needs an account: guests sign in first, then come back here.
-                        onSubscribe = { plan -> if (user == null) nav.go(LoginRoute) else nav.go(PayRoute(plan.id)) },
+                        onSubscribe = { plan ->
+                            container.analytics.log(AnalyticsEvent.SelectPlan(plan))
+                            if (user == null) nav.go(LoginRoute) else nav.go(PayRoute(plan.id))
+                        },
                     )
                 }
             }
@@ -472,6 +490,10 @@ private fun PlansGate(enabled: Boolean?, onBack: () -> Unit, content: @Composabl
         content()
     }
 }
+
+/** "com.aghourservices.ui.navigation.FirmRoute/{firmId}" -> "Firm". */
+private fun screenName(route: String): String =
+    route.substringBefore('/').substringBefore('?').substringAfterLast('.').removeSuffix("Route")
 
 // ---- Safe navigation ----
 //

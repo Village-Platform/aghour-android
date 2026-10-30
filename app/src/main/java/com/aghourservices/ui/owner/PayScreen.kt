@@ -1,5 +1,7 @@
 package com.aghourservices.ui.owner
 
+import com.aghourservices.data.analytics.AnalyticsEvent
+import com.aghourservices.data.analytics.AnalyticsService
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -78,7 +80,11 @@ data class PayUiState(
     val done: Boolean = false,
 )
 
-class PayViewModel(private val owner: OwnerRepository, private val planId: Long) : ViewModel() {
+class PayViewModel(
+    private val owner: OwnerRepository,
+    private val analytics: AnalyticsService,
+    private val planId: Long,
+) : ViewModel() {
     private val _state = MutableStateFlow(PayUiState())
     val state: StateFlow<PayUiState> = _state.asStateFlow()
 
@@ -113,7 +119,10 @@ class PayViewModel(private val owner: OwnerRepository, private val planId: Long)
         _state.update { it.copy(submitting = true, error = null) }
         viewModelScope.launch {
             when (val r = owner.subscribe(planId, method, s.reference, s.payerPhone)) {
-                is ApiResult.Success -> _state.update { it.copy(submitting = false, done = true) }
+                is ApiResult.Success -> {
+                    analytics.log(AnalyticsEvent.SubmitPayment(planId, method, s.plan?.priceCents))
+                    _state.update { it.copy(submitting = false, done = true) }
+                }
                 is ApiResult.Failure -> _state.update { it.copy(submitting = false, error = r.message) }
             }
         }
@@ -124,7 +133,7 @@ class PayViewModel(private val owner: OwnerRepository, private val planId: Long)
 @Composable
 fun PayScreen(planId: Long, onBack: () -> Unit, onDone: () -> Unit) {
     val container = appContainer()
-    val vm: PayViewModel = viewModel { PayViewModel(container.owner, planId) }
+    val vm: PayViewModel = viewModel { PayViewModel(container.owner, container.analytics, planId) }
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val copied = stringResource(R.string.copied)

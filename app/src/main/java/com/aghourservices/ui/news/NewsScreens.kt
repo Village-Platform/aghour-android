@@ -1,5 +1,6 @@
 package com.aghourservices.ui.news
 
+import com.aghourservices.data.analytics.AnalyticsEvent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -68,13 +69,9 @@ import com.aghourservices.ui.theme.Aghour
 @Composable
 fun NewsScreen(onArticleClick: (ArticleDto) -> Unit) {
     val container = appContainer()
-    val vm: NewsViewModel = viewModel { NewsViewModel(container.catalog, container.admin.changes) }
+    val vm: NewsViewModel = viewModel { NewsViewModel(container.catalog, container.admin.changes, container.analytics) }
     val state by vm.state.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
-
-    LaunchedEffect(Unit) {
-        container.analytics.logScreenView("News")
-    }
 
     val reachedEnd by remember {
         derivedStateOf {
@@ -134,15 +131,11 @@ fun NewsScreen(onArticleClick: (ArticleDto) -> Unit) {
 @Composable
 fun ArticleScreen(articleId: Long, onBack: () -> Unit, onEdit: (() -> Unit)? = null) {
     val container = appContainer()
-    val vm: ArticleViewModel = viewModel { ArticleViewModel(container.catalog, articleId, container.admin.changes) }
+    val vm: ArticleViewModel = viewModel { ArticleViewModel(container.catalog, articleId, container.admin.changes, container.analytics) }
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val article = state.article
     val c = Aghour.colors
-
-    LaunchedEffect(articleId) {
-        container.analytics.logScreenView("ArticleDetail")
-    }
 
     if (article == null) {
         Column(Modifier.fillMaxSize().background(c.page)) {
@@ -172,7 +165,10 @@ fun ArticleScreen(articleId: Long, onBack: () -> Unit, onEdit: (() -> Unit)? = n
                         if (onEdit != null) {
                             OverlayIconButton(onEdit) { Icon(Icons.Filled.Edit, stringResource(R.string.edit), tint = Color.White) }
                         }
-                        OverlayIconButton({ context.shareText("${article.title}\n\n${article.body}") }) {
+                        OverlayIconButton({
+                            container.analytics.log(AnalyticsEvent.Share("article", article.id))
+                            context.shareText("${article.title}\n\n${article.body}")
+                        }) {
                             Icon(Icons.Filled.Share, stringResource(R.string.share), tint = Color.White)
                         }
                     }

@@ -89,10 +89,6 @@ fun HomeScreen(
     val c = Aghour.colors
     StatusBarIcons()
 
-    LaunchedEffect(Unit) {
-        container.analytics.logScreenView("Home")
-    }
-
     // Refresh the bell each time Home comes back (e.g. after reading notifications).
     LifecycleResumeEffect(user?.id) {
         if (user != null) vm.loadUnread() else vm.clearUnread()

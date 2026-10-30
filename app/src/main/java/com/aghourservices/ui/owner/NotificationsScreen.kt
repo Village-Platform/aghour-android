@@ -1,5 +1,6 @@
 package com.aghourservices.ui.owner
 
+import com.aghourservices.data.analytics.AnalyticsEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -129,7 +130,10 @@ fun NotificationsScreen(
     Column(Modifier.fillMaxSize().background(c.page)) {
         ScreenTitle(stringResource(R.string.notifications), onBack = onBack, actions = {
             if (state.unreadCount > 0) {
-                TextButton(onClick = vm::markAllRead) { Text(stringResource(R.string.mark_all_read), color = c.goldInk) }
+                TextButton(onClick = {
+                    container.analytics.log(AnalyticsEvent.MarkAllNotificationsRead)
+                    vm.markAllRead()
+                }) { Text(stringResource(R.string.mark_all_read), color = c.goldInk) }
             }
         })
         if (state.items.isNotEmpty()) {
@@ -151,6 +155,7 @@ fun NotificationsScreen(
                 items(state.visible, key = { it.id }) { n ->
                     val target = notificationTarget(n.kind)?.takeIf(isAvailable)
                     NotificationRow(n, target, onClick = {
+                        container.analytics.log(AnalyticsEvent.OpenNotification(n.kind))
                         if (!n.read) vm.markRead(n.id)
                         target?.let(onOpen)
                     })

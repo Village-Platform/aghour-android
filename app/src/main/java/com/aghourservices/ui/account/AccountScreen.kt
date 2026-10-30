@@ -1,5 +1,6 @@
 package com.aghourservices.ui.account
 
+import com.aghourservices.data.analytics.AnalyticsEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -142,10 +143,6 @@ fun AccountScreen(
     var showAbout by rememberSaveable { mutableStateOf(false) }
     StatusBarIcons()
 
-    LaunchedEffect(Unit) {
-        container.analytics.logScreenView("Account")
-    }
-
     LaunchedEffect(user?.id) { if (user != null) vm.refresh() }
 
     val current = user
@@ -198,7 +195,7 @@ fun AccountScreen(
             confirmButton = {
                 TextButton(onClick = {
                     confirmLogout = false
-                    container.analytics.logEvent("user_logged_out")
+                    container.analytics.log(AnalyticsEvent.Logout)
                     scope.launch { container.auth.logout() }
                 }) { Text(stringResource(R.string.logout), color = c.bad) }
             },

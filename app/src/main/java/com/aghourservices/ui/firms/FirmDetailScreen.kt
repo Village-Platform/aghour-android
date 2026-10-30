@@ -1,5 +1,7 @@
 package com.aghourservices.ui.firms
 
+import com.aghourservices.data.analytics.AnalyticsEvent
+import com.aghourservices.data.analytics.AnalyticsService
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -100,6 +102,7 @@ data class FirmDetailUiState(
 class FirmDetailViewModel(
     private val catalog: CatalogRepository,
     private val admin: AdminRepository,
+    private val analytics: AnalyticsService,
     private val firmId: Long,
 ) : ViewModel() {
     private val _state = MutableStateFlow(FirmDetailUiState())
@@ -113,11 +116,18 @@ class FirmDetailViewModel(
         }
     }
 
+    /** view_firm once per visit, not again when an edit reloads the page. */
+    private var viewLogged = false
+
     fun load() {
         _state.value = FirmDetailUiState(loading = true)
         viewModelScope.launch {
             _state.value = when (val result = catalog.firm(firmId)) {
-                is ApiResult.Success -> FirmDetailUiState(loading = false, firm = result.data)
+                is ApiResult.Success -> {
+                    if (!viewLogged) analytics.log(AnalyticsEvent.ViewFirm(result.data))
+                    viewLogged = true
+                    FirmDetailUiState(loading = false, firm = result.data)
+                }
                 is ApiResult.Failure -> FirmDetailUiState(loading = false, error = result.message)
             }
         }
@@ -173,15 +183,11 @@ fun FirmDetailScreen(
     onDeleted: () -> Unit = onBack,
 ) {
     val container = appContainer()
-    val vm: FirmDetailViewModel = viewModel { FirmDetailViewModel(container.catalog, container.admin, firmId) }
+    val vm: FirmDetailViewModel = viewModel { FirmDetailViewModel(container.catalog, container.admin, container.analytics, firmId) }
     val state by vm.state.collectAsStateWithLifecycle()
     val firm = state.firm
     val context = LocalContext.current
     val deletedMessage = stringResource(R.string.firm_deleted)
-
-    LaunchedEffect(firmId) {
-        container.analytics.logScreenView("FirmDetail")
-    }
 
     LaunchedEffect(state.deleted) {
         if (state.deleted) {
@@ -239,7 +245,10 @@ private fun FirmDetailContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     OverlayIconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Color.White) }
-                    OverlayIconButton({ context.shareText("${firm.name}\n\n${firm.address.orEmpty()}\n${firm.phone.orEmpty()}") }) {
+                    OverlayIconButton({
+                        analytics.log(AnalyticsEvent.Share("firm", firm.id))
+                        context.shareText("${firm.name}\n\n${firm.address.orEmpty()}\n${firm.phone.orEmpty()}")
+                    }) {
                         Icon(Icons.Filled.Share, stringResource(R.string.share), tint = Color.White)
                     }
                 }
@@ -269,7 +278,7 @@ private fun FirmDetailContent(
                 modifier = Modifier.weight(1f),
             ) {
                 phone?.let {
-                    analytics.logEvent("firm_call_clicked", mapOf("firm_id" to firm.id))
+                    analytics.log(AnalyticsEvent.ContactFirm(firm, AnalyticsEvent.ContactChannel.Call))
                     context.openDialer(it)
                 }
             }
@@ -281,7 +290,7 @@ private fun FirmDetailContent(
                 modifier = Modifier.weight(1f),
             ) {
                 whatsappNumber?.let {
-                    analytics.logEvent("firm_whatsapp_clicked", mapOf("firm_id" to firm.id))
+                    analytics.log(AnalyticsEvent.ContactFirm(firm, AnalyticsEvent.ContactChannel.WhatsApp))
                     context.openWhatsApp(it)
                 }
             }
@@ -293,7 +302,7 @@ private fun FirmDetailContent(
                 modifier = Modifier.weight(1f),
             ) {
                 if (firm.latitude != null && firm.longitude != null) {
-                    analytics.logEvent("firm_map_clicked", mapOf("firm_id" to firm.id))
+                    analytics.log(AnalyticsEvent.ContactFirm(firm, AnalyticsEvent.ContactChannel.Map))
                     context.openMap(firm.latitude, firm.longitude, firm.name)
                 }
             }

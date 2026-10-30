@@ -163,6 +163,10 @@
     <string name="theme_dark">داكن</string>
     <string name="theme_system">حسب الجهاز</string>
     <string name="theme_system_hint">«حسب الجهاز» يتبع إعداد الوضع الليلي في أندرويد</string>
+    <!-- Debug builds only -->
+    <string name="debug_tools">أدوات المطوّر</string>
+    <string name="debug_test_crash">تجربة انهيار التطبيق</string>
+    <string name="debug_test_crash_hint">يغلق التطبيق فورًا. يظهر التقرير في Crashlytics بعد إعادة فتحه.</string>
     <string name="send_for_review">إرسال للمراجعة</string>
     <string name="pay_activation_note">يتم التفعيل بعد تأكيد الإدارة وصول المبلغ</string>
     <string name="notif_open_subscription">تفاصيل الاشتراك</string>

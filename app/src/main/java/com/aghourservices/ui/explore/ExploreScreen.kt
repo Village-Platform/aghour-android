@@ -61,16 +61,12 @@ import com.aghourservices.ui.theme.Aghour
 @Composable
 fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
     val container = appContainer()
-    val vm: ExploreViewModel = viewModel { ExploreViewModel(container.catalog, container.exploreCategory, container.admin.changes) }
+    val vm: ExploreViewModel = viewModel { ExploreViewModel(container.catalog, container.exploreCategory, container.admin.changes, container.analytics) }
     val state by vm.state.collectAsStateWithLifecycle()
     val focus = LocalFocusManager.current
     val listState = rememberLazyListState()
     val c = Aghour.colors
     StatusBarIcons()
-
-    LaunchedEffect(Unit) {
-        container.analytics.logScreenView("Explore")
-    }
 
     val reachedEnd by remember {
         derivedStateOf {
