@@ -43,7 +43,7 @@ import com.aghourservices.ui.theme.Aghour
 @Composable
 fun LoginScreen(onBack: () -> Unit, onDone: () -> Unit, onGoToRegister: () -> Unit) {
     val container = appContainer()
-    val vm: AuthViewModel = viewModel { AuthViewModel(container.auth) }
+    val vm: AuthViewModel = viewModel { AuthViewModel(container.auth, container.analytics) }
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(state.done) { if (state.done) onDone() }
 
@@ -76,7 +76,7 @@ fun LoginScreen(onBack: () -> Unit, onDone: () -> Unit, onGoToRegister: () -> Un
 @Composable
 fun RegisterScreen(onBack: () -> Unit, onDone: () -> Unit, onGoToLogin: () -> Unit) {
     val container = appContainer()
-    val vm: AuthViewModel = viewModel { AuthViewModel(container.auth) }
+    val vm: AuthViewModel = viewModel { AuthViewModel(container.auth, container.analytics) }
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(state.done) { if (state.done) onDone() }
 

@@ -1,5 +1,8 @@
 package com.aghourservices.ui.account
 
+import com.aghourservices.data.analytics.AnalyticsEvent
+import com.aghourservices.data.analytics.AnalyticsEvent.AuthFlow
+import com.aghourservices.data.analytics.AnalyticsService
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,7 +36,7 @@ data class AuthFormState(
 private val EgyptianMobile = Regex("^01[0125]\\d{8}$")
 
 /** Shared by the login and register screens. */
-class AuthViewModel(private val auth: AuthRepository) : ViewModel() {
+class AuthViewModel(private val auth: AuthRepository, private val analytics: AnalyticsService) : ViewModel() {
     private val _state = MutableStateFlow(AuthFormState())
     val state: StateFlow<AuthFormState> = _state.asStateFlow()
 
@@ -50,7 +53,7 @@ class AuthViewModel(private val auth: AuthRepository) : ViewModel() {
             _state.update { it.copy(phoneError = phoneError, passwordError = passwordError) }
             return
         }
-        submit { auth.login(it.phone.digitsOnly(), it.password) }
+        submit(AuthFlow.Login) { auth.login(it.phone.digitsOnly(), it.password) }
     }
 
     fun register() {
@@ -66,16 +69,22 @@ class AuthViewModel(private val auth: AuthRepository) : ViewModel() {
             return
         }
         val fullName = "${s.firstName.trim()} ${s.lastName.trim()}".trim()
-        submit { auth.register(fullName, it.phone.digitsOnly(), it.email, it.password, it.passwordConfirmation) }
+        submit(AuthFlow.SignUp) { auth.register(fullName, it.phone.digitsOnly(), it.email, it.password, it.passwordConfirmation) }
     }
 
-    private fun submit(call: suspend (AuthFormState) -> ApiResult<*>) {
+    private fun submit(flow: AuthFlow, call: suspend (AuthFormState) -> ApiResult<*>) {
         if (_state.value.submitting) return
         _state.update { it.copy(submitting = true, error = null) }
         viewModelScope.launch {
             when (val result = call(_state.value)) {
-                is ApiResult.Success -> _state.update { it.copy(submitting = false, done = true) }
-                is ApiResult.Failure -> _state.update { it.copy(submitting = false, error = result.message) }
+                is ApiResult.Success -> {
+                    analytics.log(if (flow == AuthFlow.Login) AnalyticsEvent.Login else AnalyticsEvent.SignUp)
+                    _state.update { it.copy(submitting = false, done = true) }
+                }
+                is ApiResult.Failure -> {
+                    analytics.log(AnalyticsEvent.AuthFailed(flow, result.httpStatus))
+                    _state.update { it.copy(submitting = false, error = result.message) }
+                }
             }
         }
     }

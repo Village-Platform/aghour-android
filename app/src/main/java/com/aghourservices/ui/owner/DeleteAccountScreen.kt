@@ -1,5 +1,7 @@
 package com.aghourservices.ui.owner
 
+import com.aghourservices.data.analytics.AnalyticsEvent
+import com.aghourservices.data.analytics.AnalyticsService
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -53,7 +55,7 @@ data class DeleteAccountState(
     val done: Boolean = false,
 )
 
-class DeleteAccountViewModel(private val auth: AuthRepository) : ViewModel() {
+class DeleteAccountViewModel(private val auth: AuthRepository, private val analytics: AnalyticsService) : ViewModel() {
     private val _state = MutableStateFlow(DeleteAccountState())
     val state: StateFlow<DeleteAccountState> = _state.asStateFlow()
 
@@ -75,7 +77,10 @@ class DeleteAccountViewModel(private val auth: AuthRepository) : ViewModel() {
         _state.update { it.copy(confirming = false, submitting = true) }
         viewModelScope.launch {
             when (val r = auth.deleteAccount(_state.value.password)) {
-                is ApiResult.Success -> _state.update { it.copy(submitting = false, done = true) }
+                is ApiResult.Success -> {
+                    analytics.log(AnalyticsEvent.AccountDeleted)
+                    _state.update { it.copy(submitting = false, done = true) }
+                }
                 is ApiResult.Failure -> _state.update { it.copy(submitting = false, error = r.message) }
             }
         }
@@ -85,7 +90,7 @@ class DeleteAccountViewModel(private val auth: AuthRepository) : ViewModel() {
 @Composable
 fun DeleteAccountScreen(onBack: () -> Unit) {
     val container = appContainer()
-    val vm: DeleteAccountViewModel = viewModel { DeleteAccountViewModel(container.auth) }
+    val vm: DeleteAccountViewModel = viewModel { DeleteAccountViewModel(container.auth, container.analytics) }
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val deleted = stringResource(R.string.account_deleted)

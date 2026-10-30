@@ -1,5 +1,7 @@
 package com.aghourservices.ui.firms
 
+import com.aghourservices.data.analytics.AnalyticsEvent
+import com.aghourservices.data.analytics.AnalyticsService
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -100,6 +102,7 @@ data class FirmDetailUiState(
 class FirmDetailViewModel(
     private val catalog: CatalogRepository,
     private val admin: AdminRepository,
+    private val analytics: AnalyticsService,
     private val firmId: Long,
 ) : ViewModel() {
     private val _state = MutableStateFlow(FirmDetailUiState())
@@ -113,11 +116,18 @@ class FirmDetailViewModel(
         }
     }
 
+    /** view_firm once per visit, not again when an edit reloads the page. */
+    private var viewLogged = false
+
     fun load() {
         _state.value = FirmDetailUiState(loading = true)
         viewModelScope.launch {
             _state.value = when (val result = catalog.firm(firmId)) {
-                is ApiResult.Success -> FirmDetailUiState(loading = false, firm = result.data)
+                is ApiResult.Success -> {
+                    if (!viewLogged) analytics.log(AnalyticsEvent.ViewFirm(result.data))
+                    viewLogged = true
+                    FirmDetailUiState(loading = false, firm = result.data)
+                }
                 is ApiResult.Failure -> FirmDetailUiState(loading = false, error = result.message)
             }
         }
@@ -173,7 +183,7 @@ fun FirmDetailScreen(
     onDeleted: () -> Unit = onBack,
 ) {
     val container = appContainer()
-    val vm: FirmDetailViewModel = viewModel { FirmDetailViewModel(container.catalog, container.admin, firmId) }
+    val vm: FirmDetailViewModel = viewModel { FirmDetailViewModel(container.catalog, container.admin, container.analytics, firmId) }
     val state by vm.state.collectAsStateWithLifecycle()
     val firm = state.firm
     val context = LocalContext.current
@@ -215,6 +225,7 @@ private fun FirmDetailContent(
     adminControls: @Composable ColumnScope.() -> Unit = {},
 ) {
     val context = LocalContext.current
+    val analytics = appContainer().analytics
     val c = Aghour.colors
     val isDark = c.isDark
 
@@ -234,7 +245,10 @@ private fun FirmDetailContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     OverlayIconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = Color.White) }
-                    OverlayIconButton({ context.shareText("${firm.name}\n\n${firm.address.orEmpty()}\n${firm.phone.orEmpty()}") }) {
+                    OverlayIconButton({
+                        analytics.log(AnalyticsEvent.Share("firm", firm.id))
+                        context.shareText("${firm.name}\n\n${firm.address.orEmpty()}\n${firm.phone.orEmpty()}")
+                    }) {
                         Icon(Icons.Filled.Share, stringResource(R.string.share), tint = Color.White)
                     }
                 }
@@ -263,7 +277,10 @@ private fun FirmDetailContent(
                 enabled = phone != null,
                 modifier = Modifier.weight(1f),
             ) {
-                phone?.let { context.openDialer(it) }
+                phone?.let {
+                    analytics.log(AnalyticsEvent.ContactFirm(firm, AnalyticsEvent.ContactChannel.Call))
+                    context.openDialer(it)
+                }
             }
             ActionTile(
                 icon = painterResource(R.drawable.ic_whatsapp),
@@ -272,7 +289,10 @@ private fun FirmDetailContent(
                 enabled = whatsappNumber != null,
                 modifier = Modifier.weight(1f),
             ) {
-                whatsappNumber?.let { context.openWhatsApp(it) }
+                whatsappNumber?.let {
+                    analytics.log(AnalyticsEvent.ContactFirm(firm, AnalyticsEvent.ContactChannel.WhatsApp))
+                    context.openWhatsApp(it)
+                }
             }
             ActionTile(
                 icon = rememberVectorPainter(Icons.Filled.LocationOn),
@@ -282,6 +302,7 @@ private fun FirmDetailContent(
                 modifier = Modifier.weight(1f),
             ) {
                 if (firm.latitude != null && firm.longitude != null) {
+                    analytics.log(AnalyticsEvent.ContactFirm(firm, AnalyticsEvent.ContactChannel.Map))
                     context.openMap(firm.latitude, firm.longitude, firm.name)
                 }
             }

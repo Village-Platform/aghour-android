@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.firebase.crashlytics)
 }
 
 val apiUrlDebug = providers.gradleProperty("AGHOUR_API_URL_DEBUG").getOrElse("http://10.0.2.2:3000/api/v1/")
@@ -19,8 +21,16 @@ android {
         versionName = "0.1.0"
     }
 
+    // Each build type reports to its own Firebase project: src/debug/google-services.json is
+    // aghour-dev, src/release/google-services.json is aghour-app. There is deliberately no
+    // app/google-services.json fallback, so a variant without its own file fails to build
+    // instead of silently sending data to the wrong project.
     buildTypes {
         debug {
+            // Separate package so debug and release install side by side and never share a
+            // Firebase app. aghour-dev must register com.aghourservices.dev.
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
             buildConfigField("String", "API_BASE_URL", "\"$apiUrlDebug\"")
         }
         release {
@@ -61,6 +71,9 @@ dependencies {
     // Category / menu icons (Mosque, LocalPharmacy, Storefront…). Large: R8 strips unused icons in release.
     implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.messaging)
     debugImplementation(libs.compose.ui.tooling)
 
     implementation(libs.kotlinx.serialization.json)

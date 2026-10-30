@@ -1,5 +1,6 @@
 package com.aghourservices.ui.account
 
+import com.aghourservices.data.analytics.AnalyticsEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -194,6 +195,7 @@ fun AccountScreen(
             confirmButton = {
                 TextButton(onClick = {
                     confirmLogout = false
+                    container.analytics.log(AnalyticsEvent.Logout)
                     scope.launch { container.auth.logout() }
                 }) { Text(stringResource(R.string.logout), color = c.bad) }
             },

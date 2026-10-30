@@ -4,11 +4,16 @@ import android.content.Context
 import com.aghourservices.BuildConfig
 import com.aghourservices.data.config.FeatureFlags
 import com.aghourservices.data.remote.AghourApi
+import com.aghourservices.data.remote.ApiErrorReporter
 import com.aghourservices.data.remote.AuthInterceptor
 import com.aghourservices.data.repository.AdminRepository
 import com.aghourservices.data.repository.AuthRepository
 import com.aghourservices.data.repository.CatalogRepository
 import com.aghourservices.data.repository.OwnerRepository
+import com.aghourservices.data.analytics.AnalyticsService
+import com.aghourservices.data.analytics.FirebaseAnalyticsService
+import com.aghourservices.data.analytics.CrashReportingService
+import com.aghourservices.data.analytics.FirebaseCrashReportingService
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.aghourservices.data.session.SessionStore
 import com.aghourservices.data.settings.SettingsStore
@@ -40,6 +45,8 @@ class AppContainer(context: Context) {
 
     val session = SessionStore(context, json, appScope)
     val settings = SettingsStore(context, appScope)
+    val analytics: AnalyticsService = FirebaseAnalyticsService(context)
+    val crashReporting: CrashReportingService = FirebaseCrashReportingService()
 
     private val okHttp = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -62,9 +69,22 @@ class AppContainer(context: Context) {
     val catalog = CatalogRepository(api, json)
     val auth = AuthRepository(api, session, json)
     val owner = OwnerRepository(api, json)
-    val admin = AdminRepository(api, json, catalog)
+    val admin = AdminRepository(api, json, catalog, analytics)
     val features = FeatureFlags(context, api, json, appScope)
 
     /** Category chosen on Home; the Explore tab reads it (tabs keep their own state otherwise). */
     val exploreCategory = MutableStateFlow<Long?>(null)
+
+    // Must stay last: initializers run top to bottom, and this coroutine runs on another thread,
+    // so any property declared below it could still be null when it is read.
+    init {
+        ApiErrorReporter.report = crashReporting::recordException
+        appScope.launch {
+            auth.currentUser.collect { user ->
+                crashReporting.setUserId(user?.id?.toString() ?: "")
+                analytics.setUserId(user?.id?.toString())
+                analytics.setUserRole(user?.role ?: "guest")
+            }
+        }
+    }
 }

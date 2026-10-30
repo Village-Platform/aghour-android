@@ -1,5 +1,9 @@
 package com.aghourservices.data.repository
 
+import com.aghourservices.data.analytics.AnalyticsEvent
+import com.aghourservices.data.analytics.AnalyticsEvent.Action
+import com.aghourservices.data.analytics.AnalyticsEvent.Entity
+import com.aghourservices.data.analytics.AnalyticsService
 import com.aghourservices.data.remote.AghourApi
 import com.aghourservices.data.remote.ApiResult
 import com.aghourservices.data.remote.ArticleDto
@@ -66,7 +70,12 @@ data class PlanInput(
  * The server's policies decide what is allowed; this class only sends.
  * [changes] goes up after every successful write, so any screen showing server data can reload.
  */
-class AdminRepository(private val api: AghourApi, private val json: Json, private val catalog: CatalogRepository) {
+class AdminRepository(
+    private val api: AghourApi,
+    private val json: Json,
+    private val catalog: CatalogRepository,
+    private val analytics: AnalyticsService,
+) {
 
     private val _changes = MutableStateFlow(0)
     val changes: StateFlow<Int> = _changes.asStateFlow()
@@ -74,17 +83,17 @@ class AdminRepository(private val api: AghourApi, private val json: Json, privat
     // ---- Firms ----
 
     suspend fun createFirm(input: FirmInput): ApiResult<FirmDto> =
-        write { api.createFirm(input.toBody()).data }
+        write(Entity.Firm, Action.Create) { api.createFirm(input.toBody()).data }
 
     suspend fun updateFirm(id: Long, input: FirmInput): ApiResult<FirmDto> =
-        write { api.updateFirm(id, input.toBody()).data }
+        write(Entity.Firm, Action.Update) { api.updateFirm(id, input.toBody()).data }
 
     /** Approve (active) or suspend without opening the form. */
     suspend fun setFirmStatus(id: Long, status: String): ApiResult<FirmDto> =
-        write { api.updateFirm(id, buildJsonObject { put("firm", buildJsonObject { put("status", status) }) }).data }
+        write(Entity.Firm, if (status == "active") Action.Approve else Action.Suspend) { api.updateFirm(id, buildJsonObject { put("firm", buildJsonObject { put("status", status) }) }).data }
 
     suspend fun deleteFirm(id: Long): ApiResult<Unit> =
-        write { api.deleteFirm(id).orThrow() }
+        write(Entity.Firm, Action.Delete) { api.deleteFirm(id).orThrow() }
 
     // ---- Categories ----
 
@@ -92,25 +101,25 @@ class AdminRepository(private val api: AghourApi, private val json: Json, privat
         safeApiCall(json) { api.category(id).data }
 
     suspend fun createCategory(input: CategoryInput): ApiResult<CategoryDto> =
-        write(categories = true) { api.createCategory(input.fields(), input.iconPart()).data }
+        write(Entity.Category, Action.Create, categories = true) { api.createCategory(input.fields(), input.iconPart()).data }
 
     suspend fun updateCategory(id: Long, input: CategoryInput): ApiResult<CategoryDto> =
-        write(categories = true) { api.updateCategory(id, input.fields(), input.iconPart()).data }
+        write(Entity.Category, Action.Update, categories = true) { api.updateCategory(id, input.fields(), input.iconPart()).data }
 
     /** Refused by the server while firms use the category (its message says so). */
     suspend fun deleteCategory(id: Long): ApiResult<Unit> =
-        write(categories = true) { api.deleteCategory(id).orThrow() }
+        write(Entity.Category, Action.Delete, categories = true) { api.deleteCategory(id).orThrow() }
 
     // ---- Articles ----
 
     suspend fun createArticle(input: ArticleInput): ApiResult<ArticleDto> =
-        write { api.createArticle(input.toBody()).data }
+        write(Entity.Article, Action.Create) { api.createArticle(input.toBody()).data }
 
     suspend fun updateArticle(id: Long, input: ArticleInput): ApiResult<ArticleDto> =
-        write { api.updateArticle(id, input.toBody()).data }
+        write(Entity.Article, Action.Update) { api.updateArticle(id, input.toBody()).data }
 
     suspend fun deleteArticle(id: Long): ApiResult<Unit> =
-        write { api.deleteArticle(id).orThrow() }
+        write(Entity.Article, Action.Delete) { api.deleteArticle(id).orThrow() }
 
     // ---- Subscription plans ----
 
@@ -118,21 +127,30 @@ class AdminRepository(private val api: AghourApi, private val json: Json, privat
         safeApiCall(json) { api.plan(id).data }
 
     suspend fun createPlan(input: PlanInput): ApiResult<SubscriptionPlanDto> =
-        write { api.createPlan(input.toBody()).data }
+        write(Entity.Plan, Action.Create) { api.createPlan(input.toBody()).data }
 
     suspend fun updatePlan(id: Long, input: PlanInput): ApiResult<SubscriptionPlanDto> =
-        write { api.updatePlan(id, input.toBody()).data }
+        write(Entity.Plan, Action.Update) { api.updatePlan(id, input.toBody()).data }
 
     /** Refused by the server once the plan has subscriptions; deactivate it instead. */
     suspend fun deletePlan(id: Long): ApiResult<Unit> =
-        write { api.deletePlan(id).orThrow() }
+        write(Entity.Plan, Action.Delete) { api.deletePlan(id).orThrow() }
 
-    /** Runs a write; on success tells the screens to reload (and drops the category cache if needed). */
-    private suspend fun <T> write(categories: Boolean = false, block: suspend () -> T): ApiResult<T> =
+    /**
+     * Runs a write; on success tells the screens to reload (and drops the category cache if needed)
+     * and records it for analytics.
+     */
+    private suspend fun <T> write(
+        entity: Entity,
+        action: Action,
+        categories: Boolean = false,
+        block: suspend () -> T,
+    ): ApiResult<T> =
         safeApiCall(json, block).also {
             if (it is ApiResult.Success) {
                 if (categories) catalog.forgetCategories()
                 _changes.update { n -> n + 1 }
+                analytics.log(AnalyticsEvent.ManageContent(entity, action))
             }
         }
 }

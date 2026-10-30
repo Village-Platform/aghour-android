@@ -1,5 +1,7 @@
 package com.aghourservices.ui.explore
 
+import com.aghourservices.data.analytics.AnalyticsEvent
+import com.aghourservices.data.analytics.AnalyticsService
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aghourservices.data.remote.ApiResult
@@ -43,12 +45,15 @@ class ExploreViewModel(
     private val selectedCategory: MutableStateFlow<Long?>,
     /** AdminRepository.changes: a super admin changed a firm or a category. */
     private val adminChanges: StateFlow<Int>,
+    private val analytics: AnalyticsService,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExploreUiState(categoryId = selectedCategory.value))
     val state: StateFlow<ExploreUiState> = _state.asStateFlow()
     private val queries = MutableStateFlow("")
     private var job: Job? = null
+    /** Last search sent to analytics: typing pauses, Search key and pull-to-refresh count once. */
+    private var loggedSearch: Pair<String, Long?>? = null
 
     init {
         viewModelScope.launch { loadCategories() }
@@ -81,6 +86,10 @@ class ExploreViewModel(
     }
 
     fun selectCategory(id: Long?) {
+        if (id != null && id != _state.value.categoryId) {
+            val name = _state.value.categories.firstOrNull { it.id == id }?.name
+            analytics.log(AnalyticsEvent.SelectCategory(id, name, AnalyticsEvent.Source.Explore))
+        }
         selectedCategory.value = id // collected above -> reload
     }
 
@@ -106,20 +115,30 @@ class ExploreViewModel(
     private suspend fun loadPage(page: Int) {
         val s = _state.value
         when (val result = catalog.firms(s.query, s.categoryId, page)) {
-            is ApiResult.Success -> _state.update {
-                it.copy(
-                    firms = if (page == 1) result.data.data else it.firms + result.data.data,
-                    total = result.data.meta.total,
-                    page = result.data.meta.page,
-                    totalPages = result.data.meta.totalPages,
-                    loading = false,
-                    refreshing = false,
-                    loadingMore = false,
-                )
+            is ApiResult.Success -> {
+                if (page == 1) logSearch(s.query, s.categoryId, result.data.meta.total)
+                _state.update {
+                    it.copy(
+                        firms = if (page == 1) result.data.data else it.firms + result.data.data,
+                        total = result.data.meta.total,
+                        page = result.data.meta.page,
+                        totalPages = result.data.meta.totalPages,
+                        loading = false,
+                        refreshing = false,
+                        loadingMore = false,
+                    )
+                }
             }
             is ApiResult.Failure -> _state.update {
                 it.copy(error = result.message, loading = false, refreshing = false, loadingMore = false)
             }
         }
+    }
+
+    private fun logSearch(query: String, categoryId: Long?, total: Int) {
+        val term = query.trim()
+        if (term.isEmpty() || loggedSearch == term to categoryId) return
+        loggedSearch = term to categoryId
+        analytics.log(AnalyticsEvent.Search(term, categoryId, total))
     }
 }
