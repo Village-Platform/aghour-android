@@ -26,6 +26,7 @@ import com.aghourservices.data.repository.CatalogRepository
 import com.aghourservices.data.repository.FirmInput
 import com.aghourservices.ui.components.FilterChipsRow
 import com.aghourservices.ui.components.FormField
+import com.aghourservices.ui.components.LocationPicker
 import com.aghourservices.ui.components.MutedText
 import com.aghourservices.ui.components.Segmented
 import com.aghourservices.ui.components.appContainer
@@ -240,25 +241,14 @@ fun FirmFormScreen(firmId: Long?, canSetStatus: Boolean, onBack: () -> Unit, onS
             value = state.workingHours,
             onChange = { v -> vm.update { copy(workingHours = v) } },
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            FormField(
-                label = stringResource(R.string.latitude),
-                value = state.latitude,
-                onChange = { v -> vm.update { copy(latitude = v) } },
-                modifier = Modifier.weight(1f),
-                keyboardType = KeyboardType.Decimal,
-                ltr = true,
-            )
-            FormField(
-                label = stringResource(R.string.longitude),
-                value = state.longitude,
-                onChange = { v -> vm.update { copy(longitude = v) } },
-                modifier = Modifier.weight(1f),
-                keyboardType = KeyboardType.Decimal,
-                ltr = true,
-            )
-        }
-        FieldError(state.coordinatesError)
+        LocationPicker(
+            latitude = state.latitude,
+            longitude = state.longitude,
+            onCoordinatesChanged = { lat, lng ->
+                vm.update { copy(latitude = lat, longitude = lng) }
+            },
+            error = state.coordinatesError,
+        )
         FormField(
             label = stringResource(R.string.description),
             value = state.description,

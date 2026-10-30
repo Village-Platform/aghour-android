@@ -244,4 +244,19 @@
     <string name="plan_features">المزايا (كل ميزة في سطر)</string>
     <string name="delete_plan_title">حذف الباقة؟</string>
     <string name="delete_plan_body">سيتم حذف «%1$s» نهائيًا. لا يمكن حذف باقة لها اشتراكات؛ أوقفها بدلًا من ذلك.</string>
+
+    <!-- Location Picker -->
+    <string name="firm_location">موقع المنشأة على الخريطة</string>
+    <string name="location_not_set">لم يتم تحديد الموقع على الخريطة بعد.</string>
+    <string name="location_set">تم تحديد الموقع على الخريطة</string>
+    <string name="use_current_location">تحديد موقعي الحالي (GPS)</string>
+    <string name="open_map_picker">فتح الخريطة لتحديد الموقع</string>
+    <string name="preview_on_map">معاينة على الخريطة</string>
+    <string name="paste_location_link">لصق رابط أو إحداثيات خرائط جوجل</string>
+    <string name="paste_location_placeholder">مثال: https://maps.app.goo.gl/... أو 30.360, 31.217</string>
+    <string name="manual_coordinates">تعديل الإحداثيات يدويًا</string>
+    <string name="clear_location">إزالة الموقع</string>
+    <string name="location_permission_required">يلزم السماع بإذن الموقع لتحديد موقعك الحالي.</string>
+    <string name="fetching_location">جاري تحديد الموقع...</string>
+    <string name="invalid_location_pasted">تعذر استخراج الإحداثيات. تأكد من صحة الرابط أو النص.</string>
 </resources>
