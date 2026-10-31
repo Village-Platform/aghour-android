@@ -259,4 +259,13 @@
     <string name="location_permission_required">يلزم السماع بإذن الموقع لتحديد موقعك الحالي.</string>
     <string name="fetching_location">جاري تحديد الموقع...</string>
     <string name="invalid_location_pasted">تعذر استخراج الإحداثيات. تأكد من صحة الرابط أو النص.</string>
+
+    <!-- FCM & Notifications / Topics -->
+    <string name="notification_channel_name">إشعارات أجهور الكبرى</string>
+    <string name="notification_channel_description">إشعارات الأخبار والاشتراكات والأنشطة</string>
+    <string name="manage_topics">مواضيع الإشعارات</string>
+    <string name="topics_subtitle">اختر المواضيع التي تريد تلقي إشعارات بها</string>
+    <string name="subscribed">مشتَرك</string>
+    <string name="unsubscribed">غير مشتَرك</string>
+    <string name="no_topics">لا توجد مواضيع متاح إرسال إشعارات لها.</string>
 </resources>

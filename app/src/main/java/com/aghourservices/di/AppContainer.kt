@@ -6,9 +6,11 @@ import com.aghourservices.data.config.FeatureFlags
 import com.aghourservices.data.remote.AghourApi
 import com.aghourservices.data.remote.ApiErrorReporter
 import com.aghourservices.data.remote.AuthInterceptor
+import com.aghourservices.data.remote.NotificationClickAction
 import com.aghourservices.data.repository.AdminRepository
 import com.aghourservices.data.repository.AuthRepository
 import com.aghourservices.data.repository.CatalogRepository
+import com.aghourservices.data.repository.DeviceRepository
 import com.aghourservices.data.repository.OwnerRepository
 import com.aghourservices.data.analytics.AnalyticsService
 import com.aghourservices.data.analytics.FirebaseAnalyticsService
@@ -17,6 +19,7 @@ import com.aghourservices.data.analytics.FirebaseCrashReportingService
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.aghourservices.data.session.SessionStore
 import com.aghourservices.data.settings.SettingsStore
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -51,7 +54,7 @@ class AppContainer(context: Context) {
     private val okHttp = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
-        .addInterceptor(AuthInterceptor(session) { appScope.launch { session.clear() } })
+        .addInterceptor(AuthInterceptor(session, { settings.installationId.value }) { appScope.launch { session.clear() } })
         .apply {
             if (BuildConfig.DEBUG) {
                 addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC })
@@ -67,13 +70,17 @@ class AppContainer(context: Context) {
         .create(AghourApi::class.java)
 
     val catalog = CatalogRepository(api, json)
-    val auth = AuthRepository(api, session, json)
+    val device = DeviceRepository(api, settings, json)
+    val auth = AuthRepository(api, session, { device }, json)
     val owner = OwnerRepository(api, json)
     val admin = AdminRepository(api, json, catalog, analytics)
     val features = FeatureFlags(context, api, json, appScope)
 
     /** Category chosen on Home; the Explore tab reads it (tabs keep their own state otherwise). */
     val exploreCategory = MutableStateFlow<Long?>(null)
+
+    /** Pending push notification tap to navigate to when the app opens or receives a deep link. */
+    val pendingNotificationAction = MutableStateFlow<NotificationClickAction?>(null)
 
     // Must stay last: initializers run top to bottom, and this coroutine runs on another thread,
     // so any property declared below it could still be null when it is read.
@@ -84,6 +91,11 @@ class AppContainer(context: Context) {
                 crashReporting.setUserId(user?.id?.toString() ?: "")
                 analytics.setUserId(user?.id?.toString())
                 analytics.setUserRole(user?.role ?: "guest")
+            }
+        }
+        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+            appScope.launch {
+                device.registerDevice(token)
             }
         }
     }

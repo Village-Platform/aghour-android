@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.BrightnessAuto
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -64,7 +66,7 @@ class SettingsViewModel(private val settings: SettingsStore, private val analyti
 
 /** "الإعدادات": appearance (light / dark / follow the phone). */
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(onBack: () -> Unit, onTopics: () -> Unit) {
     val container = appContainer()
     val vm: SettingsViewModel = viewModel { SettingsViewModel(container.settings, container.analytics) }
     val state by vm.state.collectAsStateWithLifecycle()
@@ -96,6 +98,14 @@ fun SettingsScreen(onBack: () -> Unit) {
                 )
                 Spacer(Modifier.height(8.dp))
                 MutedText(stringResource(R.string.theme_system_hint))
+            }
+            SurfaceCard(padding = 16.dp, onClick = onTopics) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Notifications, contentDescription = null, tint = c.goldInk, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.manage_topics), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = c.ink, modifier = Modifier.weight(1f))
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = c.muted, modifier = Modifier.size(16.dp))
+                }
             }
             // Compile-time constant: the whole card is dropped from release builds.
             if (BuildConfig.DEBUG) DebugToolsCard()

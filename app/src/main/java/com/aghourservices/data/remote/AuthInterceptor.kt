@@ -5,20 +5,25 @@ import okhttp3.Interceptor
 import okhttp3.Response
 
 /**
- * Adds the bearer token and asks the API for Arabic messages.
+ * Adds the bearer token, installation ID, and asks the API for Arabic messages.
  * If the server rejects our token (401), the local session is cleared.
  */
 class AuthInterceptor(
     private val session: SessionStore,
+    private val installationIdProvider: () -> String?,
     private val onUnauthorized: () -> Unit,
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val token = session.token.value
+        val installationId = installationIdProvider()
         val request = chain.request().newBuilder()
             .header("Accept", "application/json")
             .header("Accept-Language", "ar")
-            .apply { if (token != null) header("Authorization", "Bearer $token") }
+            .apply {
+                if (token != null) header("Authorization", "Bearer $token")
+                if (installationId != null) header("X-Installation-Id", installationId)
+            }
             .build()
 
         val response = chain.proceed(request)

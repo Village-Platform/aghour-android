@@ -20,8 +20,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,7 +38,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aghourservices.R
 import com.aghourservices.data.remote.ApiResult
+import com.aghourservices.data.remote.NotificationClickAction
 import com.aghourservices.data.remote.NotificationDto
+import com.aghourservices.data.remote.notificationAction
 import com.aghourservices.data.repository.OwnerRepository
 import com.aghourservices.ui.components.FilterChipsRow
 import com.aghourservices.ui.components.MessageBox
@@ -99,28 +99,12 @@ class NotificationsViewModel(private val owner: OwnerRepository) : ViewModel() {
     }
 }
 
-/** Where a notification row's gold link leads, guessed from the server's `kind`. */
-enum class NotificationTarget(val labelRes: Int) {
-    Payments(R.string.notif_open_subscription),
-    Plans(R.string.notif_open_plans),
-    MyFirms(R.string.notif_open_firm),
-    News(R.string.notif_open_news),
-}
-
-fun notificationTarget(kind: String): NotificationTarget? = when {
-    "expir" in kind || "renew" in kind -> NotificationTarget.Plans
-    "payment" in kind || "subscription" in kind -> NotificationTarget.Payments
-    "firm" in kind -> NotificationTarget.MyFirms
-    "article" in kind || "news" in kind -> NotificationTarget.News
-    else -> null
-}
-
 @Composable
 fun NotificationsScreen(
     onBack: () -> Unit,
-    onOpen: (NotificationTarget) -> Unit,
+    onOpenAction: (NotificationClickAction) -> Unit,
     /** Targets that can be opened now (plans and payments disappear while plans are switched off). */
-    isAvailable: (NotificationTarget) -> Boolean = { true },
+    isAvailable: (NotificationClickAction) -> Boolean = { true },
 ) {
     val container = appContainer()
     val vm: NotificationsViewModel = viewModel { NotificationsViewModel(container.owner) }
@@ -153,11 +137,11 @@ fun NotificationsScreen(
             state.visible.isEmpty() -> MessageBox(stringResource(R.string.no_notifications))
             else -> LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(state.visible, key = { it.id }) { n ->
-                    val target = notificationTarget(n.kind)?.takeIf(isAvailable)
-                    NotificationRow(n, target, onClick = {
+                    val action = notificationAction(n)?.takeIf(isAvailable)
+                    NotificationRow(n, onClick = {
                         container.analytics.log(AnalyticsEvent.OpenNotification(n.kind))
                         if (!n.read) vm.markRead(n.id)
-                        target?.let(onOpen)
+                        action?.let(onOpenAction)
                     })
                 }
             }
@@ -167,9 +151,10 @@ fun NotificationsScreen(
 
 /** Unread rows are tinted gold with a dot, read rows are plain cards. */
 @Composable
-private fun NotificationRow(n: NotificationDto, target: NotificationTarget?, onClick: () -> Unit) {
+private fun NotificationRow(n: NotificationDto, onClick: () -> Unit) {
     val c = Aghour.colors
     val shape = RoundedCornerShape(14.dp)
+
     Row(
         Modifier
             .fillMaxWidth()
@@ -190,10 +175,6 @@ private fun NotificationRow(n: NotificationDto, target: NotificationTarget?, onC
             }
             Text(n.body, style = MaterialTheme.typography.bodySmall, color = c.muted)
             Row(Modifier.fillMaxWidth().padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (target != null) {
-                    Text(stringResource(target.labelRes), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = c.goldInk)
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = c.goldInk, modifier = Modifier.size(14.dp))
-                }
                 Spacer(Modifier.weight(1f))
                 Text(relativeTime(n.createdAt), style = MaterialTheme.typography.labelSmall, color = c.muted)
             }

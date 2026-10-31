@@ -166,6 +166,7 @@ data class NotificationDto(
     val title: String,
     val body: String,
     val read: Boolean,
+    val data: JsonObject? = null,
     @SerialName("created_at") val createdAt: String? = null,
 )
 
@@ -208,3 +209,28 @@ data class UpdateMeUser(
 
 @Serializable
 data class DeleteMeRequest(val password: String)
+
+@Serializable
+data class TopicDto(
+    val key: String,
+    val name: String,
+    val description: String? = null,
+    val subscribed: Boolean,
+)
+
+@Serializable
+data class DeviceDto(
+    @SerialName("installation_id") val installationId: String,
+    val token: String,
+    val platform: String,
+    @SerialName("app_version") val appVersion: String? = null,
+    val locale: String? = null,
+)
+
+@Serializable
+data class RegisterDeviceRequest(
+    val token: String,
+    val locale: String? = null,
+    @SerialName("app_version") val appVersion: String? = null,
+    val platform: String? = null,
+)

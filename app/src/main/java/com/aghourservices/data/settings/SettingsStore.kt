@@ -11,9 +11,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 enum class ThemeMode { Light, Dark, System }
 
@@ -33,8 +35,19 @@ class SettingsStore(context: Context, scope: CoroutineScope) {
         .map { prefs -> prefs[THEME]?.let { saved -> ThemeMode.entries.firstOrNull { it.name == saved } } ?: ThemeMode.System }
         .stateIn(scope, SharingStarted.Eagerly, null)
 
+    val installationId: StateFlow<String?> = store.data
+        .map { prefs -> prefs[INSTALLATION_ID] }
+        .stateIn(scope, SharingStarted.Eagerly, null)
+
     init {
         scope.launch { themeMode.filterNotNull().distinctUntilChanged().collect(::applyToSystem) }
+        scope.launch {
+            val prefs = store.data.first()
+            if (prefs[INSTALLATION_ID] == null) {
+                val newId = UUID.randomUUID().toString()
+                store.edit { it[INSTALLATION_ID] = newId }
+            }
+        }
     }
 
     /**
@@ -58,5 +71,6 @@ class SettingsStore(context: Context, scope: CoroutineScope) {
 
     private companion object {
         val THEME = stringPreferencesKey("theme_mode")
+        val INSTALLATION_ID = stringPreferencesKey("installation_id")
     }
 }

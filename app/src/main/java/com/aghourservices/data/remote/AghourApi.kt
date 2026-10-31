@@ -11,6 +11,7 @@ import retrofit2.http.HTTP
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.PartMap
 import retrofit2.http.Path
@@ -100,6 +101,34 @@ interface AghourApi {
 
     @PATCH("notifications/read_all")
     suspend fun markAllNotificationsRead(): retrofit2.Response<Unit>
+
+    // ---- Devices & Topics ----
+
+    @PUT("devices/{installation_id}")
+    suspend fun registerDevice(
+        @Path("installation_id") installationId: String,
+        @Body body: RegisterDeviceRequest,
+    ): ItemResponse<DeviceDto>
+
+    @POST("devices/{installation_id}/detach")
+    suspend fun detachDevice(
+        @Path("installation_id") installationId: String,
+    ): ItemResponse<DeviceDto>
+
+    @GET("topics")
+    suspend fun topics(): DataList<TopicDto>
+
+    @PUT("devices/{device_installation_id}/topics/{key}")
+    suspend fun subscribeTopic(
+        @Path("device_installation_id") deviceInstallationId: String,
+        @Path("key") key: String,
+    ): ItemResponse<TopicDto>
+
+    @DELETE("devices/{device_installation_id}/topics/{key}")
+    suspend fun unsubscribeTopic(
+        @Path("device_installation_id") deviceInstallationId: String,
+        @Path("key") key: String,
+    ): ItemResponse<TopicDto>
 
     // ---- Super admin ----
     // Bodies are JsonObject so a cleared field is sent as null (the app's Json drops null properties).

@@ -72,6 +72,7 @@ import com.aghourservices.ui.admin.FirmFormScreen
 import com.aghourservices.ui.admin.PlanFormScreen
 import com.aghourservices.ui.admin.PlansAdminScreen
 import com.aghourservices.ui.components.appContainer
+import com.aghourservices.data.remote.NotificationClickAction
 import com.aghourservices.ui.components.MessageBox
 import com.aghourservices.ui.components.ScreenTitle
 import com.aghourservices.ui.explore.ExploreScreen
@@ -83,18 +84,19 @@ import com.aghourservices.ui.news.NewsScreen
 import com.aghourservices.ui.owner.ChangePasswordScreen
 import com.aghourservices.ui.owner.DeleteAccountScreen
 import com.aghourservices.ui.owner.MyFirmsScreen
-import com.aghourservices.ui.owner.NotificationTarget
 import com.aghourservices.ui.owner.NotificationsScreen
 import com.aghourservices.ui.owner.PaymentsScreen
 import com.aghourservices.ui.owner.PayScreen
 import com.aghourservices.ui.owner.PlansScreen
 import com.aghourservices.ui.settings.SettingsScreen
+import com.aghourservices.ui.settings.TopicsScreen
 import com.aghourservices.ui.theme.Aghour
 import com.aghourservices.ui.welcome.LaunchScreen
 import com.aghourservices.ui.welcome.WelcomeScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import androidx.lifecycle.compose.currentStateAsState
 
 // ---- Type-safe routes ----
 @Serializable data object LoginRoute
@@ -117,6 +119,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object DeleteAccountRoute
 @Serializable data object MyFirmsRoute
 @Serializable data object SettingsRoute
+@Serializable data object TopicsRoute
 
 // Firm management: owners (their own firms) and the super admin
 @Serializable data object NewFirmRoute
@@ -230,6 +233,29 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
             val screen = screenName(route)
             container.analytics.logScreenView(screen)
             container.crashReporting.log("screen: $screen")
+        }
+    }
+
+    val pendingAction by container.pendingNotificationAction.collectAsStateWithLifecycle()
+    val isNavReady = backStack?.lifecycle?.currentStateAsState()?.value == Lifecycle.State.RESUMED
+
+    LaunchedEffect(pendingAction, isNavReady) {
+        val action = pendingAction ?: return@LaunchedEffect
+        if (!isNavReady) return@LaunchedEffect
+
+        container.pendingNotificationAction.value = null
+        when (action) {
+            is NotificationClickAction.OpenArticle -> nav.go(ArticleRoute(action.articleId))
+            is NotificationClickAction.OpenFirm -> nav.go(FirmRoute(action.firmId))
+            is NotificationClickAction.OpenCategory -> {
+                container.exploreCategory.value = action.categoryId
+                nav.navigateToTab(ExploreRoute)
+            }
+            NotificationClickAction.OpenPlans -> nav.go(PlansRoute)
+            NotificationClickAction.OpenPayments -> nav.go(PaymentsRoute)
+            NotificationClickAction.OpenMyFirms -> nav.go(MyFirmsRoute)
+            NotificationClickAction.OpenNews -> nav.navigateToTab(NewsRoute)
+            NotificationClickAction.OpenNotifications -> nav.go(NotificationsRoute)
         }
     }
     val currentTab = destination?.let { d -> tabs.firstOrNull { it.matches(d) } }
@@ -389,15 +415,22 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
             composable<NotificationsRoute> {
                 NotificationsScreen(
                     onBack = { nav.back() },
-                    isAvailable = { target ->
-                        plansOn || (target != NotificationTarget.Plans && target != NotificationTarget.Payments)
+                    isAvailable = { action ->
+                        plansOn || (action != NotificationClickAction.OpenPlans && action != NotificationClickAction.OpenPayments)
                     },
-                    onOpen = { target ->
-                        when (target) {
-                            NotificationTarget.Payments -> nav.go(PaymentsRoute)
-                            NotificationTarget.Plans -> nav.go(PlansRoute)
-                            NotificationTarget.MyFirms -> nav.go(MyFirmsRoute)
-                            NotificationTarget.News -> nav.navigateToTab(NewsRoute)
+                    onOpenAction = { action ->
+                        when (action) {
+                            is NotificationClickAction.OpenArticle -> nav.go(ArticleRoute(action.articleId))
+                            is NotificationClickAction.OpenFirm -> nav.go(FirmRoute(action.firmId))
+                            is NotificationClickAction.OpenCategory -> {
+                                container.exploreCategory.value = action.categoryId
+                                nav.navigateToTab(ExploreRoute)
+                            }
+                            NotificationClickAction.OpenPlans -> nav.go(PlansRoute)
+                            NotificationClickAction.OpenPayments -> nav.go(PaymentsRoute)
+                            NotificationClickAction.OpenMyFirms -> nav.go(MyFirmsRoute)
+                            NotificationClickAction.OpenNews -> nav.navigateToTab(NewsRoute)
+                            NotificationClickAction.OpenNotifications -> {}
                         }
                     },
                 )
@@ -411,7 +444,8 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onAddFirm = if (canManageFirms) ({ nav.go(NewFirmRoute) }) else null,
                 )
             }
-            composable<SettingsRoute> { SettingsScreen(onBack = { nav.back() }) }
+            composable<SettingsRoute> { SettingsScreen(onBack = { nav.back() }, onTopics = { nav.go(TopicsRoute) }) }
+            composable<TopicsRoute> { TopicsScreen(onBack = { nav.back() }) }
 
             // ---- Firm management: owners (their own firms) and the super admin ----
             composable<NewFirmRoute> {
