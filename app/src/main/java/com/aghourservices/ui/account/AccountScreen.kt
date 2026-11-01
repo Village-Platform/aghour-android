@@ -1,6 +1,5 @@
 package com.aghourservices.ui.account
 
-import com.aghourservices.data.analytics.AnalyticsEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -52,12 +51,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -66,8 +68,9 @@ import com.aghourservices.BuildConfig
 import com.aghourservices.R
 import com.aghourservices.data.remote.ApiResult
 import com.aghourservices.data.remote.FirmDto
-import com.aghourservices.data.remote.SubscriptionDto
 import com.aghourservices.data.remote.UserDto
+import com.aghourservices.data.remote.canManageFirms
+import com.aghourservices.data.remote.isSuperAdmin
 import com.aghourservices.data.repository.AuthRepository
 import com.aghourservices.data.repository.OwnerRepository
 import com.aghourservices.ui.components.Badge
@@ -79,9 +82,11 @@ import com.aghourservices.ui.components.GhostButton
 import com.aghourservices.ui.components.GoldButton
 import com.aghourservices.ui.components.LetterAvatar
 import com.aghourservices.ui.components.MutedText
+import com.aghourservices.ui.components.ScreenTitle
 import com.aghourservices.ui.components.StatusBarIcons
 import com.aghourservices.ui.components.SurfaceCard
 import com.aghourservices.ui.components.appContainer
+import com.aghourservices.ui.components.relativeTime
 import com.aghourservices.ui.components.roleLabel
 import com.aghourservices.ui.theme.Aghour
 import kotlinx.coroutines.async
@@ -92,13 +97,17 @@ import kotlinx.coroutines.launch
 
 data class ProfileUiState(
     val firms: List<FirmDto> = emptyList(),
-    val current: SubscriptionDto? = null,
-    val pending: SubscriptionDto? = null,
+    val current: com.aghourservices.data.remote.SubscriptionDto? = null,
+    val pending: com.aghourservices.data.remote.SubscriptionDto? = null,
 )
 
 class ProfileViewModel(private val auth: AuthRepository, private val owner: OwnerRepository) : ViewModel() {
     private val _state = MutableStateFlow(ProfileUiState())
     val state: StateFlow<ProfileUiState> = _state.asStateFlow()
+
+    init {
+        refresh()
+    }
 
     /** Called whenever the profile is shown while signed in (role/subscription may have changed). */
     fun refresh() {
@@ -126,6 +135,8 @@ fun AccountScreen(
     onNotifications: () -> Unit,
     onChangePassword: () -> Unit,
     onMyFirms: () -> Unit,
+    onAddFirm: () -> Unit,
+    onAddArticle: () -> Unit,
     onSettings: () -> Unit,
     onDeleteAccount: () -> Unit,
     /** Super admin only (null for everyone else): the admin menu. */
@@ -155,10 +166,12 @@ fun AccountScreen(
                 if (onPlans != null) SubscriptionCard(state, onPlans)
                 if (admin != null) AdminMenuCard(admin)
                 SurfaceCard(padding = 0.dp) {
-                    if (state.firms.isNotEmpty() || alwaysShowMyFirms) {
-                        MenuRow(Icons.Outlined.Storefront, stringResource(R.string.my_firms), "${state.firms.size}", onMyFirms)
-                        MenuDivider()
-                    }
+                    MenuRow(Icons.Outlined.Storefront, stringResource(R.string.my_firms), "${state.firms.size}", onMyFirms)
+                    MenuDivider()
+                    MenuRow(Icons.Outlined.AddBusiness, stringResource(R.string.add_firm), null, onAddFirm)
+                    MenuDivider()
+                    MenuRow(Icons.Outlined.PostAdd, stringResource(R.string.add_article), null, onAddArticle)
+                    MenuDivider()
                     if (onPlans != null) {
                         MenuRow(Icons.Outlined.CreditCard, stringResource(R.string.subscription_and_plans), null, onPlans)
                         MenuDivider()
@@ -190,12 +203,11 @@ fun AccountScreen(
     if (confirmLogout) {
         AlertDialog(
             onDismissRequest = { confirmLogout = false },
-            title = { Text(stringResource(R.string.logout_confirm_title)) },
-            text = { Text(stringResource(R.string.logout_confirm_body)) },
+            title = { Text(stringResource(R.string.logout_confirm_title), fontWeight = FontWeight.Bold, color = c.ink) },
+            text = { Text(stringResource(R.string.logout_confirm_body), color = c.muted) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmLogout = false
-                    container.analytics.log(AnalyticsEvent.Logout)
                     scope.launch { container.auth.logout() }
                 }) { Text(stringResource(R.string.logout), color = c.bad) }
             },
@@ -279,46 +291,17 @@ private fun SubscriptionCard(state: ProfileUiState, onPlans: () -> Unit) {
     }
 }
 
-@Composable
-private fun MenuRow(icon: ImageVector, title: String, trailing: String?, onClick: () -> Unit) {
-    val c = Aghour.colors
-    Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(icon, contentDescription = null, tint = c.goldInk, modifier = Modifier.size(22.dp))
-        Spacer(Modifier.width(12.dp))
-        Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = c.ink, modifier = Modifier.weight(1f))
-        if (trailing != null) {
-            Box(Modifier.background(c.gold.copy(alpha = 0.20f), CircleShape).padding(horizontal = 8.dp)) {
-                Text(trailing, style = MaterialTheme.typography.labelSmall, color = c.goldInk)
-            }
-            Spacer(Modifier.width(8.dp))
-        }
-        Chevron()
-    }
-}
-
-@Composable
-private fun MenuDivider() = HorizontalDivider(color = Aghour.colors.line)
-
-/** Entry points of the super admin screens. Firms and articles are edited from their own pages. */
-data class AdminMenu(
-    val onAddFirm: () -> Unit,
-    val onAddArticle: () -> Unit,
+class AdminMenu(
     val onCategories: () -> Unit,
     val onPlans: () -> Unit,
 )
 
 @Composable
 private fun AdminMenuCard(admin: AdminMenu) {
+    val c = Aghour.colors
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.admin_section), style = MaterialTheme.typography.titleSmall, color = Aghour.colors.ink)
+        Text(stringResource(R.string.admin_section), style = MaterialTheme.typography.titleSmall, color = c.ink)
         SurfaceCard(padding = 0.dp) {
-            MenuRow(Icons.Outlined.AddBusiness, stringResource(R.string.add_firm), null, admin.onAddFirm)
-            MenuDivider()
-            MenuRow(Icons.Outlined.PostAdd, stringResource(R.string.add_article), null, admin.onAddArticle)
-            MenuDivider()
             MenuRow(Icons.Outlined.Category, stringResource(R.string.manage_categories), null, admin.onCategories)
             MenuDivider()
             MenuRow(Icons.Outlined.Sell, stringResource(R.string.manage_plans), null, admin.onPlans)
@@ -349,4 +332,31 @@ private fun GuestProfile(onLogin: () -> Unit, onRegister: () -> Unit, onSettings
             MenuRow(Icons.Outlined.Info, stringResource(R.string.about_app), null, onAbout)
         }
     }
+}
+
+@Composable
+private fun MenuRow(icon: ImageVector, title: String, trailing: String?, onClick: () -> Unit) {
+    val c = Aghour.colors
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, tint = c.goldInk, modifier = Modifier.size(22.dp))
+        Spacer(Modifier.width(12.dp))
+        Text(title, style = MaterialTheme.typography.titleSmall, color = c.ink, modifier = Modifier.weight(1f))
+        if (trailing != null) {
+            Text(trailing, style = MaterialTheme.typography.bodyMedium, color = c.muted)
+            Spacer(Modifier.width(8.dp))
+        }
+        Chevron()
+    }
+}
+
+@Composable
+private fun MenuDivider() {
+    val c = Aghour.colors
+    HorizontalDivider(color = c.line, modifier = Modifier.padding(start = 48.dp))
 }

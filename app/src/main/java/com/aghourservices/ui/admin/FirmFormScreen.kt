@@ -4,12 +4,19 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -32,6 +39,7 @@ import com.aghourservices.ui.components.Segmented
 import com.aghourservices.ui.components.appContainer
 import com.aghourservices.ui.components.categoryIconUrl
 import com.aghourservices.ui.components.firmStatusLabel
+import com.aghourservices.ui.theme.Aghour
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -135,7 +143,7 @@ class FirmFormViewModel(
                     it.copy(
                         submitting = false,
                         savedId = result.data.id,
-                        sentForReview = s.status == "active" && result.data.status == "pending",
+                        sentForReview = result.data.status == "pending",
                     )
                 }
                 is ApiResult.Failure -> _state.update { it.copy(submitting = false, error = result.message) }
@@ -164,12 +172,15 @@ fun FirmFormScreen(firmId: Long?, canSetStatus: Boolean, onBack: () -> Unit, onS
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val saved = stringResource(R.string.firm_saved)
-    val sentForReview = stringResource(R.string.firm_sent_for_review)
+    var showReviewDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(state.savedId) {
-        state.savedId?.let {
-            Toast.makeText(context, if (state.sentForReview) sentForReview else saved, Toast.LENGTH_LONG).show()
-            onSaved(it)
+        val id = state.savedId ?: return@LaunchedEffect
+        if (state.sentForReview) {
+            showReviewDialog = true
+        } else {
+            Toast.makeText(context, saved, Toast.LENGTH_SHORT).show()
+            onSaved(id)
         }
     }
 
@@ -255,6 +266,27 @@ fun FirmFormScreen(firmId: Long?, canSetStatus: Boolean, onBack: () -> Unit, onS
             onChange = { v -> vm.update { copy(description = v) } },
             imeAction = ImeAction.Default,
             multiline = true,
+        )
+    }
+
+    if (showReviewDialog && state.savedId != null) {
+        val savedId = state.savedId!!
+        val c = Aghour.colors
+        AlertDialog(
+            onDismissRequest = {
+                showReviewDialog = false
+                onSaved(savedId)
+            },
+            title = { Text(stringResource(R.string.submission_success_title), fontWeight = FontWeight.Bold, color = c.ink) },
+            text = { Text(stringResource(R.string.firm_sent_for_review_message), color = c.muted) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showReviewDialog = false
+                    onSaved(savedId)
+                }) {
+                    Text(stringResource(R.string.ok), color = c.goldInk)
+                }
+            },
         )
     }
 }

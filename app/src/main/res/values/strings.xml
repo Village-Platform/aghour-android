@@ -268,4 +268,12 @@
     <string name="subscribed">مشتَرك</string>
     <string name="unsubscribed">غير مشتَرك</string>
     <string name="no_topics">لا توجد مواضيع متاح إرسال إشعارات لها.</string>
+
+    <!-- Review Notifications -->
+    <string name="article_sent_for_review">تم الحفظ. أُرسل الخبر للمراجعة وسيظهر للجميع فور موافقة الإدارة.</string>
+    <string name="article_review_note">سيظهر الخبر للجميع بعد مراجعة الإدارة والموافقة عليه.</string>
+    <string name="submission_under_review">قيد المراجعة</string>
+    <string name="submission_success_title">تم إرسال الطلب بنجاح</string>
+    <string name="firm_sent_for_review_message">تم إرسال بيانات المنشأة بنجاح إلى الخادم، وهي الآن قيد المراجعة لدى الإدارة وستظهر للجميع فور الموافقة عليها.</string>
+    <string name="article_sent_for_review_message">تم إرسال الخبر بنجاح إلى الخادم، وهو الآن قيد المراجعة لدى الإدارة وسيظهر للجميع فور الموافقة عليه.</string>
 </resources>

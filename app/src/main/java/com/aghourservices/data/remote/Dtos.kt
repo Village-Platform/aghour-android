@@ -95,6 +95,7 @@ data class ArticleDto(
     val body: String,
     val kind: String,
     @SerialName("published_at") val publishedAt: String? = null,
+    @SerialName("review_status") val reviewStatus: String? = null,
     val author: AuthorDto,
 )
 
@@ -114,7 +115,8 @@ data class UserDto(
 val UserDto?.isSuperAdmin: Boolean get() = this?.role == "super_admin"
 
 /** Mirrors User#can_manage_firms? on the server: firm admins and the super admin may add firms. */
-val UserDto?.canManageFirms: Boolean get() = this?.role == "firm_admin" || this?.role == "super_admin"
+val UserDto?.canManageFirms: Boolean get() = this != null
+val UserDto?.canManageArticles: Boolean get() = this != null
 
 @Serializable
 data class AuthPayload(val token: String, val user: UserDto)

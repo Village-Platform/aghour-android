@@ -435,13 +435,13 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onNotifications = { nav.go(NotificationsRoute) },
                     onChangePassword = { nav.go(ChangePasswordRoute) },
                     onMyFirms = { nav.go(MyFirmsRoute) },
+                    onAddFirm = { nav.go(NewFirmRoute) },
+                    onAddArticle = { nav.go(NewArticleRoute) },
                     onSettings = { nav.go(SettingsRoute) },
                     onDeleteAccount = { nav.go(DeleteAccountRoute) },
                     alwaysShowMyFirms = canManageFirms,
                     admin = if (isAdmin) {
                         AdminMenu(
-                            onAddFirm = { nav.go(NewFirmRoute) },
-                            onAddArticle = { nav.go(NewArticleRoute) },
                             onCategories = { nav.go(AdminCategoriesRoute) },
                             onPlans = { nav.go(AdminPlansRoute) },
                         )
