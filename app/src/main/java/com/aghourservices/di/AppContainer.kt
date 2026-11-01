@@ -93,6 +93,9 @@ class AppContainer(context: Context) {
                 analytics.setUserRole(user?.role ?: "guest")
             }
         }
+        appScope.launch {
+            auth.fetchGuestToken()
+        }
         FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
             appScope.launch {
                 device.registerDevice(token)

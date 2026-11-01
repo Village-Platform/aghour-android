@@ -104,11 +104,11 @@ class ProfileViewModel(private val auth: AuthRepository, private val owner: Owne
     fun refresh() {
         viewModelScope.launch {
             auth.refreshMe()
-            val subs = async { owner.subscriptions() }
-            val firms = async { owner.myFirms() }
-            val list = (subs.await() as? ApiResult.Success)?.data.orEmpty()
+            val subs = async { owner.subscriptions(page = 1, perPage = 50) }
+            val firms = async { owner.myFirms(page = 1, perPage = 50) }
+            val list = (subs.await() as? ApiResult.Success)?.data?.data.orEmpty()
             _state.value = ProfileUiState(
-                firms = (firms.await() as? ApiResult.Success)?.data.orEmpty(),
+                firms = (firms.await() as? ApiResult.Success)?.data?.data.orEmpty(),
                 current = list.firstOrNull { it.state == "current" },
                 pending = list.firstOrNull { it.state == "pending" },
             )

@@ -15,12 +15,14 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aghourservices.data.remote.parseNotificationAction
+import android.annotation.SuppressLint
 import com.aghourservices.data.settings.ThemeMode
 import com.aghourservices.di.AppContainer
 import com.aghourservices.ui.components.LocalAppContainer
 import com.aghourservices.ui.navigation.AppNavigation
 import com.aghourservices.ui.theme.AghourTheme
 
+@SuppressLint("InvalidFragmentVersionForActivityResult")
 class MainActivity : ComponentActivity() {
 
     private val requestNotificationPermissionLauncher =

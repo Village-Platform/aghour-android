@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -68,6 +70,22 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
     val c = Aghour.colors
     StatusBarIcons()
 
+    val categoryIds = remember(state.categories) { listOf<Long?>(null) + state.categories.map { it.id } }
+    val pagerState = rememberPagerState(pageCount = { categoryIds.size })
+
+    val targetIndex = categoryIds.indexOf(state.categoryId).coerceAtLeast(0)
+    LaunchedEffect(targetIndex) {
+        if (pagerState.currentPage != targetIndex) {
+            pagerState.animateScrollToPage(targetIndex)
+        }
+    }
+    LaunchedEffect(pagerState.settledPage) {
+        val selectedId = categoryIds.getOrNull(pagerState.settledPage)
+        if (selectedId != state.categoryId) {
+            vm.selectCategory(selectedId)
+        }
+    }
+
     val reachedEnd by remember {
         derivedStateOf {
             val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
@@ -118,24 +136,26 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
             }
         }
 
-        PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
-            when {
-                state.loading -> SkeletonRows(modifier = Modifier.padding(16.dp))
-                state.error != null && state.firms.isEmpty() -> MessageBox(state.error!!, onRetry = vm::reload)
-                state.firms.isEmpty() -> MessageBox(stringResource(R.string.no_firms))
-                else -> LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    items(state.firms, key = { it.id }) { firm ->
-                        FirmRow(firm, onClick = { onFirmClick(firm) }, iconUrl = firmIconUrl(firm, state.categories))
-                    }
-                    if (state.loadingMore) {
-                        item {
-                            Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(Modifier.size(28.dp), color = c.gold)
+        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { _ ->
+            PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
+                when {
+                    state.loading -> SkeletonRows(modifier = Modifier.padding(16.dp))
+                    state.error != null && state.firms.isEmpty() -> MessageBox(state.error!!, onRetry = vm::reload)
+                    state.firms.isEmpty() -> MessageBox(stringResource(R.string.no_firms))
+                    else -> LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        items(state.firms, key = { it.id }) { firm ->
+                            FirmRow(firm, onClick = { onFirmClick(firm) }, iconUrl = firmIconUrl(firm, state.categories))
+                        }
+                        if (state.loadingMore) {
+                            item {
+                                Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(Modifier.size(28.dp), color = c.gold)
+                                }
                             }
                         }
                     }

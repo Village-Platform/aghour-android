@@ -16,14 +16,15 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.automirrored.outlined.List
+
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -44,6 +45,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.aghourservices.ui.theme.Cairo
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -89,7 +92,6 @@ import com.aghourservices.ui.owner.PaymentsScreen
 import com.aghourservices.ui.owner.PayScreen
 import com.aghourservices.ui.owner.PlansScreen
 import com.aghourservices.ui.settings.SettingsScreen
-import com.aghourservices.ui.settings.TopicsScreen
 import com.aghourservices.ui.theme.Aghour
 import com.aghourservices.ui.welcome.LaunchScreen
 import com.aghourservices.ui.welcome.WelcomeScreen
@@ -97,43 +99,70 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import androidx.lifecycle.compose.currentStateAsState
+import com.aghourservices.ui.theme.Cairo
+import kotlin.time.Duration.Companion.milliseconds
 
 // ---- Type-safe routes ----
-@Serializable data object LoginRoute
-@Serializable data object RegisterRoute
+@Serializable
+data object LoginRoute
+@Serializable
+data object RegisterRoute
 
 // Bottom-bar tabs
-@Serializable data object HomeRoute
-@Serializable data object ExploreRoute
-@Serializable data object NewsRoute
-@Serializable data object AccountRoute
+@Serializable
+data object HomeRoute
+@Serializable
+data object ExploreRoute
+@Serializable
+data object NewsRoute
+@Serializable
+data object AccountRoute
 
 // Pushed screens
-@Serializable data class FirmRoute(val firmId: Long)
-@Serializable data class ArticleRoute(val articleId: Long)
-@Serializable data object PlansRoute
-@Serializable data class PayRoute(val planId: Long)
-@Serializable data object PaymentsRoute
-@Serializable data object NotificationsRoute
-@Serializable data object ChangePasswordRoute
-@Serializable data object DeleteAccountRoute
-@Serializable data object MyFirmsRoute
-@Serializable data object SettingsRoute
-@Serializable data object TopicsRoute
+@Serializable
+data class FirmRoute(val firmId: Long)
+@Serializable
+data class ArticleRoute(val articleId: Long)
+@Serializable
+data object PlansRoute
+@Serializable
+data class PayRoute(val planId: Long)
+@Serializable
+data object PaymentsRoute
+@Serializable
+data object NotificationsRoute
+@Serializable
+data object ChangePasswordRoute
+@Serializable
+data object DeleteAccountRoute
+@Serializable
+data object MyFirmsRoute
+@Serializable
+data object SettingsRoute
 
 // Firm management: owners (their own firms) and the super admin
-@Serializable data object NewFirmRoute
-@Serializable data class EditFirmRoute(val firmId: Long)
+@Serializable
+data object NewFirmRoute
+@Serializable
+data class EditFirmRoute(val firmId: Long)
 
 // Super admin
-@Serializable data object NewArticleRoute
-@Serializable data class EditArticleRoute(val articleId: Long)
-@Serializable data object AdminCategoriesRoute
-@Serializable data object NewCategoryRoute
-@Serializable data class EditCategoryRoute(val categoryId: Long)
-@Serializable data object AdminPlansRoute
-@Serializable data object NewPlanRoute
-@Serializable data class EditPlanRoute(val planId: Long)
+@Serializable
+data object NewArticleRoute
+@Serializable
+data class EditArticleRoute(val articleId: Long)
+@Serializable
+data object AdminCategoriesRoute
+@Serializable
+data object NewCategoryRoute
+@Serializable
+data class EditCategoryRoute(val categoryId: Long)
+@Serializable
+data object AdminPlansRoute
+@Serializable
+data object NewPlanRoute
+@Serializable
+data class EditPlanRoute(val planId: Long)
 
 /** Filled icon on the selected tab, outlined on the others; the gold label also marks the selection. */
 private data class Tab(
@@ -145,10 +174,30 @@ private data class Tab(
 )
 
 private val tabs = listOf(
-    Tab(HomeRoute, R.string.tab_home, Icons.Filled.Home, Icons.Outlined.Home) { it.hasRoute<HomeRoute>() },
-    Tab(ExploreRoute, R.string.tab_explore, Icons.Filled.Search, Icons.Outlined.Search) { it.hasRoute<ExploreRoute>() },
-    Tab(NewsRoute, R.string.tab_news, Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List) { it.hasRoute<NewsRoute>() },
-    Tab(AccountRoute, R.string.tab_account, Icons.Filled.Person, Icons.Outlined.Person) { it.hasRoute<AccountRoute>() },
+    Tab(
+        HomeRoute,
+        R.string.tab_home,
+        Icons.Filled.Home,
+        Icons.Outlined.Home
+    ) { it.hasRoute<HomeRoute>() },
+    Tab(
+        ExploreRoute,
+        R.string.tab_explore,
+        Icons.Filled.Explore,
+        Icons.Outlined.Explore
+    ) { it.hasRoute<ExploreRoute>() },
+    Tab(
+        NewsRoute,
+        R.string.tab_news,
+        Icons.Filled.Newspaper,
+        Icons.Outlined.Newspaper
+    ) { it.hasRoute<NewsRoute>() },
+    Tab(
+        AccountRoute,
+        R.string.tab_account,
+        Icons.Filled.Person,
+        Icons.Outlined.Person
+    ) { it.hasRoute<AccountRoute>() },
 )
 
 private enum class Stage { Launch, Welcome, Main }
@@ -166,7 +215,7 @@ fun AppNavigation() {
     var launchDone by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         if (!launchDone) {
-            delay(LAUNCH_MS)
+            delay(LAUNCH_MS.milliseconds)
             launchDone = true
         }
     }
@@ -201,7 +250,10 @@ fun AppNavigation() {
                     showWelcome = false
                 },
             )
-            Stage.Main -> MainNavigation(openLogin = openLoginAfterWelcome, onLoginOpened = { openLoginAfterWelcome = false })
+
+            Stage.Main -> MainNavigation(
+                openLogin = openLoginAfterWelcome,
+                onLoginOpened = { openLoginAfterWelcome = false })
         }
     }
 }
@@ -251,6 +303,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                 container.exploreCategory.value = action.categoryId
                 nav.navigateToTab(ExploreRoute)
             }
+
             NotificationClickAction.OpenPlans -> nav.go(PlansRoute)
             NotificationClickAction.OpenPayments -> nav.go(PaymentsRoute)
             NotificationClickAction.OpenMyFirms -> nav.go(MyFirmsRoute)
@@ -273,10 +326,22 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                             NavigationBarItem(
                                 selected = tab == currentTab,
                                 onClick = { nav.navigateToTab(tab.route) },
-                                icon = { Icon(if (tab == currentTab) tab.selectedIcon else tab.icon, contentDescription = null) },
-                                label = { Text(stringResource(tab.labelRes), fontWeight = FontWeight.SemiBold) },
+                                icon = {
+                                    Icon(
+                                        if (tab == currentTab) tab.selectedIcon else tab.icon,
+                                        contentDescription = stringResource(tab.labelRes)
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        text = stringResource(tab.labelRes),
+                                        fontFamily = Cairo,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
+                                    )
+                                },
                                 colors = NavigationBarItemDefaults.colors(
-                                    indicatorColor = Color.Transparent,
+                                    indicatorColor = c.gold.copy(alpha = 0.15f),
                                     selectedIconColor = c.goldInk,
                                     selectedTextColor = c.goldInk,
                                     unselectedIconColor = c.muted,
@@ -293,7 +358,9 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
         NavHost(
             navController = nav,
             startDestination = HomeRoute,
-            modifier = Modifier.padding(bottom).consumeWindowInsets(bottom),
+            modifier = Modifier
+                .padding(bottom)
+                .consumeWindowInsets(bottom),
             // Tabs cross-fade; pushed screens slide in from the reading side (right-to-left aware) and
             // slide back on Back. Short distance + fade = smooth, no full-width jumps.
             enterTransition = { if (isTabSwitch()) fadeIn(tween(TAB_MS)) else pushEnter() },
@@ -306,14 +373,26 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                 LoginScreen(
                     onBack = { nav.back() },
                     onDone = { nav.afterAuth() },
-                    onGoToRegister = { nav.go(RegisterRoute) { popUpTo<LoginRoute> { inclusive = true } } },
+                    onGoToRegister = {
+                        nav.go(RegisterRoute) {
+                            popUpTo<LoginRoute> {
+                                inclusive = true
+                            }
+                        }
+                    },
                 )
             }
             composable<RegisterRoute> {
                 RegisterScreen(
                     onBack = { nav.back() },
                     onDone = { nav.afterAuth() },
-                    onGoToLogin = { nav.go(LoginRoute) { popUpTo<RegisterRoute> { inclusive = true } } },
+                    onGoToLogin = {
+                        nav.go(LoginRoute) {
+                            popUpTo<RegisterRoute> {
+                                inclusive = true
+                            }
+                        }
+                    },
                 )
             }
 
@@ -321,7 +400,13 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
             composable<HomeRoute> {
                 HomeScreen(
                     onCategoryClick = { category ->
-                        container.analytics.log(AnalyticsEvent.SelectCategory(category.id, category.name, AnalyticsEvent.Source.Home))
+                        container.analytics.log(
+                            AnalyticsEvent.SelectCategory(
+                                category.id,
+                                category.name,
+                                AnalyticsEvent.Source.Home
+                            )
+                        )
                         container.exploreCategory.value = category.id
                         nav.navigateToTab(ExploreRoute)
                     },
@@ -405,12 +490,20 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     PayScreen(
                         planId = entry.toRoute<PayRoute>().planId,
                         onBack = { nav.back() },
-                        onDone = { nav.go(PaymentsRoute) { popUpTo<PlansRoute> { inclusive = true } } },
+                        onDone = {
+                            nav.go(PaymentsRoute) {
+                                popUpTo<PlansRoute> {
+                                    inclusive = true
+                                }
+                            }
+                        },
                     )
                 }
             }
             composable<PaymentsRoute> {
-                PlansGate(plansFlag, onBack = { nav.back() }) { PaymentsScreen(onBack = { nav.back() }) }
+                PlansGate(
+                    plansFlag,
+                    onBack = { nav.back() }) { PaymentsScreen(onBack = { nav.back() }) }
             }
             composable<NotificationsRoute> {
                 NotificationsScreen(
@@ -426,6 +519,7 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                                 container.exploreCategory.value = action.categoryId
                                 nav.navigateToTab(ExploreRoute)
                             }
+
                             NotificationClickAction.OpenPlans -> nav.go(PlansRoute)
                             NotificationClickAction.OpenPayments -> nav.go(PaymentsRoute)
                             NotificationClickAction.OpenMyFirms -> nav.go(MyFirmsRoute)
@@ -444,8 +538,10 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onAddFirm = if (canManageFirms) ({ nav.go(NewFirmRoute) }) else null,
                 )
             }
-            composable<SettingsRoute> { SettingsScreen(onBack = { nav.back() }, onTopics = { nav.go(TopicsRoute) }) }
-            composable<TopicsRoute> { TopicsScreen(onBack = { nav.back() }) }
+            composable<SettingsRoute> {
+                SettingsScreen(
+                    onBack = { nav.back() })
+            }
 
             // ---- Firm management: owners (their own firms) and the super admin ----
             composable<NewFirmRoute> {
@@ -454,7 +550,13 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     canSetStatus = isAdmin,
                     onBack = { nav.back() },
                     // Open the new firm in place of the form, so Back returns to the profile.
-                    onSaved = { id -> nav.go(FirmRoute(id)) { popUpTo<NewFirmRoute> { inclusive = true } } },
+                    onSaved = { id ->
+                        nav.go(FirmRoute(id)) {
+                            popUpTo<NewFirmRoute> {
+                                inclusive = true
+                            }
+                        }
+                    },
                 )
             }
             composable<EditFirmRoute> { entry ->
@@ -469,7 +571,13 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                 ArticleFormScreen(
                     articleId = null,
                     onBack = { nav.back() },
-                    onSaved = { id -> nav.go(ArticleRoute(id)) { popUpTo<NewArticleRoute> { inclusive = true } } },
+                    onSaved = { id ->
+                        nav.go(ArticleRoute(id)) {
+                            popUpTo<NewArticleRoute> {
+                                inclusive = true
+                            }
+                        }
+                    },
                     onDeleted = { nav.back() },
                 )
             }
@@ -489,9 +597,17 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onEdit = { nav.go(EditCategoryRoute(it)) },
                 )
             }
-            composable<NewCategoryRoute> { CategoryFormScreen(categoryId = null, onBack = { nav.back() }, onDone = { nav.back() }) }
+            composable<NewCategoryRoute> {
+                CategoryFormScreen(
+                    categoryId = null,
+                    onBack = { nav.back() },
+                    onDone = { nav.back() })
+            }
             composable<EditCategoryRoute> { entry ->
-                CategoryFormScreen(categoryId = entry.toRoute<EditCategoryRoute>().categoryId, onBack = { nav.back() }, onDone = { nav.back() })
+                CategoryFormScreen(
+                    categoryId = entry.toRoute<EditCategoryRoute>().categoryId,
+                    onBack = { nav.back() },
+                    onDone = { nav.back() })
             }
             composable<AdminPlansRoute> {
                 PlansAdminScreen(
@@ -500,9 +616,17 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
                     onEdit = { nav.go(EditPlanRoute(it)) },
                 )
             }
-            composable<NewPlanRoute> { PlanFormScreen(planId = null, onBack = { nav.back() }, onDone = { nav.back() }) }
+            composable<NewPlanRoute> {
+                PlanFormScreen(
+                    planId = null,
+                    onBack = { nav.back() },
+                    onDone = { nav.back() })
+            }
             composable<EditPlanRoute> { entry ->
-                PlanFormScreen(planId = entry.toRoute<EditPlanRoute>().planId, onBack = { nav.back() }, onDone = { nav.back() })
+                PlanFormScreen(
+                    planId = entry.toRoute<EditPlanRoute>().planId,
+                    onBack = { nav.back() },
+                    onDone = { nav.back() })
             }
         }
     }
@@ -516,7 +640,9 @@ private fun MainNavigation(openLogin: Boolean, onLoginOpened: () -> Unit) {
 @Composable
 private fun PlansGate(enabled: Boolean?, onBack: () -> Unit, content: @Composable () -> Unit) {
     if (enabled == false) {
-        Column(Modifier.fillMaxSize().background(Aghour.colors.page)) {
+        Column(Modifier
+            .fillMaxSize()
+            .background(Aghour.colors.page)) {
             ScreenTitle(stringResource(R.string.subscription_and_plans), onBack = onBack)
             MessageBox(stringResource(R.string.feature_unavailable))
         }
@@ -583,13 +709,22 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.isTabSwitch(): Boo
     tabs.any { it.matches(initialState.destination) } && tabs.any { it.matches(targetState.destination) }
 
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.pushEnter(): EnterTransition =
-    slideIntoContainer(SlideDirection.Start, tween(NAV_MS, easing = navEasing)) { it / 4 } + fadeIn(tween(NAV_MS))
+    slideIntoContainer(SlideDirection.Start, tween(NAV_MS, easing = navEasing)) { it / 4 } + fadeIn(
+        tween(NAV_MS)
+    )
 
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.pushExit(): ExitTransition =
-    slideOutOfContainer(SlideDirection.Start, tween(NAV_MS, easing = navEasing)) { it / 8 } + fadeOut(tween(NAV_MS / 2))
+    slideOutOfContainer(
+        SlideDirection.Start,
+        tween(NAV_MS, easing = navEasing)
+    ) { it / 8 } + fadeOut(tween(NAV_MS / 2))
 
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.popEnter(): EnterTransition =
-    slideIntoContainer(SlideDirection.End, tween(NAV_MS, easing = navEasing)) { it / 8 } + fadeIn(tween(NAV_MS))
+    slideIntoContainer(SlideDirection.End, tween(NAV_MS, easing = navEasing)) { it / 8 } + fadeIn(
+        tween(NAV_MS)
+    )
 
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.popExit(): ExitTransition =
-    slideOutOfContainer(SlideDirection.End, tween(NAV_MS, easing = navEasing)) { it / 4 } + fadeOut(tween(NAV_MS / 2))
+    slideOutOfContainer(SlideDirection.End, tween(NAV_MS, easing = navEasing)) { it / 4 } + fadeOut(
+        tween(NAV_MS / 2)
+    )

@@ -66,7 +66,9 @@ class HomeViewModel(
     /** Called each time Home is shown while signed in (notifications may have been read elsewhere). */
     fun loadUnread() {
         viewModelScope.launch {
-            (owner.notifications() as? ApiResult.Success)?.let { r -> _state.update { it.copy(unreadCount = r.data.second) } }
+            (owner.notifications(page = 1, perPage = 1) as? ApiResult.Success)?.let { r ->
+                _state.update { it.copy(unreadCount = r.data.meta.unreadCount) }
+            }
         }
     }
 

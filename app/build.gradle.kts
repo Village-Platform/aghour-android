@@ -16,6 +16,7 @@ android {
     defaultConfig {
         applicationId = "com.aghourservices"
         minSdk = 26
+        //noinspection OldTargetApi
         targetSdk = 36 // Google Play requires API 36+ for new apps (since Aug 31, 2026)
         versionCode = 1
         versionName = "0.1.0"

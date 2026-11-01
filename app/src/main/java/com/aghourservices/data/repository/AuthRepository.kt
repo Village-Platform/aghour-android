@@ -25,6 +25,14 @@ class AuthRepository(
 ) {
     val currentUser: StateFlow<UserDto?> = session.user
 
+    suspend fun fetchGuestToken() {
+        if (session.token.value != null) return
+        when (val result = safeApiCall(json) { api.guestToken().data }) {
+            is ApiResult.Success -> session.saveToken(result.data.token)
+            is ApiResult.Failure -> {}
+        }
+    }
+
     suspend fun login(phone: String, password: String): ApiResult<UserDto> =
         when (val result = safeApiCall(json) { api.login(LoginRequest(phone.trim(), password)).data }) {
             is ApiResult.Success -> {
@@ -80,6 +88,7 @@ class AuthRepository(
             is ApiResult.Success -> {
                 runCatching { deviceRepoProvider().detachDevice() }
                 session.clear()
+                fetchGuestToken()
                 result
             }
             is ApiResult.Failure -> result
@@ -88,6 +97,7 @@ class AuthRepository(
     suspend fun logout() {
         runCatching { deviceRepoProvider().detachDevice() }
         session.clear()
+        fetchGuestToken()
     }
 
     private suspend fun syncDeviceToken() {

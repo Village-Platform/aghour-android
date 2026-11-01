@@ -27,7 +27,8 @@ import com.aghourservices.data.settings.ThemeMode
 // Fixed brand colours: used where the colour must not follow the theme
 // (welcome artwork, text and buttons drawn over photos).
 val Forest = Color(0xFF0B3727)
-val Gold = Color(0xFFC28D40)
+val MintGreen = Color(0xFF10B981)
+val Gold = MintGreen // Alias for green/mint green across the app
 val Cream = Color(0xFFF4ECD9)
 
 /**
@@ -52,7 +53,7 @@ data class AghourColors(
     val bad: Color,
     val isDark: Boolean,
 ) {
-    /** Text on a gold button (black in both themes). */
+    /** Text on an action button (black in both themes). */
     val onGold: Color get() = Color.Black
 }
 
@@ -63,15 +64,15 @@ val LightPalette = AghourColors(
     ink = Color(0xFF000000),
     muted = Color(0xFF525252),
     line = Color(0xFFE2E2E2),
-    gold = Gold,
-    goldInk = Color(0xFF7A5516),
+    gold = MintGreen,
+    goldInk = Color(0xFF047857),
     brand = Forest,
     ok = Color(0xFF1F7A4D),
     bad = Color(0xFFB3402F),
     isDark = false,
 )
 
-/** GitHub Dark greys (canvas #0D1117, subtle #161B22, border #30363D…) with the brand gold for actions. */
+/** GitHub Dark greys (canvas #0D1117, subtle #161B22, border #30363D…) with the brand mint green for actions. */
 val DarkPalette = AghourColors(
     page = Color(0xFF0D1117),
     surface = Color(0xFF161B22),
@@ -79,9 +80,9 @@ val DarkPalette = AghourColors(
     ink = Color(0xFFE6EDF3),
     muted = Color(0xFF8B949E),
     line = Color(0xFF30363D),
-    gold = Color(0xFFD9A458),
-    goldInk = Color(0xFFE8C07E),
-    brand = Color(0xFFE6EDF3),
+    gold = Color(0xFF34D399),
+    goldInk = Color(0xFF6EE7B7),
+    brand = Forest,
     ok = Color(0xFF3FB950),
     bad = Color(0xFFF85149),
     isDark = true,

@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,6 +49,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -297,7 +299,20 @@ fun <T> FilterChipsRow(
     imageUrls: Map<out T, String> = emptyMap(),
 ) {
     val c = Aghour.colors
-    LazyRow(contentPadding = contentPadding, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    val listState = rememberLazyListState()
+    val selectedIndex = options.indexOfFirst { it.first == selected }
+
+    LaunchedEffect(selectedIndex) {
+        if (selectedIndex >= 0) {
+            listState.animateScrollToItem(selectedIndex)
+        }
+    }
+
+    LazyRow(
+        state = listState,
+        contentPadding = contentPadding,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         items(options, key = { it.first.toString() }) { (value, label) ->
             val isSelected = value == selected
             val fg = if (isSelected) c.onGold else c.muted
@@ -306,20 +321,20 @@ fun <T> FilterChipsRow(
                     .clip(RoundedCornerShape(50))
                     .background(if (isSelected) c.gold else c.surface2)
                     .clickable { onSelect(value) }
-                    .padding(horizontal = 14.dp, vertical = 7.dp),
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 val imageUrl = imageUrls[value]
                 if (imageUrl != null) {
-                    CategoryImage(imageUrl, 20.dp, Modifier.clip(RoundedCornerShape(6.dp)))
-                    Spacer(Modifier.width(6.dp))
+                    CategoryImage(imageUrl, 32.dp, Modifier.clip(RoundedCornerShape(8.dp)))
+                    Spacer(Modifier.width(8.dp))
                 } else if (value in icons) {
                     val icon = icons[value]
-                    if (icon != null) Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
-                    else BrandMark(Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
+                    if (icon != null) Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(24.dp))
+                    else BrandMark(Modifier.size(24.dp))
+                    Spacer(Modifier.width(8.dp))
                 }
-                Text(label, color = fg, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Text(label, color = fg, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.ExtraBold)
             }
         }
     }

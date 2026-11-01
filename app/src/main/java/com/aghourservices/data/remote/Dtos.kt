@@ -22,6 +22,7 @@ data class PageMeta(
     @SerialName("per_page") val perPage: Int,
     val total: Int,
     @SerialName("total_pages") val totalPages: Int,
+    @SerialName("unread_count") val unreadCount: Int = 0,
 )
 
 /** GET app_config. Unknown flags are ignored; a missing flag means off. */
@@ -234,3 +235,6 @@ data class RegisterDeviceRequest(
     @SerialName("app_version") val appVersion: String? = null,
     val platform: String? = null,
 )
+
+@Serializable
+data class GuestPayload(val token: String)

@@ -63,6 +63,9 @@ interface AghourApi {
     @POST("auth/register")
     suspend fun register(@Body body: RegisterRequest): ItemResponse<AuthPayload>
 
+    @POST("auth/guest")
+    suspend fun guestToken(): ItemResponse<GuestPayload>
+
     @GET("me")
     suspend fun me(): ItemResponse<UserDto>
 
@@ -86,7 +89,10 @@ interface AghourApi {
     suspend fun paymentMethods(): DataList<PaymentMethodDto>
 
     @GET("subscriptions")
-    suspend fun subscriptions(@Query("per_page") perPage: Int = 50): ListResponse<SubscriptionDto>
+    suspend fun subscriptions(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+    ): ListResponse<SubscriptionDto>
 
     @POST("subscriptions")
     suspend fun createSubscription(@Body body: CreateSubscriptionRequest): ItemResponse<SubscriptionDto>

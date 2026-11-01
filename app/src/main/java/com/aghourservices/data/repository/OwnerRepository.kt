@@ -4,6 +4,7 @@ import com.aghourservices.data.remote.AghourApi
 import com.aghourservices.data.remote.ApiResult
 import com.aghourservices.data.remote.CreateSubscriptionRequest
 import com.aghourservices.data.remote.FirmDto
+import com.aghourservices.data.remote.ListResponse
 import com.aghourservices.data.remote.NewSubscription
 import com.aghourservices.data.remote.NotificationDto
 import com.aghourservices.data.remote.PaymentMethodDto
@@ -21,8 +22,8 @@ class OwnerRepository(private val api: AghourApi, private val json: Json) {
     suspend fun paymentMethods(): ApiResult<List<PaymentMethodDto>> =
         safeApiCall(json) { api.paymentMethods().data }
 
-    suspend fun subscriptions(): ApiResult<List<SubscriptionDto>> =
-        safeApiCall(json) { api.subscriptions().data }
+    suspend fun subscriptions(page: Int = 1, perPage: Int = 20): ApiResult<ListResponse<SubscriptionDto>> =
+        safeApiCall(json) { api.subscriptions(page = page, perPage = perPage) }
 
     suspend fun subscribe(planId: Long, method: String, reference: String, payerPhone: String?): ApiResult<SubscriptionDto> =
         safeApiCall(json) {
@@ -38,14 +39,11 @@ class OwnerRepository(private val api: AghourApi, private val json: Json) {
             ).data
         }
 
-    suspend fun myFirms(): ApiResult<List<FirmDto>> =
-        safeApiCall(json) { api.firms(mine = true, perPage = 50).data }
+    suspend fun myFirms(page: Int = 1, perPage: Int = 20): ApiResult<ListResponse<FirmDto>> =
+        safeApiCall(json) { api.firms(mine = true, page = page, perPage = perPage) }
 
-    suspend fun notifications(): ApiResult<Pair<List<NotificationDto>, Int>> =
-        safeApiCall(json) {
-            val response = api.notifications()
-            response.data to response.data.count { !it.read }
-        }
+    suspend fun notifications(page: Int = 1, perPage: Int = 20): ApiResult<ListResponse<NotificationDto>> =
+        safeApiCall(json) { api.notifications(page = page, perPage = perPage) }
 
     suspend fun markRead(id: Long): ApiResult<NotificationDto> =
         safeApiCall(json) { api.markNotificationRead(id).data }

@@ -3,7 +3,7 @@
     <!-- Palette from the screen designs (ajhour_screens.html) -->
     <color name="brand_green">#FF0B3727</color>
     <color name="brand_green_dark">#FF031F17</color>
-    <color name="brand_gold">#FFC28D40</color>
+    <color name="brand_gold">#FF10B981</color>
     <color name="brand_cream">#FFFAF5EC</color>
     <color name="ic_launcher_background">#FFFFFFFF</color>
     <!-- Window backgrounds = the "page" design token in each theme -->

@@ -18,14 +18,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,13 +65,17 @@ import kotlinx.coroutines.launch
 
 data class NotificationsUiState(
     val loading: Boolean = true,
+    val refreshing: Boolean = false,
+    val loadingMore: Boolean = false,
     val items: List<NotificationDto> = emptyList(),
-    /** "غير مقروء" filter chip. */
     val unreadOnly: Boolean = false,
+    val page: Int = 0,
+    val totalPages: Int = 1,
     val error: String? = null,
 ) {
     val unreadCount: Int get() = items.count { !it.read }
     val visible: List<NotificationDto> get() = if (unreadOnly) items.filter { !it.read } else items
+    val canLoadMore: Boolean get() = page < totalPages && !loading && !loadingMore && !refreshing
 }
 
 class NotificationsViewModel(private val owner: OwnerRepository) : ViewModel() {
@@ -76,11 +87,36 @@ class NotificationsViewModel(private val owner: OwnerRepository) : ViewModel() {
     }
 
     fun load() {
-        _state.update { it.copy(loading = true, error = null) }
-        viewModelScope.launch {
-            when (val r = owner.notifications()) {
-                is ApiResult.Success -> _state.update { it.copy(loading = false, items = r.data.first) }
-                is ApiResult.Failure -> _state.update { it.copy(loading = false, error = r.message) }
+        _state.update { it.copy(loading = true, error = null, page = 0, totalPages = 1) }
+        viewModelScope.launch { loadPage(1) }
+    }
+
+    fun refresh() {
+        _state.update { it.copy(refreshing = true, error = null) }
+        viewModelScope.launch { loadPage(1) }
+    }
+
+    fun loadMore() {
+        val current = _state.value
+        if (!current.canLoadMore) return
+        _state.update { it.copy(loadingMore = true) }
+        viewModelScope.launch { loadPage(current.page + 1) }
+    }
+
+    private suspend fun loadPage(page: Int) {
+        when (val r = owner.notifications(page = page)) {
+            is ApiResult.Success -> _state.update {
+                it.copy(
+                    loading = false,
+                    refreshing = false,
+                    loadingMore = false,
+                    items = if (page == 1) r.data.data else it.items + r.data.data,
+                    page = r.data.meta.page,
+                    totalPages = r.data.meta.totalPages,
+                )
+            }
+            is ApiResult.Failure -> _state.update {
+                it.copy(loading = false, refreshing = false, loadingMore = false, error = r.message)
             }
         }
     }
@@ -99,6 +135,7 @@ class NotificationsViewModel(private val owner: OwnerRepository) : ViewModel() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(
     onBack: () -> Unit,
@@ -109,7 +146,16 @@ fun NotificationsScreen(
     val container = appContainer()
     val vm: NotificationsViewModel = viewModel { NotificationsViewModel(container.owner) }
     val state by vm.state.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
     val c = Aghour.colors
+
+    val reachedEnd by remember {
+        derivedStateOf {
+            val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            last >= listState.layoutInfo.totalItemsCount - 3
+        }
+    }
+    LaunchedEffect(reachedEnd, state.canLoadMore) { if (reachedEnd && state.canLoadMore) vm.loadMore() }
 
     Column(Modifier.fillMaxSize().background(c.page)) {
         ScreenTitle(stringResource(R.string.notifications), onBack = onBack, actions = {
@@ -131,18 +177,33 @@ fun NotificationsScreen(
             )
             Spacer(Modifier.height(8.dp))
         }
-        when {
-            state.loading -> SkeletonRows(4, Modifier.padding(16.dp))
-            state.error != null -> MessageBox(state.error!!, onRetry = vm::load)
-            state.visible.isEmpty() -> MessageBox(stringResource(R.string.no_notifications))
-            else -> LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(state.visible, key = { it.id }) { n ->
-                    val action = notificationAction(n)?.takeIf(isAvailable)
-                    NotificationRow(n, onClick = {
-                        container.analytics.log(AnalyticsEvent.OpenNotification(n.kind))
-                        if (!n.read) vm.markRead(n.id)
-                        action?.let(onOpenAction)
-                    })
+
+        PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
+            when {
+                state.loading -> SkeletonRows(4, Modifier.padding(16.dp))
+                state.error != null && state.items.isEmpty() -> MessageBox(state.error!!, onRetry = vm::load)
+                state.visible.isEmpty() -> MessageBox(stringResource(R.string.no_notifications))
+                else -> LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(state.visible, key = { it.id }) { n ->
+                        val action = notificationAction(n)?.takeIf(isAvailable)
+                        NotificationRow(n, onClick = {
+                            container.analytics.log(AnalyticsEvent.OpenNotification(n.kind))
+                            if (!n.read) vm.markRead(n.id)
+                            action?.let(onOpenAction)
+                        })
+                    }
+                    if (state.loadingMore) {
+                        item {
+                            Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(Modifier.size(28.dp), color = c.gold)
+                            }
+                        }
+                    }
                 }
             }
         }

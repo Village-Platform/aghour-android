@@ -49,6 +49,10 @@ class SessionStore(context: Context, private val json: Json, scope: CoroutineSco
         store.edit { it[USER] = json.encodeToString(UserDto.serializer(), user) }
     }
 
+    suspend fun saveToken(token: String) {
+        store.edit { it[TOKEN] = token }
+    }
+
     /** Signs out but keeps app preferences such as the welcome flag. */
     suspend fun clear() {
         store.edit {

@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
@@ -73,6 +75,22 @@ fun NewsScreen(onArticleClick: (ArticleDto) -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
+    val kinds = remember { listOf<String?>(null, "news", "announcement", "article") }
+    val pagerState = rememberPagerState(pageCount = { kinds.size })
+
+    val targetIndex = kinds.indexOf(state.kind).coerceAtLeast(0)
+    LaunchedEffect(targetIndex) {
+        if (pagerState.currentPage != targetIndex) {
+            pagerState.animateScrollToPage(targetIndex)
+        }
+    }
+    LaunchedEffect(pagerState.settledPage) {
+        val selectedKind = kinds.getOrNull(pagerState.settledPage)
+        if (selectedKind != state.kind) {
+            vm.selectKind(selectedKind)
+        }
+    }
+
     val reachedEnd by remember {
         derivedStateOf {
             val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
@@ -96,28 +114,30 @@ fun NewsScreen(onArticleClick: (ArticleDto) -> Unit) {
         )
         Spacer(Modifier.height(10.dp))
 
-        PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
-            when {
-                state.loading -> SkeletonRows(modifier = Modifier.padding(16.dp))
-                state.error != null && state.articles.isEmpty() -> MessageBox(state.error!!, onRetry = vm::reload)
-                state.articles.isEmpty() -> MessageBox(stringResource(R.string.no_news))
-                else -> LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    itemsIndexed(state.articles, key = { _, a -> a.id }) { index, article ->
-                        if (index == 0) {
-                            FeaturedNewsCard(article, stringResource(R.string.latest), onClick = { onArticleClick(article) })
-                        } else {
-                            NewsRow(article, onClick = { onArticleClick(article) })
+        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { _ ->
+            PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
+                when {
+                    state.loading -> SkeletonRows(modifier = Modifier.padding(16.dp))
+                    state.error != null && state.articles.isEmpty() -> MessageBox(state.error!!, onRetry = vm::reload)
+                    state.articles.isEmpty() -> MessageBox(stringResource(R.string.no_news))
+                    else -> LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        itemsIndexed(state.articles, key = { _, a -> a.id }) { index, article ->
+                            if (index == 0) {
+                                FeaturedNewsCard(article, stringResource(R.string.latest), onClick = { onArticleClick(article) })
+                            } else {
+                                NewsRow(article, onClick = { onArticleClick(article) })
+                            }
                         }
-                    }
-                    if (state.loadingMore) {
-                        item {
-                            Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(Modifier.size(28.dp), color = c.gold)
+                        if (state.loadingMore) {
+                            item {
+                                Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(Modifier.size(28.dp), color = c.gold)
+                                }
                             }
                         }
                     }
