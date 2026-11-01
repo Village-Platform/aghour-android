@@ -10,12 +10,20 @@ import okhttp3.Response
  */
 class AuthInterceptor(
     private val session: SessionStore,
+    private val guestTokenProvider: () -> String?,
     private val installationIdProvider: () -> String?,
     private val onUnauthorized: () -> Unit,
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        val token = session.token.value
+        val requestUrl = chain.request().url.encodedPath
+        val isAuthEndpoint = requestUrl.contains("auth/guest") || requestUrl.contains("auth/login") || requestUrl.contains("auth/register")
+
+        var token = session.token.value
+        if (!isAuthEndpoint && token == null && session.user.value == null) {
+            token = guestTokenProvider()
+        }
+
         val installationId = installationIdProvider()
         val request = chain.request().newBuilder()
             .header("Accept", "application/json")

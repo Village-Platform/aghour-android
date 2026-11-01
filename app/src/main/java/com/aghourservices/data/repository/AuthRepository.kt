@@ -13,6 +13,7 @@ import com.aghourservices.data.remote.safeApiCall
 import com.aghourservices.data.session.SessionStore
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.Json
 import kotlin.coroutines.resume
@@ -25,12 +26,25 @@ class AuthRepository(
 ) {
     val currentUser: StateFlow<UserDto?> = session.user
 
-    suspend fun fetchGuestToken() {
-        if (session.token.value != null) return
-        when (val result = safeApiCall(json) { api.guestToken().data }) {
-            is ApiResult.Success -> session.saveToken(result.data.token)
-            is ApiResult.Failure -> {}
+    suspend fun ensureGuestToken(): String? {
+        val existingToken = session.token.first()
+        val existingUser = session.user.first()
+        if (existingUser != null) return existingToken
+        if (existingToken != null) return existingToken
+
+        return when (val result = safeApiCall(json) { api.guestToken().data }) {
+            is ApiResult.Success -> {
+                if (session.user.value == null) {
+                    session.saveToken(result.data.token)
+                    result.data.token
+                } else session.token.value
+            }
+            is ApiResult.Failure -> null
         }
+    }
+
+    suspend fun fetchGuestToken() {
+        ensureGuestToken()
     }
 
     suspend fun login(phone: String, password: String): ApiResult<UserDto> =

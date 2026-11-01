@@ -54,7 +54,14 @@ class AppContainer(context: Context) {
     private val okHttp = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
-        .addInterceptor(AuthInterceptor(session, { settings.installationId.value }) { appScope.launch { session.clear() } })
+        .addInterceptor(
+            AuthInterceptor(
+                session = session,
+                guestTokenProvider = { kotlinx.coroutines.runBlocking { auth.ensureGuestToken() } },
+                installationIdProvider = { settings.installationId.value },
+                onUnauthorized = { appScope.launch { session.clear() } },
+            )
+        )
         .apply {
             if (BuildConfig.DEBUG) {
                 addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC })
