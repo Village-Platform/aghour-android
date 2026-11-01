@@ -59,15 +59,17 @@ class AghourMessagingService : FirebaseMessagingService() {
         data: Map<String, String>,
         bitmap: Bitmap?,
     ) {
-        val channelId = "aghour_notifications"
+        val channelId = "aghour_notifications_high"
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         val channel = NotificationChannel(
             channelId,
             getString(R.string.notification_channel_name),
-            NotificationManager.IMPORTANCE_DEFAULT
+            NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = getString(R.string.notification_channel_description)
+            enableVibration(true)
+            enableLights(true)
         }
         manager.createNotificationChannel(channel)
 
@@ -88,6 +90,9 @@ class AghourMessagingService : FirebaseMessagingService() {
             .setContentText(body)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
 
         if (bitmap != null) {
             builder.setStyle(NotificationCompat.BigPictureStyle().bigPicture(bitmap))
