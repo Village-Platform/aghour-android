@@ -46,4 +46,7 @@ class DeviceRepository(
         val installationId = settings.installationId.value ?: return ApiResult.Failure("No installation ID")
         return safeApiCall(json) { api.unsubscribeTopic(installationId, key).data }
     }
+
+    suspend fun markNotificationRead(id: Long): ApiResult<com.aghourservices.data.remote.NotificationDto> =
+        safeApiCall(json) { api.markNotificationRead(id).data }
 }

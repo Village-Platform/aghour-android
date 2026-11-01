@@ -36,7 +36,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -73,13 +75,18 @@ fun ExploreScreen(onFirmClick: (FirmDto) -> Unit) {
     val categoryIds = remember(state.categories) { listOf<Long?>(null) + state.categories.map { it.id } }
     val pagerState = rememberPagerState(pageCount = { categoryIds.size })
 
+    var isProgrammaticScroll by remember { mutableStateOf(false) }
+
     val targetIndex = categoryIds.indexOf(state.categoryId).coerceAtLeast(0)
     LaunchedEffect(targetIndex) {
         if (pagerState.currentPage != targetIndex) {
+            isProgrammaticScroll = true
             pagerState.animateScrollToPage(targetIndex)
+            isProgrammaticScroll = false
         }
     }
     LaunchedEffect(pagerState.settledPage) {
+        if (isProgrammaticScroll) return@LaunchedEffect
         val selectedId = categoryIds.getOrNull(pagerState.settledPage)
         if (selectedId != state.categoryId) {
             vm.selectCategory(selectedId)

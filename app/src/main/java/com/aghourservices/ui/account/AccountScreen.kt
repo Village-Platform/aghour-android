@@ -147,7 +147,7 @@ fun AccountScreen(
 
     val current = user
     if (current == null) {
-        GuestProfile(onLogin, onRegister, onSettings, onAbout = { showAbout = true })
+        GuestProfile(onLogin, onRegister, onSettings, onNotifications = onNotifications, onAbout = { showAbout = true })
     } else {
         Column(Modifier.fillMaxSize().background(c.page).verticalScroll(rememberScrollState())) {
             ProfileHeader(current)
@@ -327,7 +327,7 @@ private fun AdminMenuCard(admin: AdminMenu) {
 }
 
 @Composable
-private fun GuestProfile(onLogin: () -> Unit, onRegister: () -> Unit, onSettings: () -> Unit, onAbout: () -> Unit) {
+private fun GuestProfile(onLogin: () -> Unit, onRegister: () -> Unit, onSettings: () -> Unit, onNotifications: () -> Unit, onAbout: () -> Unit) {
     val c = Aghour.colors
     Column(
         Modifier.fillMaxSize().background(c.page).verticalScroll(rememberScrollState()).statusBarsPadding().padding(20.dp),
@@ -342,6 +342,8 @@ private fun GuestProfile(onLogin: () -> Unit, onRegister: () -> Unit, onSettings
         GoldButton(stringResource(R.string.login), onLogin)
         GhostButton(stringResource(R.string.register), onRegister, height = 50.dp)
         SurfaceCard(padding = 0.dp) {
+            MenuRow(Icons.Outlined.Notifications, stringResource(R.string.notifications), null, onNotifications)
+            MenuDivider()
             MenuRow(Icons.Outlined.Palette, stringResource(R.string.appearance_menu), null, onSettings)
             MenuDivider()
             MenuRow(Icons.Outlined.Info, stringResource(R.string.about_app), null, onAbout)

@@ -33,7 +33,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,14 +89,14 @@ fun HomeScreen(
     StatusBarIcons()
 
     // Refresh the bell each time Home comes back (e.g. after reading notifications).
-    LifecycleResumeEffect(user?.id) {
-        if (user != null) vm.loadUnread() else vm.clearUnread()
+    LifecycleResumeEffect(Unit) {
+        vm.loadUnread()
         onPauseOrDispose {}
     }
 
     PullToRefreshBox(
         isRefreshing = state.refreshing,
-        onRefresh = { vm.refresh(); if (user != null) vm.loadUnread() },
+        onRefresh = { vm.refresh(); vm.loadUnread() },
         modifier = Modifier.fillMaxSize().background(c.page),
     ) {
         Column(
@@ -116,10 +115,8 @@ fun HomeScreen(
                             fontWeight = FontWeight.Bold,
                         )
                     }
-                    if (user != null) {
-                        BellButton(state.unreadCount, onNotifications)
-                        Spacer(Modifier.width(8.dp))
-                    }
+                    BellButton(state.unreadCount, onNotifications)
+                    Spacer(Modifier.width(8.dp))
                     BrandMark(Modifier.size(40.dp))
                 }
                 Spacer(Modifier.height(12.dp))
@@ -189,28 +186,40 @@ fun HomeScreen(
     }
 }
 
-/** Bell tile with a red unread counter (signed-in users only). */
+/** Bell tile with a clean, round unread counter badge. */
 @Composable
 private fun BellButton(unread: Int, onClick: () -> Unit) {
     val c = Aghour.colors
-    Box {
+    Box(modifier = Modifier.padding(top = 4.dp, end = 4.dp)) {
         Box(
             Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .size(42.dp)
+                .clip(RoundedCornerShape(14.dp))
                 .background(c.surface2)
-                .border(1.dp, c.line, RoundedCornerShape(12.dp))
+                .border(1.dp, c.line, RoundedCornerShape(14.dp))
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Filled.Notifications, contentDescription = stringResource(R.string.notifications), tint = c.ink, modifier = Modifier.size(20.dp))
+            Icon(Icons.Filled.Notifications, contentDescription = stringResource(R.string.notifications), tint = c.ink, modifier = Modifier.size(22.dp))
         }
         if (unread > 0) {
             Box(
-                Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-4).dp).size(18.dp).background(c.bad, CircleShape),
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 6.dp, y = (-6).dp)
+                    .size(20.dp)
+                    .clip(CircleShape)
+                    .background(c.bad)
+                    .border(1.5.dp, c.surface, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(if (unread > 9) "9+" else "$unread", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (unread > 9) "9+" else "$unread",
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                )
             }
         }
     }

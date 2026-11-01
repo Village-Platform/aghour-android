@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 data class ExploreUiState(
     val query: String = "",
@@ -57,16 +58,19 @@ class ExploreViewModel(
 
     init {
         viewModelScope.launch { loadCategories() }
+        reload()
         // Category picked on Home (or by a chip here)
         viewModelScope.launch {
-            selectedCategory.collect { id ->
-                _state.update { it.copy(categoryId = id) }
-                reload()
+            selectedCategory.drop(1).collect { id ->
+                if (id != _state.value.categoryId) {
+                    _state.update { it.copy(categoryId = id) }
+                    reload()
+                }
             }
         }
         // Search while typing, after a short pause
         viewModelScope.launch {
-            queries.drop(1).debounce(400).distinctUntilChanged().collect { reload() }
+            queries.drop(1).debounce(400.milliseconds).distinctUntilChanged().collect { reload() }
         }
         viewModelScope.launch {
             adminChanges.drop(1).collect {
