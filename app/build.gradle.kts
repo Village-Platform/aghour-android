@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -9,6 +11,14 @@ plugins {
 val apiUrlDebug = providers.gradleProperty("AGHOUR_API_URL_DEBUG").getOrElse("http://10.0.2.2:3000/api/v1/")
 val apiUrlRelease = providers.gradleProperty("AGHOUR_API_URL_RELEASE").getOrElse("https://api.example.com/api/v1/")
 
+// Upload key for Google Play (Play App Signing re-signs with the app signing key). The key and its
+// passwords live outside the repo; without the file, release builds are simply left unsigned.
+val uploadKeyProps = Properties().apply {
+    val path = providers.gradleProperty("AGHOUR_UPLOAD_KEY_PROPERTIES")
+        .getOrElse("${System.getProperty("user.home")}/.android-keys/aghour-legacy.properties")
+    file(path).takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
 android {
     namespace = "com.aghourservices"
     compileSdk = 37
@@ -18,8 +28,19 @@ android {
         minSdk = 26
         //noinspection OldTargetApi
         targetSdk = 36 // Google Play requires API 36+ for new apps (since Aug 31, 2026)
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 54
+        versionName = "10.0.0"
+    }
+
+    signingConfigs {
+        if (uploadKeyProps.isNotEmpty()) {
+            create("upload") {
+                storeFile = file(uploadKeyProps.getProperty("storeFile"))
+                storePassword = uploadKeyProps.getProperty("storePassword")
+                keyAlias = uploadKeyProps.getProperty("keyAlias")
+                keyPassword = uploadKeyProps.getProperty("keyPassword")
+            }
+        }
     }
 
     // Each build type reports to its own Firebase project: src/debug/google-services.json is
@@ -38,6 +59,7 @@ android {
             isMinifyEnabled = false // enable R8 + rules before the first Play release
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "API_BASE_URL", "\"$apiUrlRelease\"")
+            signingConfigs.findByName("upload")?.let { signingConfig = it }
         }
     }
 
